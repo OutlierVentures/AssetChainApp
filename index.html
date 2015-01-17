@@ -38,6 +38,28 @@
     <!-- App CSS -->
     <link href="css/app.css" rel="stylesheet">
 
+    <script type="text/javascript">
+        if (eth == null) {
+            // Create stub object eth
+            var eth = {
+                toDecimal: function (s) { return 0; },
+                toAscii: function (value) { return ""; },
+                stateAt: function (contractAddress, stateAddress) {
+                    return "";
+                },
+                transact: function (parameters, callback) {
+
+                },
+                coinbase: "",
+                key: "",
+                secretToAddress: function (secret) {
+                    return "exampleAddress";
+                },
+                pad: function (dataString, length) { return ""; }
+            }
+        }
+    </script>
+
 </head>
 
 <body>
@@ -280,7 +302,7 @@
             </div>
             <!-- /.col-lg-12 -->
         </div>
-    <!-- /#page-wrapper -->
+        <!-- /#page-wrapper -->
     </div>
     <!-- /#wrapper -->
     <!-- jQuery -->
