@@ -1,118 +1,121 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <PropertyGroup>
-        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
-        <SchemaVersion>2.0</SchemaVersion>
-        <ProjectGuid>{f6a679bc-cf9e-453c-bad2-eb175120b3ff}</ProjectGuid>
-        <ProjectHome />
-        <ProjectView>ShowAllFiles</ProjectView>
-        <StartupFile>app.ts</StartupFile>
-        <WorkingDirectory>.</WorkingDirectory>
-        <OutputPath>.</OutputPath>
-        <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
-        <TypeScriptSourceMap>true</TypeScriptSourceMap>
-        <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
-        <EnableTypeScript>true</EnableTypeScript>
-        <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
-        <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
-    <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
-    <ItemGroup>
-        <Content Include="index.html" />
-        <Content Include="app.css" />
-        <TypeScriptCompile Include="app.ts" />
-        <Compile Include="app.js" />
-        <Content Include="css\app.css" />
-        <Content Include="css\bootstrap.css" />
-        <Content Include="css\bootstrap.min.css" />
-        <Content Include="css\sb-admin-2.css" />
-        <Content Include="fonts\glyphicons-halflings-regular.svg" />
-        <Compile Include="js\bootstrap.js" />
-        <Compile Include="js\bootstrap.min.js" />
-        <Compile Include="js\jquery.js" />
-        <Compile Include="js\sb-admin-2.js" />
-        <Content Include="css\plugins\dataTables.bootstrap.css" />
-        <Content Include="css\plugins\morris.css" />
-        <Content Include="css\plugins\social-buttons.css" />
-        <Content Include="css\plugins\timeline.css" />
-        <Content Include="css\plugins\metisMenu\metisMenu.css" />
-        <Content Include="css\plugins\metisMenu\metisMenu.min.css" />
-        <Content Include="font-awesome-4.1.0\css\font-awesome.css" />
-        <Content Include="font-awesome-4.1.0\css\font-awesome.min.css" />
-        <Content Include="font-awesome-4.1.0\fonts\fontawesome-webfont.svg" />
-        <Compile Include="js\plugins\dataTables\dataTables.bootstrap.js" />
-        <Compile Include="js\plugins\dataTables\jquery.dataTables.js" />
-        <Compile Include="js\plugins\flot\excanvas.min.js" />
-        <Compile Include="js\plugins\flot\flot-data.js" />
-        <Compile Include="js\plugins\flot\jquery.flot.js" />
-        <Compile Include="js\plugins\flot\jquery.flot.pie.js" />
-        <Compile Include="js\plugins\flot\jquery.flot.resize.js" />
-        <Compile Include="js\plugins\flot\jquery.flot.tooltip.min.js" />
-        <Compile Include="js\plugins\metisMenu\metisMenu.js" />
-        <Compile Include="js\plugins\metisMenu\metisMenu.min.js" />
-        <Compile Include="js\plugins\morris\morris-data.js" />
-        <Compile Include="js\plugins\morris\morris.js" />
-        <Compile Include="js\plugins\morris\morris.min.js" />
-        <Compile Include="js\plugins\morris\raphael.min.js" />
-    </ItemGroup>
-    <ItemGroup>
-        <Folder Include="css" />
-        <Folder Include="css\plugins" />
-        <Folder Include="css\plugins\metisMenu" />
-        <Folder Include="font-awesome-4.1.0" />
-        <Folder Include="font-awesome-4.1.0\css" />
-        <Folder Include="font-awesome-4.1.0\fonts" />
-        <Folder Include="font-awesome-4.1.0\less" />
-        <Folder Include="font-awesome-4.1.0\scss" />
-        <Folder Include="fonts" />
-        <Folder Include="js" />
-        <Folder Include="js\plugins" />
-        <Folder Include="js\plugins\dataTables" />
-        <Folder Include="js\plugins\flot" />
-        <Folder Include="js\plugins\metisMenu" />
-        <Folder Include="js\plugins\morris" />
-    </ItemGroup>
-    <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
-    <!--Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them.-->
-    <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
-    <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsTools.targets" />
-    <ProjectExtensions>
-        <VisualStudio>
-          <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
-            <WebProjectProperties>
-              <UseIIS>False</UseIIS>
-              <AutoAssignPort>True</AutoAssignPort>
-              <DevelopmentServerPort>0</DevelopmentServerPort>
-              <DevelopmentServerVPath>/</DevelopmentServerVPath>
-              <IISUrl>http://localhost:48022/</IISUrl>
-              <NTLMAuthentication>False</NTLMAuthentication>
-              <UseCustomServer>True</UseCustomServer>
-              <CustomServerUrl>http://localhost:1337</CustomServerUrl>
-              <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
-            </WebProjectProperties>
-          </FlavorProperties>
-          <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
-            <WebProjectProperties>
-              <StartPageUrl>
-              </StartPageUrl>
-              <StartAction>CurrentPage</StartAction>
-              <AspNetDebugging>True</AspNetDebugging>
-              <SilverlightDebugging>False</SilverlightDebugging>
-              <NativeDebugging>False</NativeDebugging>
-              <SQLDebugging>False</SQLDebugging>
-              <ExternalProgram>
-              </ExternalProgram>
-              <StartExternalURL>
-              </StartExternalURL>
-              <StartCmdLineArguments>
-              </StartCmdLineArguments>
-              <StartWorkingDirectory>
-              </StartWorkingDirectory>
-              <EnableENC>False</EnableENC>
-              <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
-            </WebProjectProperties>
-          </FlavorProperties>
-        </VisualStudio>
-    </ProjectExtensions>
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{f6a679bc-cf9e-453c-bad2-eb175120b3ff}</ProjectGuid>
+    <ProjectHome />
+    <ProjectView>ShowAllFiles</ProjectView>
+    <StartupFile>app.ts</StartupFile>
+    <WorkingDirectory>.</WorkingDirectory>
+    <OutputPath>.</OutputPath>
+    <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+    <TypeScriptSourceMap>true</TypeScriptSourceMap>
+    <TypeScriptModuleKind>CommonJS</TypeScriptModuleKind>
+    <EnableTypeScript>true</EnableTypeScript>
+    <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
+    <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+  <ItemGroup>
+    <Content Include="index.html" />
+    <Content Include="app.css" />
+    <TypeScriptCompile Include="app.ts" />
+    <Compile Include="app.js" />
+    <Content Include="css\app.css" />
+    <Content Include="css\bootstrap.css" />
+    <Content Include="css\bootstrap.min.css" />
+    <Content Include="css\sb-admin-2.css" />
+    <Content Include="fonts\glyphicons-halflings-regular.svg" />
+    <Compile Include="js\bootstrap.js" />
+    <Compile Include="js\bootstrap.min.js" />
+    <Compile Include="js\jquery.js" />
+    <Compile Include="js\sb-admin-2.js" />
+    <Content Include="css\plugins\dataTables.bootstrap.css" />
+    <Content Include="css\plugins\morris.css" />
+    <Content Include="css\plugins\social-buttons.css" />
+    <Content Include="css\plugins\timeline.css" />
+    <Content Include="css\plugins\metisMenu\metisMenu.css" />
+    <Content Include="css\plugins\metisMenu\metisMenu.min.css" />
+    <Content Include="font-awesome-4.1.0\css\font-awesome.css" />
+    <Content Include="font-awesome-4.1.0\css\font-awesome.min.css" />
+    <Content Include="font-awesome-4.1.0\fonts\fontawesome-webfont.svg" />
+    <Compile Include="js\plugins\dataTables\dataTables.bootstrap.js" />
+    <Compile Include="js\plugins\dataTables\jquery.dataTables.js" />
+    <Compile Include="js\plugins\flot\excanvas.min.js" />
+    <Compile Include="js\plugins\flot\flot-data.js" />
+    <Compile Include="js\plugins\flot\jquery.flot.js" />
+    <Compile Include="js\plugins\flot\jquery.flot.pie.js" />
+    <Compile Include="js\plugins\flot\jquery.flot.resize.js" />
+    <Compile Include="js\plugins\flot\jquery.flot.tooltip.min.js" />
+    <Compile Include="js\plugins\metisMenu\metisMenu.js" />
+    <Compile Include="js\plugins\metisMenu\metisMenu.min.js" />
+    <Compile Include="js\plugins\morris\morris-data.js" />
+    <Compile Include="js\plugins\morris\morris.js" />
+    <Compile Include="js\plugins\morris\morris.min.js" />
+    <Compile Include="js\plugins\morris\raphael.min.js" />
+    <TypeScriptCompile Include="typings\eth.d.ts" />
+    <TypeScriptCompile Include="typings\google.maps.d.ts" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="css" />
+    <Folder Include="css\plugins" />
+    <Folder Include="css\plugins\metisMenu" />
+    <Folder Include="font-awesome-4.1.0" />
+    <Folder Include="font-awesome-4.1.0\css" />
+    <Folder Include="font-awesome-4.1.0\fonts" />
+    <Folder Include="font-awesome-4.1.0\less" />
+    <Folder Include="font-awesome-4.1.0\scss" />
+    <Folder Include="fonts" />
+    <Folder Include="js" />
+    <Folder Include="js\plugins" />
+    <Folder Include="js\plugins\dataTables" />
+    <Folder Include="js\plugins\flot" />
+    <Folder Include="js\plugins\metisMenu" />
+    <Folder Include="js\plugins\morris" />
+    <Folder Include="typings\" />
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <!--Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them.-->
+  <Import Project="$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)\TypeScript\Microsoft.TypeScript.targets" Condition="False" />
+  <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsTools.targets" />
+  <ProjectExtensions>
+    <VisualStudio>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+        <WebProjectProperties>
+          <UseIIS>False</UseIIS>
+          <AutoAssignPort>True</AutoAssignPort>
+          <DevelopmentServerPort>0</DevelopmentServerPort>
+          <DevelopmentServerVPath>/</DevelopmentServerVPath>
+          <IISUrl>http://localhost:48022/</IISUrl>
+          <NTLMAuthentication>False</NTLMAuthentication>
+          <UseCustomServer>True</UseCustomServer>
+          <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+          <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+        </WebProjectProperties>
+      </FlavorProperties>
+      <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+        <WebProjectProperties>
+          <StartPageUrl>
+          </StartPageUrl>
+          <StartAction>CurrentPage</StartAction>
+          <AspNetDebugging>True</AspNetDebugging>
+          <SilverlightDebugging>False</SilverlightDebugging>
+          <NativeDebugging>False</NativeDebugging>
+          <SQLDebugging>False</SQLDebugging>
+          <ExternalProgram>
+          </ExternalProgram>
+          <StartExternalURL>
+          </StartExternalURL>
+          <StartCmdLineArguments>
+          </StartCmdLineArguments>
+          <StartWorkingDirectory>
+          </StartWorkingDirectory>
+          <EnableENC>False</EnableENC>
+          <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+        </WebProjectProperties>
+      </FlavorProperties>
+    </VisualStudio>
+  </ProjectExtensions>
 </Project>
