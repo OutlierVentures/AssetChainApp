@@ -2,3 +2,19 @@
     /*border: 2px dashed red;*/
     height: 40em;
 }
+
+.navbar-brand {
+    padding: 10px 15px;
+}
+
+
+/*.navbar-brand,
+.navbar-nav li a {
+    line-height: 150px;
+    height: 150px;
+    padding-top: 0;
+}
+
+.sidebar {
+    margin-top:151px;
+}*/

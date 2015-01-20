@@ -25,15 +25,17 @@ function InitializeUserExperience() {
     // is unneccesary.
     var pageHeader = document.getElementById('page-header');
     var myProperties = document.getElementById('my-properties');
-    var linkMyProperties = document.getElementById('my-properties-link');
-    var linkNewClaim = document.getElementById('new-claim-link');
+    var linkMyAssets = document.getElementById('my-assets-link');
+    var linkNewClaim = document.getElementById('register-asset-link');
+    var linkVerifyAsset = document.getElementById('verify-asset-link');
+    var linkTransferAsset = document.getElementById('transfer-asset-link');
     var linkAllProperties = document.getElementById('all-properties-link');
     var allProperties = document.getElementById('all-properties');
     var panelNewClaim = document.getElementById('new-claim-form');
     DisplayElement(myProperties, !IsAdminUser());
     DisplayElement(allProperties, IsAdminUser());
     DisplayElement(linkAllProperties, IsAdminUser());
-    DisplayElement(linkMyProperties, !IsAdminUser());
+    DisplayElement(linkMyAssets, !IsAdminUser());
     DisplayElement(linkNewClaim, !IsAdminUser());
     // New claim panel always hidden at first
     DisplayElement(panelNewClaim, false);

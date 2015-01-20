@@ -19,6 +19,8 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Content Include="asset-chain-logo.xcf" />
+    <Content Include="img\asset-chain-logo.png" />
     <Content Include="index.html" />
     <Content Include="app.css" />
     <TypeScriptCompile Include="app.ts" />
@@ -68,6 +70,7 @@
     <Folder Include="font-awesome-4.1.0\less" />
     <Folder Include="font-awesome-4.1.0\scss" />
     <Folder Include="fonts" />
+    <Folder Include="img\" />
     <Folder Include="js" />
     <Folder Include="js\plugins" />
     <Folder Include="js\plugins\dataTables" />
