@@ -21,6 +21,11 @@
   <ItemGroup>
     <Content Include="asset-chain-logo.xcf" />
     <Content Include="client\img\asset-chain-logo.png" />
+    <Content Include="client\img\assets\rolex-platinum-pearlmaster.jpg" />
+    <Content Include="client\img\assets\rolex-submariner-for-cartier.jpg" />
+    <Content Include="client\img\backends\coinprism-logo.png" />
+    <Content Include="client\img\backends\counterparty-logo.png" />
+    <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
     <TypeScriptCompile Include="client\app.ts" />
     <Compile Include="client\app.js" />
@@ -63,6 +68,8 @@
     <Folder Include="client\css\" />
     <Folder Include="client\css\plugins\" />
     <Folder Include="client\css\plugins\metisMenu\" />
+    <Folder Include="client\img\assets\" />
+    <Folder Include="client\img\backends\" />
     <Folder Include="client\plugins\" />
     <Folder Include="client\plugins\metisMenu\" />
     <Folder Include="client\font-awesome-4.1.0\" />

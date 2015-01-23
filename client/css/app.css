@@ -18,3 +18,8 @@
 .sidebar {
     margin-top:151px;
 }*/
+
+
+.well-transparent {
+    background-color: rgba(245, 245, 245, 0.1);
+}
