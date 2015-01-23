@@ -6,7 +6,7 @@
     <ProjectGuid>{f6a679bc-cf9e-453c-bad2-eb175120b3ff}</ProjectGuid>
     <ProjectHome />
     <ProjectView>ShowAllFiles</ProjectView>
-    <StartupFile>app.ts</StartupFile>
+    <StartupFile>client\app.ts</StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
@@ -20,63 +20,65 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
     <Content Include="asset-chain-logo.xcf" />
-    <Content Include="img\asset-chain-logo.png" />
-    <Content Include="index.html" />
-    <Content Include="app.css" />
-    <TypeScriptCompile Include="app.ts" />
-    <Compile Include="app.js" />
-    <Content Include="css\app.css" />
-    <Content Include="css\bootstrap.css" />
-    <Content Include="css\bootstrap.min.css" />
-    <Content Include="css\sb-admin-2.css" />
-    <Content Include="fonts\glyphicons-halflings-regular.svg" />
-    <Compile Include="js\bootstrap.js" />
-    <Compile Include="js\bootstrap.min.js" />
-    <Compile Include="js\jquery.js" />
-    <Compile Include="js\sb-admin-2.js" />
-    <Content Include="css\plugins\dataTables.bootstrap.css" />
-    <Content Include="css\plugins\morris.css" />
-    <Content Include="css\plugins\social-buttons.css" />
-    <Content Include="css\plugins\timeline.css" />
-    <Content Include="css\plugins\metisMenu\metisMenu.css" />
-    <Content Include="css\plugins\metisMenu\metisMenu.min.css" />
-    <Content Include="font-awesome-4.1.0\css\font-awesome.css" />
-    <Content Include="font-awesome-4.1.0\css\font-awesome.min.css" />
-    <Content Include="font-awesome-4.1.0\fonts\fontawesome-webfont.svg" />
-    <Compile Include="js\plugins\dataTables\dataTables.bootstrap.js" />
-    <Compile Include="js\plugins\dataTables\jquery.dataTables.js" />
-    <Compile Include="js\plugins\flot\excanvas.min.js" />
-    <Compile Include="js\plugins\flot\flot-data.js" />
-    <Compile Include="js\plugins\flot\jquery.flot.js" />
-    <Compile Include="js\plugins\flot\jquery.flot.pie.js" />
-    <Compile Include="js\plugins\flot\jquery.flot.resize.js" />
-    <Compile Include="js\plugins\flot\jquery.flot.tooltip.min.js" />
-    <Compile Include="js\plugins\metisMenu\metisMenu.js" />
-    <Compile Include="js\plugins\metisMenu\metisMenu.min.js" />
-    <Compile Include="js\plugins\morris\morris-data.js" />
-    <Compile Include="js\plugins\morris\morris.js" />
-    <Compile Include="js\plugins\morris\morris.min.js" />
-    <Compile Include="js\plugins\morris\raphael.min.js" />
+    <Content Include="client\img\asset-chain-logo.png" />
+    <Content Include="client\index.html" />
+    <TypeScriptCompile Include="client\app.ts" />
+    <Compile Include="client\app.js" />
+    <Content Include="client\css\app.css" />
+    <Content Include="client\css\bootstrap.css" />
+    <Content Include="client\css\bootstrap.min.css" />
+    <Content Include="client\css\sb-admin-2.css" />
+    <Content Include="client\fonts\glyphicons-halflings-regular.svg" />
+    <Compile Include="client\js\bootstrap.js" />
+    <Compile Include="client\js\bootstrap.min.js" />
+    <Compile Include="client\js\jquery.js" />
+    <Compile Include="client\js\sb-admin-2.js" />
+    <Content Include="client\css\plugins\dataTables.bootstrap.css" />
+    <Content Include="client\css\plugins\morris.css" />
+    <Content Include="client\css\plugins\social-buttons.css" />
+    <Content Include="client\css\plugins\timeline.css" />
+    <Content Include="client\css\plugins\metisMenu\metisMenu.css" />
+    <Content Include="client\css\plugins\metisMenu\metisMenu.min.css" />
+    <Content Include="client\font-awesome-4.1.0\css\font-awesome.css" />
+    <Content Include="client\font-awesome-4.1.0\css\font-awesome.min.css" />
+    <Content Include="client\font-awesome-4.1.0\fonts\fontawesome-webfont.svg" />
+    <Compile Include="client\js\plugins\dataTables\dataTables.bootstrap.js" />
+    <Compile Include="client\js\plugins\dataTables\jquery.dataTables.js" />
+    <Compile Include="client\js\plugins\flot\excanvas.min.js" />
+    <Compile Include="client\js\plugins\flot\flot-data.js" />
+    <Compile Include="client\js\plugins\flot\jquery.flot.js" />
+    <Compile Include="client\js\plugins\flot\jquery.flot.pie.js" />
+    <Compile Include="client\js\plugins\flot\jquery.flot.resize.js" />
+    <Compile Include="client\js\plugins\flot\jquery.flot.tooltip.min.js" />
+    <Compile Include="client\js\plugins\metisMenu\metisMenu.js" />
+    <Compile Include="client\js\plugins\metisMenu\metisMenu.min.js" />
+    <Compile Include="client\js\plugins\morris\morris-data.js" />
+    <Compile Include="client\js\plugins\morris\morris.js" />
+    <Compile Include="client\js\plugins\morris\morris.min.js" />
+    <Compile Include="client\js\plugins\morris\raphael.min.js" />
     <TypeScriptCompile Include="typings\eth.d.ts" />
     <TypeScriptCompile Include="typings\google.maps.d.ts" />
   </ItemGroup>
   <ItemGroup>
-    <Folder Include="css" />
-    <Folder Include="css\plugins" />
-    <Folder Include="css\plugins\metisMenu" />
-    <Folder Include="font-awesome-4.1.0" />
-    <Folder Include="font-awesome-4.1.0\css" />
-    <Folder Include="font-awesome-4.1.0\fonts" />
-    <Folder Include="font-awesome-4.1.0\less" />
-    <Folder Include="font-awesome-4.1.0\scss" />
-    <Folder Include="fonts" />
-    <Folder Include="img\" />
-    <Folder Include="js" />
-    <Folder Include="js\plugins" />
-    <Folder Include="js\plugins\dataTables" />
-    <Folder Include="js\plugins\flot" />
-    <Folder Include="js\plugins\metisMenu" />
-    <Folder Include="js\plugins\morris" />
+    <Folder Include="client\css\" />
+    <Folder Include="client\css\plugins\" />
+    <Folder Include="client\css\plugins\metisMenu\" />
+    <Folder Include="client\plugins\" />
+    <Folder Include="client\plugins\metisMenu\" />
+    <Folder Include="client\font-awesome-4.1.0\" />
+    <Folder Include="client\font-awesome-4.1.0\css\" />
+    <Folder Include="client\font-awesome-4.1.0\fonts\" />
+    <Folder Include="client\font-awesome-4.1.0\less\" />
+    <Folder Include="client\font-awesome-4.1.0\scss\" />
+    <Folder Include="client\fonts\" />
+    <Folder Include="client\img\" />
+    <Folder Include="client\js\" />
+    <Folder Include="client\js\plugins\" />
+    <Folder Include="client\js\plugins\dataTables\" />
+    <Folder Include="client\js\plugins\flot\" />
+    <Folder Include="client\js\plugins\metisMenu\" />
+    <Folder Include="client\js\plugins\morris\" />
+    <Folder Include="client\" />
     <Folder Include="typings\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
