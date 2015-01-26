@@ -28,7 +28,6 @@
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
     <TypeScriptCompile Include="client\app.ts" />
-    <Compile Include="client\app.js" />
     <Content Include="client\css\app.css" />
     <Content Include="client\css\bootstrap.css" />
     <Content Include="client\css\bootstrap.min.css" />

@@ -1,5 +1,5 @@
-﻿/// <reference path="typings/google.maps.d.ts" />
-/// <reference path="typings/eth.d.ts" />
+﻿/// <reference path="../typings/google.maps.d.ts" />
+/// <reference path="../typings/eth.d.ts" />
 
 // The map UX component
 var map: google.maps.Map;
