@@ -8,10 +8,10 @@ module AssetChain {
 
     assetChainApp.config(function ($routeProvider, $locationProvider) {
         $routeProvider
-            .when('/', { controller: AssetListController, templateUrl: 'partials/asset-list.html' })
-            .when('/asset/list', { controller: AssetListController, templateUrl: 'partials/asset-list.html' })
-            .when('/asset/register', { controller: RegisterAssetController, templateUrl: '/partials/register-asset.html' })
-            .when('/not-found', { templateUrl: '/partials/not-found.html' })
+            .when('/', { controller: AssetListController, templateUrl: 'views/asset-list.html' })
+            .when('/asset/list', { controller: AssetListController, templateUrl: 'views/asset-list.html' })
+            .when('/asset/register', { controller: RegisterAssetController, templateUrl: '/views/register-asset.html' })
+            .when('/not-found', { templateUrl: '/views/not-found.html' })
             .otherwise({ redirectTo: 'not-found' })
         $locationProvider.html5Mode(false)
     })
