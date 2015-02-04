@@ -1,5 +1,4 @@
-/// <reference path="typings/google.maps.d.ts" />
-/// <reference path="typings/eth.d.ts" />
+/// <reference path="_all-references.ts" />
 // The map UX component
 var map;
 var AllPropertiesMap;
@@ -29,12 +28,12 @@ function InitializeUserExperience() {
     var linkNewClaim = document.getElementById('register-asset-link');
     var linkVerifyAsset = document.getElementById('verify-asset-link');
     var linkTransferAsset = document.getElementById('transfer-asset-link');
-    var linkAllProperties = document.getElementById('all-properties-link');
-    var allProperties = document.getElementById('all-properties');
+    //var linkAllProperties = document.getElementById('all-properties-link');
+    //var allProperties = document.getElementById('all-properties');
     var panelNewClaim = document.getElementById('new-claim-form');
     DisplayElement(myProperties, !IsAdminUser());
-    DisplayElement(allProperties, IsAdminUser());
-    DisplayElement(linkAllProperties, IsAdminUser());
+    //DisplayElement(allProperties, IsAdminUser());
+    //DisplayElement(linkAllProperties, IsAdminUser());
     DisplayElement(linkMyAssets, !IsAdminUser());
     DisplayElement(linkNewClaim, !IsAdminUser());
     // New claim panel always hidden at first
@@ -47,6 +46,8 @@ function InitializeUserExperience() {
     }
 }
 function DisplayElement(element, show) {
+    if (element == null)
+        throw new Error("element is null");
     if (!show) {
         element.style.display = "none";
     }
@@ -247,13 +248,13 @@ function SubmitNewClaim() {
 }
 window.onload = function () {
     InitializeUserExperience();
-    if (IsAdminUser())
-        initializeAllPropertiesMap();
-    else
-        initializeMyPropertiesMap();
+    //if (IsAdminUser())
+    //    initializeAllPropertiesMap();
+    //else
+    //    initializeMyPropertiesMap();
     // TODO: handle "my properties" to show only properties of the user.
     // TODO: introduce AngularJS, split everything up in views and controllers
     // ... or keep it out to reduce dependencies
-    ShowAllProperties();
+    //ShowAllProperties();
 };
-//# sourceMappingURL=app.js.map
+//# sourceMappingURL=app-no-angular.js.map

@@ -2,7 +2,7 @@
 <html lang="en">
 
 <head>
-
+    <base href="/">
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -64,7 +64,7 @@
 
 <body>
 
-    <div id="wrapper">
+    <div id="wrapper" ng-app="assetChainApp">
 
         <!-- Navigation -->
         <nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0">
@@ -136,7 +136,7 @@
             <!-- /.navbar-static-side -->
         </nav>
 
-        <div id="page-wrapper">
+        <div id="page-wrapper" >
             <div class="row">
                 <div class="col-lg-12">
                     <h1 class="page-header" id="page-header">My assets</h1>
@@ -146,178 +146,12 @@
             <!-- /.row -->
             <div class="row" id="my-properties">
                 <div class="col-lg-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-home fa-fw"></i> Asset list
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="well well-transparent">
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <h3>Rolex Platinum Pearlmaster</h3>
-                                                <p>Jewelry - Watch</p>
-
-                                                <img src="img/assets/rolex-platinum-pearlmaster.jpg" class="img-responsive img-rounded" style="margin-bottom: 1em;">
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="row">
-                                                    <div class="col-lg-12">
-                                                        <div class="panel panel-default">
-                                                            <div class="panel-heading">
-                                                                <i class="fa fa-lock"></i> Secured on:
-                                                            </div>
-                                                            <div class="panel-body">
-                                                                <div class="row">
-                                                                    <div class="col-lg-4" style="padding-bottom: 1em;">
-
-                                                                        <p><img src="img/backends/counterparty-logo.png" /> Counterparty </p>
-                                                                        <button type="button" class="btn btn-primary"><i class="fa fa-search"></i> View transaction</button>
-                                                                    </div>
-                                                                    <div class="col-lg-4" style="padding-bottom: 1em;">
-                                                                        <p><img src="img/backends/ethereum-logo.png" /> Ethereum</p>
-                                                                        <button type="button" class="btn btn-primary"><i class="fa fa-search"></i> View transaction</button>
-                                                                    </div>
-
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-lg-12">
-                                                        <div class="btn-group">
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-clock-o"></i> Show history</button>
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-mail-forward fa-fw"></i> Transfer</button>
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-check fa-fw"></i> Verification call</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-12">
-                                    <div class="well well-transparent">
-                                        <div class="row">
-                                            <div class="col-lg-6">
-                                                <h3>Rolex Submariner for Cartier</h3>
-                                                <p>Jewelry - Watch</p>
-                                                <img src="img/assets/rolex-submariner-for-cartier.jpg" class="img-responsive img-rounded" style="margin-bottom: 1em;">
-                                            </div>
-                                            <div class="col-lg-6">
-                                                <div class="row">
-                                                    <div class="col-lg-12">
-                                                        <div class="panel panel-default">
-                                                            <div class="panel-heading">
-                                                                <i class="fa fa-lock"></i> Secured on:
-                                                            </div>
-                                                            <div class="panel-body">
-                                                                <div class="row">
-                                                                    <div class="col-lg-4" style="padding-bottom: 1em;">
-                                                                        <p><img src="img/backends/coinprism-logo.png" /> Coinprism </p>
-                                                                        <button type="button" class="btn btn-primary"><i class="fa fa-search"></i> View transaction</button>
-                                                                    </div>
-                                                                    <div class="col-lg-4" style="padding-bottom: 1em;">
-                                                                        <p><img src="img/backends/ethereum-logo.png" /> Ethereum</p>
-                                                                        <button type="button" class="btn btn-primary"><i class="fa fa-search"></i> View transaction</button>
-                                                                    </div>
-                                                                </div>
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                    <div class="col-lg-12">
-                                                        <div class="btn-group">
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-clock-o"></i> Show history</button>
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-mail-forward fa-fw"></i> Transfer</button>
-                                                            <button type="button" class="btn btn-primary"><i class="fa fa-check fa-fw"></i> Verification call</button>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- /.col-lg-4 (nested) -->
-                            <!--<div class="col-lg-8">
-                                <div class="panel panel-default">
-                                    <div id="single-property-map"></div>
-                                </div>
-                            </div>-->
-                            <!-- /.col-lg-8 (nested) -->
-                        </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
+                    <div ng-view></div>
                 </div>
                 <!-- /.col-lg-12 -->
             </div>
             <!-- /.row -->
-            <div class="row" id="all-properties">
-                <div class="col-lg-12">
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-home fa-fw"></i> All assets
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <div class="row">
-                                <div class="col-lg-4">
-                                    <div class="table-responsive">
-                                        <table class="table table-bordered table-hover table-striped">
-                                            <thead>
-                                                <tr>
-                                                    <th>Address</th>
-                                                    <th>Date of registration</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody>
-                                                <tr>
-                                                    <td>Kalverstraat 10A</td>
-                                                    <td>2014-11-03</td>
-                                                </tr>
-                                                <tr>
-                                                    <td>Nieuwendijk 134</td>
-                                                    <td>2014-11-01</td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                    <!-- /.table-responsive -->
-                                </div>
-                                <!-- /.col-lg-4 (nested) -->
-                                <div class="col-lg-8">
-                                    <div class="panel panel-default">
-                                        <div id="all-properties-map"></div>
-                                    </div>
-                                </div>
-                                <!-- /.col-lg-8 (nested) -->
-
-                            </div>
-                            <!-- /.row -->
-                        </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-                    <div class="panel panel-default">
-                        <div class="panel-heading">
-                            <i class="fa fa-bar-chart-o fa-fw"></i> Timeline
-                        </div>
-                        <!-- /.panel-heading -->
-                        <div class="panel-body">
-                            <div id="morris-area-chart"></div>
-                        </div>
-                        <!-- /.panel-body -->
-                    </div>
-                    <!-- /.panel -->
-
-                </div>
-                <!-- /.col-lg-12 -->
-
-            </div>
+            
             <div class="row" id="new-claim-form">
                 <div class="col-lg-12">
                     <div class="panel panel-default">
@@ -374,25 +208,26 @@
     </div>
     <!-- /#wrapper -->
     <!-- jQuery -->
-    <script src="js/jquery.js"></script>
+    <script src="js/vendor/jquery.js"></script>
 
     <!-- Bootstrap Core JavaScript -->
-    <script src="js/bootstrap.min.js"></script>
+    <script src="js/vendor/bootstrap.min.js"></script>
 
     <!-- Metis Menu Plugin JavaScript -->
     <script src="js/plugins/metisMenu/metisMenu.min.js"></script>
 
-    <!-- Morris Charts JavaScript -->
-    <script src="js/plugins/morris/raphael.min.js"></script>
-    <script src="js/plugins/morris/morris.min.js"></script>
-    <script src="js/plugins/morris/morris-data.js"></script>
-
     <!-- Custom Theme JavaScript -->
-    <script src="js/sb-admin-2.js"></script>
+    <script src="js/vendor/sb-admin-2.js"></script>
 
     <script type="text/javascript" src="http://maps.googleapis.com/maps/api/js"></script>
 
-    <script type="text/javascript" src="app.js"></script>
+    <script src="js/vendor/angularjs-1.3.1-rc.1/angular.min.js"></script>
+    <script src="js/vendor/angularjs-1.3.1-rc.1/angular-resource.min.js"></script>
+    <script src="js/vendor/angularjs-1.3.1-rc.1/angular-route.min.js"></script>
+
+    <script type="text/javascript" src="js/app-no-angular.js"></script>
+    <script type="text/javascript" src="js/controllers.js"></script>
+    <script type="text/javascript" src="js/app.js"></script>
 
 </body>
 
