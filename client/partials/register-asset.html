@@ -1,0 +1,56 @@
+﻿<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header" id="page-header">Register a new asset</h1>
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<div class="row" id="new-claim-form">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-globe fa-fw"></i> Register new asset
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-4">
+                    </div>
+                    <!-- /.table-responsive -->
+                </div>
+                <!-- /.col-lg-4 (nested) -->
+                <div class="col-lg-8">
+                    <div>
+                        <form role="form">
+                            <div class="form-group">
+                                <label>Class</label>
+                                <p class="help-block">Choose the class that best describes your asset.</p>
+                                <select>
+                                    <optgroup label="Jewelry"><option>Watch</option><option>Necklace</option></optgroup>
+                                    <optgroup label="Art"><option>Painting</option><option>Sculpture</option></optgroup>
+                                </select>
+                                <!--<p>Latitude:</p><input class="form-control" id="latitude" name="latitude" disabled>
+                                <p>Longitude:</p><input class="form-control" id="longitude" name="longitude" disabled>-->
+                            </div>
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input class="form-control" name="street-address" id="street-address-input">
+                                <p class="help-block">Give a descriptive name for your new asset.</p>
+                            </div>
+                            <div class="form-group">
+                                <label>Comments</label>
+                                <textarea class="form-control" name="comments" id="comments-input"></textarea>
+                                <p class="help-block">Add any comments describing the item.</p>
+                            </div>
+                            <button class="pull-right btn btn-primary" onclick="SubmitNewClaim(); return false;">Start registration</button>
+                        </form>
+                    </div>
+                </div>
+                <!-- /.col-lg-8 (nested) -->
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->

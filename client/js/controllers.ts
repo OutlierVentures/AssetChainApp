@@ -4,6 +4,7 @@ function DashboardController($scope, $location, $http, $routeParams, AssetsServi
 }
 
 function AssetListController($scope, $location, $http, $routeParams, AssetsService) {
+    // Local example data.
     // TODO: get from backend
     $scope.assets = [
         {
@@ -60,5 +61,36 @@ function AssetListController($scope, $location, $http, $routeParams, AssetsServi
             name: "Diamond 1ct",
             category: "Jewelry/Precious stones",
         }
+    ];
+}
+
+function RegisterAssetController() {
+}
+
+/**
+ * Controller for the navigation bar (top and left).
+ */
+function NavigationController($scope, $location, $http, $routeParams, AssetsService) {
+    $scope.menuItems = [
+        {
+            name: "My assets",
+            url: "asset/list",
+            icon: "list",
+        },
+        {
+            name: "Register new asset",
+            url: "asset/register",
+            icon: "plus-circle",
+        },
+        {
+            name: "Verify assets",
+            url: "asset/verify",
+            icon: "check",
+        },
+        {
+            name: "Transfer assets",
+            url: "asset/transfer",
+            icon: "mail-forward",
+        },
     ];
 }
