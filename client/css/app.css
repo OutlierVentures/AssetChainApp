@@ -23,3 +23,34 @@
 .well-transparent {
     background-color: rgba(245, 245, 245, 0.1);
 }
+
+
+/* BEGIN overrides of SB Admin */
+
+/* We use the top-level #wrapper id to make the declarations more specific than the
+    ones in sb-admin-2.css and hence have preference.
+*/
+
+#wrapper .navbar-top-links .dropdown-messages {
+    margin-left: auto;
+}
+
+#wrapper .navbar-top-links .dropdown-tasks {
+    margin-left: auto;
+}
+
+#wrapper .navbar-top-links .dropdown-alerts {
+    margin-left: auto;
+}
+
+#wrapper .navbar-top-links .dropdown-user {
+    left: 0;
+}
+
+@media(min-width:768px) {
+    #wrapper .navbar-top-links .dropdown-user {
+        left: auto;
+    }
+}
+
+/* END overrides of SB Admin 2 */

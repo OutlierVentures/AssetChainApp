@@ -11,7 +11,32 @@
     </div>
     <!-- /.navbar-header -->
 
-    <ul class="nav navbar-top-links navbar-right">
+    <ul class="nav navbar-top-links navbar-right" ng-controller="NotificationController">
+        <li class="dropdown">
+            <a class="dropdown-toggle" data-toggle="dropdown">
+                <i class="fa fa-bell fa-fw"></i>  <i class="fa fa-caret-down"></i>
+            </a>
+            <ul class="dropdown-menu dropdown-alerts">
+                <li ng-repeat-start="notification in latestNotifications">
+                    <a href="#/{{notification.url}}">
+                        <div>
+                            <i class="fa fa-{{notification.icon || 'comment' }} fa-fw"></i> {{notification.title}}
+                            <span class="pull-right text-muted small" am-time-ago="notification.date"></span>
+                            <p class="small" ng-bind-html="notification.details"></p>
+                        </div>
+                    </a>
+                </li>
+                <li class="divider" ng-repeat-end></li>
+                <li>
+                    <a class="text-center" href="#/user/notifications">
+                        <strong>See all notifications</strong>
+                        <i class="fa fa-angle-right"></i>
+                    </a>
+                </li>
+            </ul>
+            <!-- /.dropdown-alerts -->
+        </li>
+        <!-- /.dropdown -->
         <li class="dropdown">
             <a class="dropdown-toggle" data-toggle="dropdown" href="#">
                 <i class="fa fa-user fa-fw"></i>  <i class="fa fa-caret-down"></i>
