@@ -41,12 +41,30 @@
                                                 </div>
                                             </div>
                                         </div>
+                                        <!--<div ng-show="{{asset.verifications}}" class="col-lg-12">
+                                            <div class="panel panel-default">
+                                                <div class="panel-heading">
+                                                    <i class="fa fa-check"></i> Verified by:
+                                                </div>
+                                                <div class="panel-body">
+                                                    <div class="row">
+                                                        <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
+                                                            <p>{{verification.name}} </p>
+                                                            <p class="small">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
+                                                            <p>{{verification.address}}</p>
+
+                                                            <a ng-hide="verification.url == null" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>-->   
                                         <div class="col-lg-12">
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-primary"><i class="fa fa-clock-o"></i> Show history</button>
-                                                <button type="button" class="btn btn-primary"><i class="fa fa-mail-forward fa-fw"></i> Transfer</button>
-                                                <button type="button" class="btn btn-primary"><i class="fa fa-check fa-fw"></i> Ownership verification</button>
-                                                <button type="button" class="btn btn-primary"><i class="fa fa-check fa-fw"></i> Expert verification</button>
+                                                <a class="btn btn-primary" href="#/asset/{{asset.id}}"><i class="fa fa-clock-o"></i> Show history</a>
+                                                <a class="btn btn-primary" href="#/transfer/{{asset.id}}"><i class="fa fa-mail-forward fa-fw"></i> Transfer</a>
+                                                <a class="btn btn-primary" href="#/verify/ownership/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Ownership verification</a>
+                                                <a class="btn btn-primary" href="#/verify/expert/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Expert verification</a>
                                             </div>
                                         </div>
                                     </div>

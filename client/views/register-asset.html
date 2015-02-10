@@ -20,12 +20,12 @@
                 <!-- /.col-lg-4 (nested) -->
                 <div class="col-lg-8">
                     <div>
-                        <form role="form">
+                        <form role="form" name="assetform" novalidate>
                             <div class="form-group">
                                 <label>Class</label>
                                 <p class="help-block">Choose the class that best describes your asset.</p>
-                                <select>
-                                    <optgroup label="Jewelry"><option>Watch</option><option>Necklace</option></optgroup>
+                                <select ng-model="asset.category" required>
+                                    <optgroup label="Jewelry"><option>Watch</option><option>Necklace</option><option>Diamond</option></optgroup>
                                     <optgroup label="Art"><option>Painting</option><option>Sculpture</option></optgroup>
                                 </select>
                                 <!--<p>Latitude:</p><input class="form-control" id="latitude" name="latitude" disabled>
@@ -33,15 +33,17 @@
                             </div>
                             <div class="form-group">
                                 <label>Name</label>
-                                <input class="form-control" name="street-address" id="street-address-input">
+                                <input class="form-control" name="name" ng-model="asset.name" required>
                                 <p class="help-block">Give a descriptive name for your new asset.</p>
                             </div>
                             <div class="form-group">
                                 <label>Comments</label>
-                                <textarea class="form-control" name="comments" id="comments-input"></textarea>
+                                <textarea class="form-control" name="comments" ng-model="asset.comments"></textarea>
                                 <p class="help-block">Add any comments describing the item.</p>
                             </div>
-                            <button class="pull-right btn btn-primary" onclick="SubmitNewClaim(); return false;">Start registration</button>
+                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid" class="btn btn-primary">
+                                Register asset
+                            </button>                            
                         </form>
                     </div>
                 </div>

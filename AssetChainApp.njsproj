@@ -84,6 +84,8 @@
     <Content Include="client\views\dashboard.html" />
     <Content Include="client\views\navbar.html" />
     <Content Include="client\views\not-found.html" />
+    <Content Include="client\views\verify-expert.html" />
+    <Content Include="client\views\transfer-asset.html" />
     <Content Include="client\views\register-asset.html" />
     <TypeScriptCompile Include="client\js\app-no-angular.ts" />
     <Content Include="client\css\app.css" />

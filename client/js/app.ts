@@ -13,6 +13,8 @@ module AssetChain {
             .when('/asset/list', { controller: AssetListController, templateUrl: 'views/asset-list.html' })
             .when('/asset/register', { controller: RegisterAssetController, templateUrl: '/views/register-asset.html' })
             .when('/asset/:id', { controller: SingleAssetController, templateUrl: '/views/asset-details.html' })
+            .when('/transfer/:id', { controller: TransferAssetController, templateUrl: '/views/transfer-asset.html' })
+            .when('/verify/expert/:id', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: '/views/notifications.html' })
             .when('/not-found', { templateUrl: '/views/not-found.html' })
             .otherwise({ redirectTo: 'not-found' })
@@ -79,7 +81,15 @@ module AssetChain {
                                 transactionUrl: "http://blockscan.com/txInfo/11545830"
                             }
                         ]
-                    }
+                    },
+                    verifications: [
+                        {
+                            name: "Watches of Switzerland",
+                            address: "61 Brompton Road, London, London, SW3 1B, United Kingdom",
+                            date: '2015-01-13 15:34',
+                        }
+                        ]
+
                 },
                 {
                     id: "4",
@@ -106,11 +116,59 @@ module AssetChain {
 
             // TODO: replace by $resource.
             cb({
-                content: _(assets).find(function (asset) {
+                content: _(assets).find(function (asset: Asset) {
                     return asset.id === params["id"]
                 })
             });
         }
+
+        /**
+         * Update or add an asset.
+         * params: the asset data. When ID is not present, a new item is created.
+         */
+        this.save = function (asset: Asset, cb) {
+            if (asset.id === undefined)
+                this.create(asset, cb);
+            else
+                this.update(asset, cb);
+        };
+
+        this.create = function (asset: Asset, cb) {
+            asset.id = guid();
+            assets.push(asset)
+            cb({ content: asset });
+        };
+
+        this.update = function (updatedAsset: Asset, cb) {
+            var currentAsset = _(assets).find(function (asset: Asset) { return asset.id === updatedAsset.id });
+            currentAsset = _(currentAsset).extend(updatedAsset);
+            cb({ content: updatedAsset });
+        };
+
     });
 
+}
+
+
+var guid = (function () {
+    function s4() {
+        return Math.floor((1 + Math.random()) * 0x10000)
+            .toString(16)
+            .substring(1);
+    }
+    return function () {
+        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+            s4() + '-' + s4() + s4() + s4();
+    };
+})();
+
+/**
+ * Class representing an asset (to be) registered on AssetChain.
+ */
+class Asset {
+    id: string;
+    name: string;
+    category: string;
+    comments: string;
+    IsPendingClaim: boolean = true;
 }

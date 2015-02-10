@@ -3,6 +3,20 @@ function DashboardController($scope, $location, $http, $routeParams, AssetsServi
 
 }
 
+function ExpertVerificationController($scope, $location, $http, $routeParams, AssetsService) {
+    var asset_id = $routeParams.id;
+    AssetsService.get({ id: asset_id }, function (resp) {
+        $scope.asset = resp.content;
+    });
+}
+
+function TransferAssetController($scope, $location, $http, $routeParams, AssetsService) {
+    var asset_id = $routeParams.id;
+    AssetsService.get({ id: asset_id }, function (resp) {
+        $scope.asset = resp.content;
+    });
+}
+
 function AssetListController($scope, $location, $http, $routeParams, AssetsService) {
     $scope.assets = AssetsService.getAll();
 }
@@ -14,7 +28,14 @@ function SingleAssetController($scope, $location, $http, $routeParams, AssetsSer
     });
 }
 
-function RegisterAssetController() {
+function RegisterAssetController($scope, $location, $http, $routeParams, AssetsService) {
+    $scope.save = function () {
+        AssetsService.save($scope.asset, function (resp) {
+            // Redirect to the new asset page.
+            $location.path('/asset/' + resp.content.id);
+        });
+        
+    }
 }
 
 /**
@@ -50,7 +71,7 @@ function NotificationController($scope, $location, $http, $routeParams, AssetsSe
     var exampleDate: string;
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
-    
+
 
     $scope.notifications = [
         {

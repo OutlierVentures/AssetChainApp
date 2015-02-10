@@ -31,17 +31,6 @@ function GetMyAddress(): string {
 // Address for the assets contract. Update after (re-)creating the contract.
 var contractAddress = "0x" + "6a75a18c0de9952a11ab66228d4ad9694651d22b";
 
-/**
- * Class representing a (pending) claimed property.
- */
-class Asset {
-    OwnerAddress: string;
-    Index: number;
-    Name: string;
-    Comments: string;
-    IsPendingClaim: boolean = true;
-}
-
 // Extend the basic Number type with a pad() function for use with Ethereum contract interaction.
 interface Number {
     pad(size: number): string;
@@ -72,13 +61,13 @@ function ToBoolean(contractStateValue: string): boolean {
 function GetPropertyAt(stateIndex: number): Asset {
     var p = new Asset();
 
-    p.OwnerAddress = GetPropertyStateValue(stateIndex, 1);
-    if (p.OwnerAddress == null)
+    p.category = GetPropertyStateValue(stateIndex, 1);
+    if (p.category == null)
         return null; // No property exists at this index.
 
-    p.Index = stateIndex;
-    p.Name = eth.toAscii(GetPropertyStateValue(stateIndex, 4));
-    p.Comments = eth.toAscii(GetPropertyStateValue(stateIndex, 5));
+    p.id = stateIndex;
+    p.name = eth.toAscii(GetPropertyStateValue(stateIndex, 4));
+    //p.Comments = eth.toAscii(GetPropertyStateValue(stateIndex, 5));
     p.IsPendingClaim = ToBoolean(GetPropertyStateValue(stateIndex, 6));
 
     return p;
