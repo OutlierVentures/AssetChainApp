@@ -4,3 +4,4 @@
 /// <reference path="libs/google/google.maps.d.ts" />
 /// <reference path="libs/ethereum/eth.d.ts" />
 /// <reference path="vendor/moment/moment.d.ts" />
+/// <reference path="vendor/underscore/underscore.d.ts" />

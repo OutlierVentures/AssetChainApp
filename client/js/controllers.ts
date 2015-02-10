@@ -4,67 +4,14 @@ function DashboardController($scope, $location, $http, $routeParams, AssetsServi
 }
 
 function AssetListController($scope, $location, $http, $routeParams, AssetsService) {
-    // Local example data.
-    // TODO: get from backend
-    $scope.assets = [
-        {
-            id: 3,
-            name: "Rolex Platinum Pearlmaster",
-            category: "Jewelry/Watch",
-            images: [
-                {
-                    location: "local",
-                    fileName: "rolex-platinum-pearlmaster.jpg",
-                },
-                {
-                    location: "local",
-                    fileName: "rolex-platinum-pearlmaster-closeup.png",
-                },
-            ],
-            securedOn: {
-                name: "Premium security",
-                ledgers:
-                [
-                    {
-                        name: "Counterparty",
-                        logoImageFileName: "counterparty-logo.png",
-                        transactionUrl: "http://blockscan.com/txInfo/11570794"
-                    },
-                    {
-                        name: "Ethereum",
-                        logoImageFileName: "ethereum-logo.png",
-                    }
-                ]
-            }
-        },
-        {
-            id: 2,
-            name: "Rolex Submariner for Cartier",
-            category: "Jewelry/Watch",
-            images: [
-                {
-                    location: "local",
-                    fileName: "rolex-submariner-for-cartier.jpg",
-                }
-            ],
-            securedOn: {
-                name: "Premium security",
-                ledgers:
-                [
-                    {
-                        name: "Counterparty",
-                        logoImageFileName: "counterparty-logo.png",
-                        transactionUrl: "http://blockscan.com/txInfo/11545830"
-                    }
-                ]
-            }
-        },
-        {
-            id: 4,
-            name: "Diamond 1ct",
-            category: "Jewelry/Precious stones",
-        }
-    ];
+    $scope.assets = AssetsService.getAll();
+}
+
+function SingleAssetController($scope, $location, $http, $routeParams, AssetsService) {
+    var asset_id = $routeParams.id;
+    AssetsService.get({ id: asset_id }, function (resp) {
+        $scope.asset = resp.content;
+    });
 }
 
 function RegisterAssetController() {
@@ -87,12 +34,12 @@ function NavigationController($scope, $location, $http, $routeParams, AssetsServ
         },
         {
             name: "Verify assets",
-            url: "asset/verify",
+            url: "verify",
             icon: "check",
         },
         {
             name: "Transfer assets",
-            url: "asset/transfer",
+            url: "transfer",
             icon: "mail-forward",
         },
     ];
