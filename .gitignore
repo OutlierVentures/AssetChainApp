@@ -187,3 +187,11 @@ FakesAssemblies/
 GeneratedArtifacts/
 _Pvt_Extensions/
 ModelManifest.xml
+/client/js/app.js
+/client/js/app.js.map
+/client/js/controllers.js
+/client/js/controllers.js.map
+/client/js/_all-references.js
+/client/js/_all-references.js.map
+/client/js/app-no-angular.js.map
+/.ntvs_analysis.dat
