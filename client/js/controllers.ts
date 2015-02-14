@@ -5,6 +5,21 @@ function DashboardController($scope, $location, $http, $routeParams, AssetsServi
 
 function ExpertVerificationController($scope, $location, $http, $routeParams, AssetsService) {
     var asset_id = $routeParams.id;
+
+    // Dummy data.
+    // TODO: get expert near user
+    // TODO: provide search interface
+    $scope.expertsByLocation = [{
+        name: "London",
+        experts: [
+            {
+                name: "The Watch Gallery (Rolex Boutique)"
+            },
+            {
+                name: "Watches of Switzerland"
+            }]
+    }];
+
     AssetsService.get({ id: asset_id }, function (resp) {
         $scope.asset = resp.content;
     });
@@ -34,7 +49,7 @@ function RegisterAssetController($scope, $location, $http, $routeParams, AssetsS
             // Redirect to the new asset page.
             $location.path('/asset/' + resp.content.id);
         });
-        
+
     }
 }
 
