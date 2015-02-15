@@ -58,7 +58,7 @@ function GetPropertyAt(stateIndex) {
     p.category = GetPropertyStateValue(stateIndex, 1);
     if (p.category == null)
         return null; // No property exists at this index.
-    p.id = stateIndex;
+    p.id = stateIndex.toString();
     p.name = eth.toAscii(GetPropertyStateValue(stateIndex, 4));
     //p.Comments = eth.toAscii(GetPropertyStateValue(stateIndex, 5));
     p.IsPendingClaim = ToBoolean(GetPropertyStateValue(stateIndex, 6));

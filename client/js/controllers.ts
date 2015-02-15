@@ -81,13 +81,26 @@ function NavigationController($scope, $location, $http, $routeParams, AssetsServ
     ];
 }
 
+class Notification {
+    title: string;
+    date: string;
+    details: string;
+    url: string;
+    icon: string;
+    seen: boolean;
+}
 
-function NotificationController($scope, $location, $http, $routeParams, AssetsService) {
+interface NotificationScope {
+    notifications: Notification[];
+    latestNotifications: Notification[];
+}
+
+function NotificationController($scope: NotificationScope, $location, $http, $routeParams, AssetsService) {
     var exampleDate: string;
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
 
-
+    // Note: using object initializers like this requires all properties to be set.
     $scope.notifications = [
         {
             title: "Asset secured",
@@ -103,7 +116,9 @@ function NotificationController($scope, $location, $http, $routeParams, AssetsSe
             details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
             url: "asset/4",
             icon: "mail-forward",
+            seen: false,
         },
+
         {
             title: "New asset registered",
             date: '2015-01-13 12:43',
@@ -116,9 +131,11 @@ function NotificationController($scope, $location, $http, $routeParams, AssetsSe
             title: "Entered on AssetChain",
             date: '2015-01-13 19:01',
             details: "You became an AssetChain user. Be welcome!",
+            url: '',
             icon: "home",
-        },
-    ];
+            seen: false,
+        }];
 
+    // Latest notifications: get first N items.
     $scope.latestNotifications = $scope.notifications.slice(0, 3);
 }
