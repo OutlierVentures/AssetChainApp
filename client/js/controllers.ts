@@ -53,7 +53,7 @@ function RegisterAssetController($scope, $location, $http, $routeParams, assetsS
     $scope.save = function () {
         assetsService.save($scope.asset, function (resp) {
             // Redirect to the new asset page.
-            $location.path('/asset/' + resp.content.id);
+            $location.path('/asset/' + resp.id);
         });
 
     }

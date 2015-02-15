@@ -126,23 +126,24 @@ class AssetsService {
      * Update or add an asset.
      * params: the asset data. When ID is not present, a new item is created.
      */
-    save(asset: Asset, cb) {
+    save(asset: Asset, cb:SingleAssetCallback) {
         if (asset.id === undefined)
             this.create(asset, cb);
         else
             this.update(asset, cb);
     }
 
-    create(asset: Asset, cb) {
+    create(asset: Asset, cb:SingleAssetCallback) {
         asset.id = guid();
         this.assets.push(asset)
-        cb({ content: asset });
+        cb(asset);
     }
 
-    update(updatedAsset: Asset, cb) {
-        var currentAsset = _(this.assets).find(function (asset: Asset) { return asset.id === updatedAsset.id });
-        currentAsset = _(currentAsset).extend(updatedAsset);
-        cb({ content: updatedAsset });
+    update(updatedAsset: Asset, cb: SingleAssetCallback) {
+        this.get(updatedAsset.id, function (currentAsset) {
+            currentAsset = _(currentAsset).extend(updatedAsset);
+            cb(updatedAsset);
+        });        
     }
 }
 
