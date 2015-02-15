@@ -1,9 +1,13 @@
 ﻿
-function DashboardController($scope, $location, $http, $routeParams, AssetsService) {
+function DashboardController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+    // Get latest notifications
 
+    // Get all assets (not only current user)
+
+    // Get some stats/charts
 }
 
-function ExpertVerificationController($scope, $location, $http, $routeParams, AssetsService) {
+function ExpertVerificationController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     var asset_id = $routeParams.id;
 
     // Dummy data.
@@ -20,32 +24,34 @@ function ExpertVerificationController($scope, $location, $http, $routeParams, As
             }]
     }];
 
-    AssetsService.get({ id: asset_id }, function (resp) {
-        $scope.asset = resp.content;
+    assetsService.get(asset_id, function (resp) {
+        $scope.asset = resp;
     });
 }
 
-function TransferAssetController($scope, $location, $http, $routeParams, AssetsService) {
+function TransferAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     var asset_id = $routeParams.id;
-    AssetsService.get({ id: asset_id }, function (resp) {
-        $scope.asset = resp.content;
+    assetsService.get(asset_id, function (resp) {
+        $scope.asset = resp;
     });
 }
 
-function AssetListController($scope, $location, $http, $routeParams, AssetsService) {
-    $scope.assets = AssetsService.getAll();
+function AssetListController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+    assetsService.getAll(function (res) {
+        $scope.assets = res;
+    });
 }
 
-function SingleAssetController($scope, $location, $http, $routeParams, AssetsService) {
+function SingleAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     var asset_id = $routeParams.id;
-    AssetsService.get({ id: asset_id }, function (resp) {
-        $scope.asset = resp.content;
+    assetsService.get(asset_id, function (resp) {
+        $scope.asset = resp;
     });
 }
 
-function RegisterAssetController($scope, $location, $http, $routeParams, AssetsService) {
+function RegisterAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     $scope.save = function () {
-        AssetsService.save($scope.asset, function (resp) {
+        assetsService.save($scope.asset, function (resp) {
             // Redirect to the new asset page.
             $location.path('/asset/' + resp.content.id);
         });
@@ -56,7 +62,7 @@ function RegisterAssetController($scope, $location, $http, $routeParams, AssetsS
 /**
  * Controller for the navigation bar (top and left).
  */
-function NavigationController($scope, $location, $http, $routeParams, AssetsService) {
+function NavigationController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     $scope.menuItems = [
         {
             name: "My assets",
@@ -95,7 +101,7 @@ interface NotificationScope {
     latestNotifications: Notification[];
 }
 
-function NotificationController($scope: NotificationScope, $location, $http, $routeParams, AssetsService) {
+function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService : AssetsService) {
     var exampleDate: string;
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
