@@ -14,10 +14,23 @@ interface MultipleAssetCallback {
 class AssetsService {
     assets: Asset[];
 
+    backend: Storage;
+
+    constructor() {
+        this.backend = localStorage;
+
+        this.ensureAssets();
+    }    
+
     /**
      * Ensure that initial data is loaded.
      */
     ensureAssets(): void {
+        if (this.assets != null)
+            return;
+
+        this.loadDB();
+
         if (this.assets != null)
             return;
 
@@ -98,6 +111,14 @@ class AssetsService {
         ];
     }
 
+    private saveDB(): void{
+        this.backend.setItem("assets", JSON.stringify(this.assets));
+    }
+
+    private loadDB(): void {
+        this.assets = JSON.parse(this.backend.getItem("assets"));
+    }
+
     /**
      * Get all assets for the user.
      * @return all assets of the user.
@@ -126,14 +147,16 @@ class AssetsService {
      * Update or add an asset.
      * params: the asset data. When ID is not present, a new item is created.
      */
-    save(asset: Asset, cb:SingleAssetCallback) {
+    save(asset: Asset, cb: SingleAssetCallback) {
         if (asset.id === undefined)
             this.create(asset, cb);
         else
             this.update(asset, cb);
+
+        this.saveDB();
     }
 
-    create(asset: Asset, cb:SingleAssetCallback) {
+    create(asset: Asset, cb: SingleAssetCallback) {
         asset.id = guid();
         this.assets.push(asset)
         cb(asset);
@@ -143,7 +166,7 @@ class AssetsService {
         this.get(updatedAsset.id, function (currentAsset) {
             currentAsset = _(currentAsset).extend(updatedAsset);
             cb(updatedAsset);
-        });        
+        });
     }
 }
 
