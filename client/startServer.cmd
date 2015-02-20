@@ -2,7 +2,7 @@
 
 REM Serve static files within the current directory.
 
-SET PORTNUMBER=1564
+SET PORTNUMBER=1565
 
 REM We send the start command first, which returns control immediately, 
 REM then start http-server. In practice the http-server is started quickly 

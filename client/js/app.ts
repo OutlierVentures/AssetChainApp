@@ -170,6 +170,17 @@ class AssetsService {
     }
 }
 
+interface IIdentityProvider {
+    /**
+     * Get the identifier of the current user on the backend, for example 
+     */
+    getIdentifier(): string;
+}
+
+class IdentityService {
+    providers: IIdentityProvider[];
+}
+
 module AssetChain {
     'use strict';
 
@@ -194,6 +205,7 @@ module AssetChain {
     // Note: the string name provided to angular has to match the parameter names as used in the controllers,
     // case-sensitive. E.g. we can't use 'AssetsService' here and use 'assetsService' in the controllers.
     assetChainApp.service('assetsService', AssetsService);
+    assetChainApp.service('identityService', IdentityService);
 }
 
 
