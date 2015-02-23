@@ -36,10 +36,14 @@ function TransferAssetController($scope, $location, $http, $routeParams, assetsS
     });
 }
 
-function AssetListController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function AssetListController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     assetsService.getAll(function (res) {
         $scope.assets = res;
     });
+
+    $scope.reload = function() {
+        assetsService.reload();
+    }
 }
 
 function SingleAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
@@ -59,8 +63,13 @@ function RegisterAssetController($scope, $location, $http, $routeParams, assetsS
     }
 }
 
+
+function IdentityController($scope, identityService: IdentityService) {
+    
+}
+
 /**
- * Controller for the navigation bar (top and left).
+ * Controller for the navigation bars.
  */
 function NavigationController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
     $scope.menuItems = [

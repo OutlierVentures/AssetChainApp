@@ -1,5 +1,7 @@
 ﻿/// <reference path="_all-references.ts" />
 
+var CryptoJS;
+
 interface SingleAssetCallback {
     (asset: Asset);
 }
@@ -14,10 +16,12 @@ interface MultipleAssetCallback {
 class AssetsService {
     assets: Asset[];
 
-    backend: Storage;
+    backend: IStorageService;
 
     constructor() {
-        this.backend = localStorage;
+        // TODO: make storageService into a configurable, multi-backend data layer
+        // For example, assets can be stored anywhere, but their verification cannot.
+        this.backend = new LocalStorageService();
 
         this.ensureAssets();
     }    
@@ -111,12 +115,18 @@ class AssetsService {
         ];
     }
 
-    private saveDB(): void{
-        this.backend.setItem("assets", JSON.stringify(this.assets));
+    private saveDB(): void {
+        // TODO: encrypt by identityservice
+        // TODO: use a unique key for the current account
+        this.backend.SetItem("assets", this.assets);
     }
 
     private loadDB(): void {
-        this.assets = JSON.parse(this.backend.getItem("assets"));
+        this.assets = this.backend.GetItem("assets");
+    }
+
+    reload(): void {
+        this.loadDB();
     }
 
     /**
@@ -148,6 +158,8 @@ class AssetsService {
      * params: the asset data. When ID is not present, a new item is created.
      */
     save(asset: Asset, cb: SingleAssetCallback) {
+        this.ensureAssets();
+
         if (asset.id === undefined)
             this.create(asset, cb);
         else
@@ -172,13 +184,138 @@ class AssetsService {
 
 interface IIdentityProvider {
     /**
-     * Get the identifier of the current user on the backend, for example 
+     * Get the identifier of the current user on the backend, for example the Ethereum address, Counterparty
+     * wallet address, etc.
      */
-    getIdentifier(): string;
+    GetIdentifier(): string;
+
+    /**
+     * Log on at the identity backend. The provider needs to be initialized (with configuration, credentials etc)
+     * before calling Logon().
+     * @return Whether the logon attempt succeeded.
+     */
+    Logon(): boolean;
+
+    /**
+     * @return Whether the provider is currently logged on.
+     */
+    IsAuthenticated(): boolean;
+
+    /**
+     * Encrypt the given data with the private key of this identity provider.
+     */
+    Encrypt(unencryptedData: string): string;
+
+    Decrypt(encryptedData: string): string;
 }
 
+/**
+ * Identity provider for AssetChain, using encrypted local storage + cloud storage.
+ */
+class AssetChainIdentityProvider{
+    GetIdentifier(): string {
+        // TODO: implement
+        return "userID";
+    }
+
+    IsAuthenticated():boolean{
+        // TODO: implement
+        return true;
+    } 
+
+    Logon():boolean{
+        // TODO: implement
+        return true;
+    }
+
+    private GetPrivateKey(): string {
+        // TODO: use private key as user provided
+        return "abc";
+    }
+
+    Encrypt(unencryptedData: string): string{
+        return CryptoJS.AES.encrypt(unencryptedData, this.GetPrivateKey()).toString();
+    }
+
+    Decrypt(encryptedData: string): string {
+        // TODO: check for errors
+        // TODO: handle case that data is unencrypted, or encrypted with different alg
+        return CryptoJS.AES.decrypt(encryptedData, this.GetPrivateKey()).toString(CryptoJS.enc.Utf8);
+    }
+
+}
+
+interface IStorageService {
+    SetItem(key: string, val: any);
+
+    GetItem(key: string): any;
+}
+
+class LocalStorageService {
+    identityService: IdentityService;
+
+    constructor() {
+        // TODO: make configurable.
+        this.identityService = new IdentityService();
+        this.identityService.Logon(new AssetChainIdentityProvider());
+    }
+
+    SetItem(key: string, val: any) {
+        var stringVar = JSON.stringify(val);
+        stringVar = stringVar.replace(/,"\$\$hashKey":"object:\d+"/g, "");
+        stringVar = this.identityService.PrimaryProvider.Encrypt(stringVar);
+        localStorage.setItem(key, stringVar);
+    }
+
+    GetItem(key: string): any {
+        var valString: string = localStorage.getItem(key);
+        if (valString === null)
+            return null;
+
+        valString = this.identityService.PrimaryProvider.Decrypt(valString);
+
+        if (valString.indexOf("hashKey") > 0) {
+            console.log("Replacing hashKey in valstring");
+            console.log(valString);
+            valString = valString.replace(/,"\$\$hashKey":"object:\d+"/g, "");
+        }
+
+        return JSON.parse(valString);
+    }
+}
+
+/**
+ * Service managing the identity of the user on the various backends.
+ */
 class IdentityService {
-    providers: IIdentityProvider[];
+    //
+    Providers: IIdentityProvider[];
+
+    /**
+     * The main identity provider. If this is null, we're not authenticated.
+     */
+    PrimaryProvider: IIdentityProvider;
+
+    constructor() {
+        this.Providers = [];
+    }
+
+    /**
+     * Logon with this provider.
+     */
+    Logon(provider: IIdentityProvider): boolean {
+        if (!provider.Logon())
+            return false;
+        this.Providers.push(provider)
+        // The first successful provider is the primary one.
+        if (this.PrimaryProvider === undefined)
+            this.PrimaryProvider = provider;
+        return true;
+    }
+
+    IsAuthenticated(): boolean {
+        return false;
+    }
 }
 
 module AssetChain {
@@ -205,7 +342,10 @@ module AssetChain {
     // Note: the string name provided to angular has to match the parameter names as used in the controllers,
     // case-sensitive. E.g. we can't use 'AssetsService' here and use 'assetsService' in the controllers.
     assetChainApp.service('assetsService', AssetsService);
+
     assetChainApp.service('identityService', IdentityService);
+    
+    // How to get a reference to this specific service?
 }
 
 
