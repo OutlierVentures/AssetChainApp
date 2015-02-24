@@ -1,72 +1,74 @@
-﻿<div class="row">
-    <div class="col-lg-12">
-        <h1 class="page-header" id="page-header">My assets</h1>
+﻿<div ng-show="isAuthenticated()">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header" id="page-header">My assets</h1>
+        </div>
+        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.col-lg-12 -->
-</div>
-<!-- /.row -->
-<div class="row" id="my-properties">
-    <div class="col-lg-12">
-        <div class="panel panel-default">
-            <div class="panel-heading">
-                <i class="fa fa-home fa-fw"></i> Asset list
-            </div>
-            <!-- /.panel-heading -->
-            <div class="panel-body">
-                <button class="btn btn-primary" ng-click="reload()"><i class="fa fa-refresh"></i> Refresh</button>
-                <button class="btn btn-primary" ng-click="clearData()"><i class="fa fa-close"></i> Clear data</button>
-                <div ng-repeat="asset in assets track by asset.id" class="row">
-                    <div class="col-lg-12">
-                        <div class="well well-transparent">
-                            <div class="row">
-                                <div class="col-lg-6">
-                                    <h3>{{asset.name}}</h3>
-                                    <p>{{asset.category}}</p>
+    <!-- /.row -->
+    <div class="row" id="my-properties">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-home fa-fw"></i> Asset list
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <button class="btn btn-primary" ng-click="reload()"><i class="fa fa-refresh"></i> Refresh</button>
+                    <button class="btn btn-primary" ng-click="clearData()"><i class="fa fa-close"></i> Clear data</button>
+                    <div ng-repeat="asset in assets track by asset.id" class="row">
+                        <div class="col-lg-12">
+                            <div class="well well-transparent">
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <h3>{{asset.name}}</h3>
+                                        <p>{{asset.category}}</p>
 
-                                    <div ng-repeat="image in asset.images" style="display: inline-block"><img ng-src="img/assets/{{image.fileName}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;"></div>
-                                </div>
-                                <div class="col-lg-6">
-                                    <div class="row">
-                                        <div ng-show="{{asset.securedOn}}" class="col-lg-12">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading">
-                                                    <i class="fa fa-lock"></i> Secured with <strong>{{asset.securedOn.name}}</strong> on:
-                                                </div>
-                                                <div class="panel-body">
-                                                    <div class="row">
-                                                        <div ng-repeat="ledger in asset.securedOn.ledgers" class="col-lg-4" style="padding-bottom: 1em;">
-                                                            <p><img ng-src="img/backends/{{ledger.logoImageFileName}}" /> {{ledger.name}} </p>
+                                        <div ng-repeat="image in asset.images" style="display: inline-block"><img ng-src="img/assets/{{image.fileName}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;"></div>
+                                    </div>
+                                    <div class="col-lg-6">
+                                        <div class="row">
+                                            <div ng-show="{{asset.securedOn}}" class="col-lg-12">
+                                                <div class="panel panel-default">
+                                                    <div class="panel-heading">
+                                                        <i class="fa fa-lock"></i> Secured with <strong>{{asset.securedOn.name}}</strong> on:
+                                                    </div>
+                                                    <div class="panel-body">
+                                                        <div class="row">
+                                                            <div ng-repeat="ledger in asset.securedOn.ledgers" class="col-lg-4" style="padding-bottom: 1em;">
+                                                                <p><img ng-src="img/backends/{{ledger.logoImageFileName}}" /> {{ledger.name}} </p>
 
-                                                            <a ng-hide="ledger.transactionUrl == null" class="btn btn-primary" href="{{ledger.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
+                                                                <a ng-hide="ledger.transactionUrl == null" class="btn btn-primary" href="{{ledger.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
                                             </div>
-                                        </div>
-                                        <!--<div ng-show="{{asset.verifications}}" class="col-lg-12">
-                                            <div class="panel panel-default">
-                                                <div class="panel-heading">
-                                                    <i class="fa fa-check"></i> Verified by:
-                                                </div>
-                                                <div class="panel-body">
-                                                    <div class="row">
-                                                        <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
-                                                            <p>{{verification.name}} </p>
-                                                            <p class="small">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
-                                                            <p>{{verification.address}}</p>
+                                            <!--<div ng-show="{{asset.verifications}}" class="col-lg-12">
+                                                <div class="panel panel-default">
+                                                    <div class="panel-heading">
+                                                        <i class="fa fa-check"></i> Verified by:
+                                                    </div>
+                                                    <div class="panel-body">
+                                                        <div class="row">
+                                                            <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
+                                                                <p>{{verification.name}} </p>
+                                                                <p class="small">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
+                                                                <p>{{verification.address}}</p>
 
-                                                            <a ng-hide="verification.url == null" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
+                                                                <a ng-hide="verification.url == null" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
+                                                            </div>
                                                         </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                        </div>-->   
-                                        <div class="col-lg-12">
-                                            <div class="btn-group">
-                                                <a class="btn btn-primary" href="#/asset/{{asset.id}}"><i class="fa fa-clock-o"></i> Show history</a>
-                                                <a class="btn btn-primary" href="#/transfer/{{asset.id}}"><i class="fa fa-mail-forward fa-fw"></i> Transfer</a>
-                                                <a class="btn btn-primary" href="#/verify/ownership/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Ownership verification</a>
-                                                <a class="btn btn-primary" href="#/verify/expert/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Expert verification</a>
+                                            </div>-->
+                                            <div class="col-lg-12">
+                                                <div class="btn-group">
+                                                    <a class="btn btn-primary" href="#/asset/{{asset.id}}"><i class="fa fa-clock-o"></i> Show history</a>
+                                                    <a class="btn btn-primary" href="#/transfer/{{asset.id}}"><i class="fa fa-mail-forward fa-fw"></i> Transfer</a>
+                                                    <a class="btn btn-primary" href="#/verify/ownership/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Ownership verification</a>
+                                                    <a class="btn btn-primary" href="#/verify/expert/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Expert verification</a>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -74,18 +76,18 @@
                             </div>
                         </div>
                     </div>
+                    <!-- /.col-lg-4 (nested) -->
+                    <!--<div class="col-lg-8">
+                        <div class="panel panel-default">
+                            <div id="single-property-map"></div>
+                        </div>
+                    </div>-->
+                    <!-- /.col-lg-8 (nested) -->
                 </div>
-                <!-- /.col-lg-4 (nested) -->
-                <!--<div class="col-lg-8">
-                    <div class="panel panel-default">
-                        <div id="single-property-map"></div>
-                    </div>
-                </div>-->
-                <!-- /.col-lg-8 (nested) -->
+                <!-- /.panel-body -->
             </div>
-            <!-- /.panel-body -->
         </div>
+        <!-- /.col-lg-12 -->
     </div>
-    <!-- /.col-lg-12 -->
+    <!-- /.row -->
 </div>
-<!-- /.row -->

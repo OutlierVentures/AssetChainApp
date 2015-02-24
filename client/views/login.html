@@ -1,0 +1,65 @@
+﻿<div id="logon" ng-controller="LoginController" ng-show="!isAuthenticated()">
+    <div class="col-lg-1"></div>
+    <div class="col-lg-10">
+        <div class="row">
+            <div class="col-lg-12">
+                <h1 class="page-header" id="page-header">Open your AssetChain wallet</h1>
+            </div>
+            <!-- /.col-lg-12 -->
+        </div>
+
+        <div class="row">
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h1>Your password</h1></div>
+
+                    <div class="panel-body">
+                        <p>Please provide your AssetChain password.</p>
+                        <form role="form" name="loginForm" novalidate>
+                            <div class="form-group">
+                                <div class="input-group">
+                                    <label class="input-group-addon">Your password</label>
+                                    <input class="form-control" type="password" ng-model="credentials.password" required />
+                                    <span class="input-group-btn">
+                                        <button ng-click="login()" ng-disabled="loginForm.$invalid" class="btn btn-primary">
+                                            Open my wallet
+                                        </button>
+                                    </span>
+                                </div>
+                            </div>
+
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-lg-4">
+                <div class="well">
+                    <h2>About AssetChain</h2>
+                    <p>
+                        AssetCha.in is a 'smart property' service built on an online public ledger called the bitcoin blockchain. It allows you to associate items of value to a verified personal account for 'proof of ownership' and to guarantee their authenticity.
+                    </p>
+                </div>
+
+
+            </div>
+            <div class="col-lg-4">
+                <div class="well">
+                    <h2>The blockchain</h2>
+                    <p>AssetCha.in is an Outlier Ventures solution. We specialise in building technology that leverages something very clever called The Blockchain. The Blockchain allows for the semi-anonymous transfer of ownership of an asset via an online public ledger between two parties. It's semi-anonymous because the two people can have full view of the other parties credentials only with another's permission but the ledger and the network that validates the transaction regards them as anonymous.</p>
+                </div>
+
+            </div>
+            <div class="col-lg-4">
+                <div class="well">
+                    <h2>Real world assets</h2>
+                    <p>The most common use is of The Blockchain is the transfer of Bitcoins a digital form of currency. But we use it to transfer the ownership of real world assets such as cars, watches and jewellery. Like a Bitcoin when we record your asset on The Blockchain we associate it to your unique account after verifying you are who you say you are and that you do indeed own the asset.</p>
+
+                </div>
+
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-1"></div>
+</div>

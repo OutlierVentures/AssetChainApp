@@ -1,5 +1,5 @@
 ﻿<!--Top-level and sidebar navigation.-->
-<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0" ng-controller="NavigationController">
+<nav class="navbar navbar-default navbar-static-top" role="navigation" style="margin-bottom: 0" ng-controller="NavigationController" ng-show="isAuthenticated()">
     <div class="navbar-header">
         <button type="button" class="navbar-toggle" data-toggle="collapse" data-target=".navbar-collapse">
             <span class="sr-only">Toggle navigation</span>
@@ -7,7 +7,7 @@
             <span class="icon-bar"></span>
             <span class="icon-bar"></span>
         </button>
-        <a class="navbar-brand" href="#"><img src="img/asset-chain-logo.png" /></a>
+        <a class="navbar-brand" href="#/"><img src="img/asset-chain-logo.png" /></a>
     </div>
     <!-- /.navbar-header -->
 
@@ -62,7 +62,7 @@
     <div class="navbar-default sidebar" role="navigation">
         <div class="sidebar-nav navbar-collapse">
             <ul class="nav" id="side-menu">
-                <li class="sidebar-search">
+                <li class="sidebar-search" ng-hide="true">
                     <div class="input-group custom-search-form">
                         <input type="text" class="form-control" placeholder="Search...">
                         <span class="input-group-btn">

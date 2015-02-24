@@ -562,6 +562,7 @@
     <Content Include="client\vendors\underscore\package.json" />
     <Content Include="client\vendors\underscore\README.md" />
     <Content Include="client\vendors\underscore\underscore-min.map" />
+    <Content Include="client\views\login.html" />
     <Content Include="client\views\asset-details.html" />
     <Content Include="client\views\notifications.html" />
     <Content Include="client\views\asset-list.html" />

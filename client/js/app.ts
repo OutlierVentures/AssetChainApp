@@ -18,18 +18,30 @@ class AssetsService {
 
     backend: IStorageService;
 
-    constructor() {
+    public static $inject = [
+        'identityService'
+    ];
+
+    // dependencies are injected via AngularJS $injector
+    constructor(
+        private identityService: IdentityService) {
+
         // TODO: make storageService into a configurable, multi-backend data layer
         // For example, assets can be stored anywhere, but their verification cannot.
-        this.backend = new EncryptedLocalStorageService();
+
+        // TODO: inject and pass identityService
+        this.backend = new EncryptedLocalStorageService(identityService);
 
         this.ensureAssets();
-    }    
+    }
 
     /**
      * Ensure that initial data is loaded.
      */
     ensureAssets(): void {
+        if (!this.identityService.IsAuthenticated())
+            return;
+
         if (this.assets != null)
             return;
 
@@ -211,30 +223,43 @@ interface IIdentityProvider {
 }
 
 /**
- * Identity provider for AssetChain, using encrypted local storage + cloud storage.
+ * Identity provider for AssetChain, using encrypted local storage.
  */
-class AssetChainIdentityProvider{
+class AssetChainIdentityProvider {
+    /**
+     * Hash of the password of the user.
+     */
+    private _PasswordHash: string;
+
+    /**
+     * The unencrypted password of the user. Only stored in-memory.
+     */
+    private _Password: string;
+
+
     GetIdentifier(): string {
-        // TODO: implement
-        return "userID";
+        return this._PasswordHash;
     }
 
-    IsAuthenticated():boolean{
-        // TODO: implement
-        return true;
-    } 
+    SetPassword(password: string) {
+        this._PasswordHash = CryptoJS.SHA256(password);
+        this._Password = password;
+    }
 
-    Logon():boolean{
-        // TODO: implement
-        return true;
+    IsAuthenticated(): boolean {
+        return this._PasswordHash != null;
+    }
+
+    Logon(): boolean {
+        // We only require a password to function. If it's not empty, we're good to go.
+        return this._PasswordHash != null;
     }
 
     private GetPrivateKey(): string {
-        // TODO: use private key as user provided
-        return "abc";
+        return this._Password;
     }
 
-    Encrypt(unencryptedData: string): string{
+    Encrypt(unencryptedData: string): string {
         return CryptoJS.AES.encrypt(unencryptedData, this.GetPrivateKey()).toString();
     }
 
@@ -256,13 +281,10 @@ interface IStorageService {
  * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
  */
 class EncryptedLocalStorageService {
-    identityService: IdentityService;
+    private identityService: IdentityService;
 
-    constructor() {
-        // Create a new identity provider.
-        // TODO: make configurable. Use the central identity service.
-        this.identityService = new IdentityService();
-        this.identityService.Logon(new AssetChainIdentityProvider());
+    constructor(identityService: IdentityService) {
+        this.identityService = identityService;
     }
 
     SetItem(key: string, val: any) {
@@ -314,7 +336,7 @@ class IdentityService {
     }
 
     IsAuthenticated(): boolean {
-        return false;
+        return this.PrimaryProvider != null && this.PrimaryProvider.IsAuthenticated();
     }
 }
 
@@ -324,6 +346,7 @@ module AssetChain {
     var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment'])
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
+        .controller('LoginController', LoginController)
 
     assetChainApp.config(function ($routeProvider: ng.route.IRouteProvider, $locationProvider: ng.ILocationProvider) {
         $routeProvider
@@ -341,11 +364,13 @@ module AssetChain {
 
     // Note: the string name provided to angular has to match the parameter names as used in the controllers,
     // case-sensitive. E.g. we can't use 'AssetsService' here and use 'assetsService' in the controllers.
+    assetChainApp.service('identityService', IdentityService);
+
     assetChainApp.service('assetsService', AssetsService);
 
-    assetChainApp.service('identityService', IdentityService);
     
     // How to get a reference to this specific service?
+    // --> inject the service to another service.
 }
 
 

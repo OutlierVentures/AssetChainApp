@@ -1,5 +1,21 @@
 ﻿
-function DashboardController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function LoginController($scope, $route, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
+    
+    $scope.isAuthenticated = function (): boolean {
+        return identityService.IsAuthenticated();
+    }
+
+    $scope.login = function () {
+        var provider = new AssetChainIdentityProvider();
+        
+        // TODO: check whether it's a valid wallet password (mnemonic)
+        provider.SetPassword($scope.credentials.password);
+        identityService.Logon(provider);
+        $route.reload();
+    }
+}
+
+function DashboardController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     // Get latest notifications
 
     // Get all assets (not only current user)
@@ -7,7 +23,7 @@ function DashboardController($scope, $location, $http, $routeParams, assetsServi
     // Get some stats/charts
 }
 
-function ExpertVerificationController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function ExpertVerificationController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     var asset_id = $routeParams.id;
 
     // Dummy data.
@@ -29,35 +45,39 @@ function ExpertVerificationController($scope, $location, $http, $routeParams, as
     });
 }
 
-function TransferAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function TransferAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     var asset_id = $routeParams.id;
     assetsService.get(asset_id, function (resp) {
         $scope.asset = resp;
     });
 }
 
-function AssetListController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
+function AssetListController($scope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
     assetsService.getAll(function (res) {
         $scope.assets = res;
     });
 
-    $scope.reload = function() {
+    $scope.reload = function () {
         assetsService.reload();
     }
 
     $scope.clearData = function () {
         localStorage.clear();
     }
+
+    $scope.isAuthenticated = function (): boolean {
+        return identityService.IsAuthenticated();
+    }
 }
 
-function SingleAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function SingleAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     var asset_id = $routeParams.id;
     assetsService.get(asset_id, function (resp) {
         $scope.asset = resp;
     });
 }
 
-function RegisterAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function RegisterAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
     $scope.save = function () {
         assetsService.save($scope.asset, function (resp) {
             // Redirect to the new asset page.
@@ -69,13 +89,13 @@ function RegisterAssetController($scope, $location, $http, $routeParams, assetsS
 
 
 function IdentityController($scope, identityService: IdentityService) {
-    
+
 }
 
 /**
  * Controller for the navigation bars.
  */
-function NavigationController($scope, $location, $http, $routeParams, assetsService : AssetsService) {
+function NavigationController($scope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
     $scope.menuItems = [
         {
             name: "My assets",
@@ -98,6 +118,10 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
             icon: "mail-forward",
         },
     ];
+
+    $scope.isAuthenticated = function (): boolean {
+        return identityService.IsAuthenticated();
+    }
 }
 
 class Notification {
@@ -114,7 +138,7 @@ interface NotificationScope {
     latestNotifications: Notification[];
 }
 
-function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService : AssetsService) {
+function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService: AssetsService) {
     var exampleDate: string;
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();

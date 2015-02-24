@@ -41,18 +41,25 @@
 
 </head>
 
-<body>
-    <div id="wrapper" ng-app="assetChainApp">
-        <!-- Navigation. The navbar view includes the NavigationController. -->
-        <nav ng-include="'views/navbar.html'"></nav>
+<body>    
+    <div ng-app="assetChainApp">
+        <div id="wrapper">
+            <!-- Navigation. The navbar view includes the NavigationController. -->
+            <nav ng-include="'views/navbar.html'"></nav>
 
-        <div id="page-wrapper" >
-            <!-- Main view. The view for the current ngRoute will be shown here. -->
-            <div ng-view></div>
+
+            <div id="page-wrapper">
+                <!-- Main view. The view for the current ngRoute will be shown here. -->
+                <div ng-view></div>
+
+                <!--Login screen, only shown when not logged in.-->
+                <div ng-include="'views/login.html'"></div>
+            </div>
+
+            <!-- /#page-wrapper -->
         </div>
-        <!-- /#page-wrapper -->
+        <!-- /#wrapper -->
     </div>
-    <!-- /#wrapper -->
 
     <!--START from bower-->
 
@@ -68,15 +75,15 @@
     <script src="vendors/angular/angular.min.js"></script>
     <script src="vendors/angular-resource/angular-resource.min.js"></script>
     <script src="vendors/angular-route/angular-route.min.js"></script>
-    <script src="vendors/angular-sanitize/angular-sanitize.min.js"></script>    
+    <script src="vendors/angular-sanitize/angular-sanitize.min.js"></script>
 
     <script src="vendors/moment/min/moment.min.js"></script>
     <script src="vendors/angular-moment/angular-moment.min.js"></script>
-    
+
     <script src="vendors/underscore/underscore-min.js"></script>
 
     <script src="vendors/cryptojs/components/core-min.js"></script>
-    <!--<script src="vendors/cryptojs/components/sha256-min.js"></script>-->
+    <script src="vendors/cryptojs/components/sha256-min.js"></script>
     <script src="vendors/cryptojs/rollups/aes.js"></script>
 
 
