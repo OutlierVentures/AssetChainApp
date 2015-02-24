@@ -41,9 +41,30 @@
                                 <textarea class="form-control" name="comments" ng-model="asset.comments"></textarea>
                                 <p class="help-block">Add any comments describing the item.</p>
                             </div>
+                            <div class="form-group">
+                                <label>Photos of your asset</label>
+                                
+                                <div class="thumbnail" ng-hide="$flow.files.length">
+                                    <img src="http://www.placehold.it/200x150/EFEFEF/AAAAAA&text=no+image" />
+                                </div>
+                                <div class="thumbnail" ng-show="$flow.files.length">
+                                    <img flow-img="$flow.files[0]" />
+                                </div>
+                                <div>
+                                    <a class="btn" ng-hide="$flow.files.length" flow-btn flow-attrs="{accept:'image/*'}">Select image</a>
+                                    <a class="btn" ng-show="$flow.files.length" flow-btn flow-attrs="{accept:'image/*'}">Change</a>
+                                    <a class="btn btn-danger" ng-show="$flow.files.length"
+                                       ng-click="$flow.cancel()">
+                                        Remove
+                                    </a>
+                                </div>
+                                <p>
+                                    Only PNG, GIF, JPG files allowed.
+                                </p>
+                            </div>
                             <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid" class="btn btn-primary">
                                 Register asset
-                            </button>                            
+                            </button>
                         </form>
                     </div>
                 </div>

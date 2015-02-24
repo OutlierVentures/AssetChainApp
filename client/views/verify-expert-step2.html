@@ -1,6 +1,6 @@
 ﻿<div class="row">
     <div class="col-lg-12">
-        <h1 class="page-header" id="page-header">Expert verification</h1>
+        <h1 class="page-header" id="page-header">Verification details</h1>
     </div>
     <!-- /.col-lg-12 -->
 </div>
@@ -23,21 +23,12 @@
                     <div>
                         <form role="form" name="verificationform" novalidate>
                             <div class="form-group">
-                                <label>Expert</label>
-                                <p class="help-block">Choose the expert near you who will verify your asset. The expert will respond to your call to make an appointment.</p>
-                                <select ng-model="verification.name" required>
-                                    <optgroup ng-repeat="location in ExpertsByLocation" label="{{location.name}}">
-                                        <option ng-repeat="expert in location.experts track by expert.id">{{expert.name}}</option>
-                                    </optgroup>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label>Comments</label>
-                                <textarea class="form-control" name="comments" ng-model="verification.comments"></textarea>
-                                <p class="help-block">Add any comments with regard to the verification or your asset.</p>
+                                <label>Known defects</label>
+                                <textarea class="form-control" name="comments" ng-model="verification.defects"></textarea>
+                                <p class="help-block">Does your asset have any defects? Please describe them in detail.</p>
                             </div>
                             <button name="saveButton" ng-click="vm.Save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
-                                Begin verification request
+                                Submit verification request
                             </button>                            
                         </form>
                     </div>

@@ -83,7 +83,8 @@ class AssetsService {
                             logoImageFileName: "ethereum-logo.png",
                         }
                     ]
-                }
+                },
+                Verifications: [],
             },
             {
                 id: "2",
@@ -108,11 +109,15 @@ class AssetsService {
                         }
                     ]
                 },
-                verifications: [
+                Verifications: [
                     {
+                        id: "89489489485456",
                         name: "Watches of Switzerland",
                         address: "61 Brompton Road, London, London, SW3 1B, United Kingdom",
                         date: '2015-01-13 15:34',
+                        comments: "",
+                        defects: "",
+                        IsPending: false,
                     }
                 ]
 
@@ -123,6 +128,7 @@ class AssetsService {
                 category: "Jewelry/Precious stones",
                 comments: null,
                 IsPendingClaim: false,
+                Verifications: [],
             }
         ];
     }
@@ -355,10 +361,73 @@ class IdentityService {
     }
 }
 
+/**
+ * Service around experts who execute verifications of assets.
+ */
+class ExpertsService {
+    /**
+     * Returns a set of experts by search criteria.
+     */
+    GetExperts(location: string, category: string) {
+        // Provide dummy data.
+        // TODO: implement
+        if (category == "Jewelry/Watch") {
+            return [{
+                name: "London",
+                experts: [
+                    {
+                        id: "1859159",
+                        name: "The Watch Gallery (Rolex Boutique)"
+                    },
+                    {
+                        id: "41859189",
+                        name: "Watches of Switzerland"
+                    }]
+            }];
+        }
+        else if (category.indexOf("Jewelry") > 0) {
+            return [{
+                name: "London",
+                experts: [
+                    {
+                        id: "5615641",
+                        name: "Royal Exchange Jewellers"
+                    },
+                    {
+                        id: "1564156",
+                        name: "Jonathan Geeves Jewellers"
+                    },
+                    {
+                        id: "9486451",
+                        name: "Tawny Phillips"
+                    }]
+            }];
+        } else {
+            return [{
+                name: "London",
+                experts: [
+                    {
+                        id: "5615641",
+                        name: "Royal Exchange Jewellers"
+                    },
+                    {
+                        id: "1564156",
+                        name: "Jonathan Geeves Jewellers"
+                    },
+                    {
+                        id: "9486451",
+                        name: "Tawny Phillips"
+                    }]
+            }];
+
+        }
+    }
+}
+
 module AssetChain {
     'use strict';
 
-    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment'])
+    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment', 'flow'])
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)
@@ -371,6 +440,8 @@ module AssetChain {
             .when('/asset/:id', { controller: SingleAssetController, templateUrl: '/views/asset-details.html' })
             .when('/transfer/:id', { controller: TransferAssetController, templateUrl: '/views/transfer-asset.html' })
             .when('/verify/expert/:id', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert.html' })
+            .when('/verify/expert/:id/:verificationID', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert-step2.html' })
+            .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: '/views/verify-ownership.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: '/views/notifications.html' })
             .when('/not-found', { templateUrl: '/views/not-found.html' })
             .otherwise({ redirectTo: 'not-found' })
@@ -383,11 +454,8 @@ module AssetChain {
 
     assetChainApp.service('assetsService', AssetsService);
 
-    
-    // How to get a reference to this specific service?
-    // --> inject the service to another service.
+    assetChainApp.service('expertsService', ExpertsService);
 }
-
 
 var guid = (function () {
     function s4() {
@@ -410,4 +478,15 @@ class Asset {
     category: string;
     comments: string;
     IsPendingClaim: boolean = true;
+    Verifications: Verification[];
+}
+
+class Verification {
+    id: string;
+    name: string;
+    address: string;
+    date: string;
+    comments: string;
+    IsPending: boolean;
+    defects: string;
 }

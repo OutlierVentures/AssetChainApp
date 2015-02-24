@@ -14,8 +14,8 @@
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
-                    <button class="btn btn-primary" ng-click="reload()"><i class="fa fa-refresh"></i> Refresh</button>
-                    <button class="btn btn-primary" ng-click="clearData()"><i class="fa fa-close"></i> Clear data</button>
+                    <!--<button class="btn btn-primary" ng-click="reload()"><i class="fa fa-refresh"></i> Refresh</button>
+                    <button class="btn btn-primary" ng-click="clearData()"><i class="fa fa-close"></i> Clear data</button>-->
                     <div ng-repeat="asset in assets track by asset.id" class="row">
                         <div class="col-lg-12">
                             <div class="well well-transparent">
@@ -44,7 +44,7 @@
                                                     </div>
                                                 </div>
                                             </div>
-                                            <!--<div ng-show="{{asset.verifications}}" class="col-lg-12">
+                                            <!--<div ng-show="{{asset.Verifications}}" class="col-lg-12">
                                                 <div class="panel panel-default">
                                                     <div class="panel-heading">
                                                         <i class="fa fa-check"></i> Verified by:
@@ -54,7 +54,8 @@
                                                             <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
                                                                 <p>{{verification.name}} </p>
                                                                 <p class="small">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
-                                                                <p>{{verification.address}}</p>
+                                                                <p ng-show="verification.address">{{verification.address}}</p>
+                                                                <p ng-show="verification.comments">{{verification.comments}}</p>
 
                                                                 <a ng-hide="verification.url == null" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
                                                             </div>

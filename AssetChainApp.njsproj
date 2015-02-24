@@ -569,6 +569,8 @@
     <Content Include="client\views\dashboard.html" />
     <Content Include="client\views\navbar.html" />
     <Content Include="client\views\not-found.html" />
+    <Content Include="client\views\verify-expert-step2.html" />
+    <Content Include="client\views\verify-ownership.html" />
     <Content Include="client\views\verify-expert.html" />
     <Content Include="client\views\transfer-asset.html" />
     <Content Include="client\views\register-asset.html" />

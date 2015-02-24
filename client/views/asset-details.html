@@ -33,19 +33,21 @@
                                 </div>
                             </div>
                         </div>
-                        <div ng-show="{{asset.verifications}}" class="col-lg-12">
+                        <div ng-show="{{asset.Verifications}}" class="col-lg-12">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <i class="fa fa-check"></i> Verified by:
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
+                                        <div ng-repeat="verification in asset.Verifications" class="col-lg-4" style="padding-bottom: 1em;">
                                             <p>{{verification.name}} </p>
-                                            <p class="small">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
-                                            <p>{{verification.address}}</p>
+                                            <p class="small" ng-show="verification.date">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
+                                            <p ng-show="verification.address">{{verification.address}}</p>
+                                            <p ng-show="verification.comments">Your comments: {{verification.comments}}</p>
 
-                                            <a ng-hide="verification.url == null" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
+                                            <a ng-show="verification.url" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
+                                            <p ng-show="verification.IsPending"><strong>This verification request is still pending.</strong></p>
                                         </div>
                                     </div>
                                 </div>

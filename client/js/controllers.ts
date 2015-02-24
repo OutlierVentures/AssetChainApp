@@ -1,6 +1,6 @@
 ﻿
 function LoginController($scope, $route, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
-    
+
     $scope.isAuthenticated = function (): boolean {
         return identityService.IsAuthenticated();
     }
@@ -23,25 +23,88 @@ function DashboardController($scope, $location, $http, $routeParams, assetsServi
     // Get some stats/charts
 }
 
-function ExpertVerificationController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
-    var asset_id = $routeParams.id;
 
-    // Dummy data.
-    // TODO: get expert near user
-    // TODO: provide search interface
-    $scope.expertsByLocation = [{
-        name: "London",
-        experts: [
-            {
-                name: "The Watch Gallery (Rolex Boutique)"
-            },
-            {
-                name: "Watches of Switzerland"
-            }]
-    }];
+interface IAssetRouteParameters extends ng.route.IRouteParamsService {
+    id: string;
+    verificationID: string;
+}
+
+interface IVerificationScope extends ng.IScope {
+    AssetID: string;
+    VerificationID: string;
+    Asset: Asset;
+    // TODO: define classes for experts and a dictionary of them.
+    ExpertsByLocation: any;
+    Location: ng.ILocationService;
+    vm: ExpertVerificationController;
+    verification: Verification;
+}
+
+class ExpertVerificationController {
+
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService",
+        "expertsService"];
+
+    constructor(
+        private $scope: IVerificationScope,
+        private $location: ng.ILocationService,
+        private $routeParams: IAssetRouteParameters,
+        private assetsService: AssetsService,
+        private expertsService: ExpertsService) {
+        $scope.AssetID = $routeParams.id;
+        $scope.VerificationID = $routeParams.verificationID;
+        $scope.vm = this;
+        $scope.Location = $location;
+
+        assetsService.get($scope.AssetID, function (resp) {
+            $scope.Asset = resp;
+
+            if ($scope.VerificationID != null) {
+                // Load the verification we worked on in an earlier step.
+                var verificationsWithId = _($scope.Asset.Verifications).select(v => v.id == $scope.VerificationID);
+                $scope.verification = verificationsWithId[0];
+            }
+
+            $scope.ExpertsByLocation = expertsService.GetExperts("London", $scope.Asset.category);
+        });
+    }
+
+    Save() {
+        // Provide the callback below access to the scope.
+        // TODO: refactor.
+        var s = this.$scope;
+
+        this.assetsService.save(this.$scope.Asset, function (resp) {
+            if (s.Location.path() == "/verify/expert/" + s.AssetID) {
+                // Step 1
+                s.verification.id = guid();     
+                s.verification.date = moment().toISOString();
+                s.verification.IsPending = true;
+                s.Asset.Verifications.push(s.verification);
+                s.Location.path("/verify/expert/" + s.AssetID + "/" + s.verification.id);
+            } else {
+                // Step 2
+                // Finished.
+                // TODO: show "finished" message.
+                // TODO: add item to notifications.
+                
+                s.Location.path("/");
+            }
+        });
+    }
+}
+
+function OwnershipVerificationController($scope, $location, $http, $routeParams, assetsService: AssetsService, expertsService: ExpertsService) {
+    var asset_id = $routeParams.id;
 
     assetsService.get(asset_id, function (resp) {
         $scope.asset = resp;
+
+        $scope.expertsByLocation = expertsService.GetExperts("London", $scope.asset.category);
     });
 }
 
