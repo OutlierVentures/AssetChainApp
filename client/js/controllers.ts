@@ -44,6 +44,10 @@ function AssetListController($scope, $location, $http, $routeParams, assetsServi
     $scope.reload = function() {
         assetsService.reload();
     }
+
+    $scope.clearData = function () {
+        localStorage.clear();
+    }
 }
 
 function SingleAssetController($scope, $location, $http, $routeParams, assetsService : AssetsService) {

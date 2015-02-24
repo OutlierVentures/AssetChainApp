@@ -21,7 +21,7 @@ class AssetsService {
     constructor() {
         // TODO: make storageService into a configurable, multi-backend data layer
         // For example, assets can be stored anywhere, but their verification cannot.
-        this.backend = new LocalStorageService();
+        this.backend = new EncryptedLocalStorageService();
 
         this.ensureAssets();
     }    
@@ -118,7 +118,8 @@ class AssetsService {
     private saveDB(): void {
         // TODO: encrypt by identityservice
         // TODO: use a unique key for the current account
-        this.backend.SetItem("assets", this.assets);
+        // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
+        this.backend.SetItem("assets", angular.copy(this.assets));
     }
 
     private loadDB(): void {
@@ -251,19 +252,24 @@ interface IStorageService {
     GetItem(key: string): any;
 }
 
-class LocalStorageService {
+/**
+ * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
+ */
+class EncryptedLocalStorageService {
     identityService: IdentityService;
 
     constructor() {
-        // TODO: make configurable.
+        // Create a new identity provider.
+        // TODO: make configurable. Use the central identity service.
         this.identityService = new IdentityService();
         this.identityService.Logon(new AssetChainIdentityProvider());
     }
 
     SetItem(key: string, val: any) {
         var stringVar = JSON.stringify(val);
-        stringVar = stringVar.replace(/,"\$\$hashKey":"object:\d+"/g, "");
+
         stringVar = this.identityService.PrimaryProvider.Encrypt(stringVar);
+
         localStorage.setItem(key, stringVar);
     }
 
@@ -273,12 +279,6 @@ class LocalStorageService {
             return null;
 
         valString = this.identityService.PrimaryProvider.Decrypt(valString);
-
-        if (valString.indexOf("hashKey") > 0) {
-            console.log("Replacing hashKey in valstring");
-            console.log(valString);
-            valString = valString.replace(/,"\$\$hashKey":"object:\d+"/g, "");
-        }
 
         return JSON.parse(valString);
     }
