@@ -281,28 +281,43 @@ interface IStorageService {
  * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
  */
 class EncryptedLocalStorageService {
-    private identityService: IdentityService;
+    private _IdentityService: IdentityService;
+
+    private _KeyPrefix: string;
 
     constructor(identityService: IdentityService) {
-        this.identityService = identityService;
+        this._IdentityService = identityService;
+    }
+
+    private GetFullKey(key: string): string {
+        // Use the identifier of the identityService as a prefix for the local storage keys.
+        // Effectively that means prefixing with SHA256 hashes, for example:
+        // a5a28cfe2786537d28d4f57d4a15fe5813a973d3d6f9b9186033b8df50fac56b_assets
+
+        // This can only be done once _IdentityService.PrimaryProvider is logged on, i.e.
+        // when we're good to go.
+        // TODO: include checks for this.
+        this._KeyPrefix = this._IdentityService.PrimaryProvider.GetIdentifier();
+
+        return this._KeyPrefix + "_" + key;
     }
 
     SetItem(key: string, val: any) {
         var stringVar = JSON.stringify(val);
 
-        stringVar = this.identityService.PrimaryProvider.Encrypt(stringVar);
+        stringVar = this._IdentityService.PrimaryProvider.Encrypt(stringVar);
 
-        localStorage.setItem(key, stringVar);
+        localStorage.setItem(this.GetFullKey(key), stringVar);
     }
 
     GetItem(key: string): any {
-        var valString: string = localStorage.getItem(key);
-        if (valString === null)
+        var stringVar: string = localStorage.getItem(this.GetFullKey(key));
+        if (stringVar === null)
             return null;
 
-        valString = this.identityService.PrimaryProvider.Decrypt(valString);
+        stringVar = this._IdentityService.PrimaryProvider.Decrypt(stringVar);
 
-        return JSON.parse(valString);
+        return JSON.parse(stringVar);
     }
 }
 
