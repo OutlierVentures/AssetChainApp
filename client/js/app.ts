@@ -427,7 +427,7 @@ class ExpertsService {
 module AssetChain {
     'use strict';
 
-    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment', 'flow'])
+    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment'])
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)

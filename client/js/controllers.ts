@@ -84,6 +84,8 @@ class ExpertVerificationController {
                 s.verification.id = guid();     
                 s.verification.date = moment().toISOString();
                 s.verification.IsPending = true;
+                if (s.Asset.Verifications == null)
+                    s.Asset.Verifications = [];
                 s.Asset.Verifications.push(s.verification);
                 s.Location.path("/verify/expert/" + s.AssetID + "/" + s.verification.id);
             } else {
