@@ -1,6 +1,4 @@
-/// <reference path="_all-references.ts" />
 if (eth == null) {
-    // if we're running outside of Ethereum, create stub object eth for code to still work.
     var eth = {
         toDecimal: function (s) {
             return 0;
@@ -29,7 +27,6 @@ function IsAdminUser() {
 function GetMyAddress() {
     return eth.secretToAddress(eth.key);
 }
-// Address for the assets contract. Update after (re-)creating the contract.
 var contractAddress = "0x" + "6a75a18c0de9952a11ab66228d4ad9694651d22b";
 Number.prototype.pad = function (size) {
     var s = String(this);
@@ -49,23 +46,17 @@ function ToBoolean(contractStateValue) {
         return true;
     return false;
 }
-/**
- * Gets the property at the specified index as a Property object. If no property
- * exists at the specified index, null is returned.
- */
 function GetPropertyAt(stateIndex) {
     var p = new Asset();
     p.category = GetPropertyStateValue(stateIndex, 1);
     if (p.category == null)
-        return null; // No property exists at this index.
+        return null;
     p.id = stateIndex.toString();
     p.name = eth.toAscii(GetPropertyStateValue(stateIndex, 4));
-    //p.Comments = eth.toAscii(GetPropertyStateValue(stateIndex, 5));
     p.IsPendingClaim = ToBoolean(GetPropertyStateValue(stateIndex, 6));
     return p;
 }
 function SubmitNewClaim() {
-    /** TODO: refactor. Introduce Angular **/
     var addressInput = document.getElementById('street-address-input');
     var commentsInput = document.getElementById('comments-input');
     var data = eth.pad("1", 32) + eth.pad(addressInput.value, 32) + eth.pad(commentsInput.value, 32);
@@ -78,7 +69,6 @@ function SubmitNewClaim() {
         gas: 5000,
         gasPrice: 100000
     }, function () {
-        // TODO: Save intermediate data; go to next step. 
         window.location.reload();
     });
 }
