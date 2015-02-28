@@ -3,7 +3,7 @@
     <div class="col-lg-10">
         <div class="row">
             <div class="col-lg-12">
-                <h1 class="page-header" id="page-header">Open your AssetChain wallet</h1>
+                <h1 class="page-header" id="page-header"><i class="fa fa-lock"></i> Open your secure AssetChain vault</h1>
             </div>
             <!-- /.col-lg-12 -->
         </div>
@@ -11,23 +11,22 @@
         <div class="row">
             <div class="col-lg-12">
                 <div class="panel panel-default">
-                    <div class="panel-heading"><h1>Your password</h1></div>
+                    <div class="panel-heading"><h2>Your password</h2></div>
 
                     <div class="panel-body">
-                        <p>Please provide your AssetChain password.</p>
+                        <p>Please provide your AssetChain password to open your vault.</p>
                         <form role="form" name="loginForm" novalidate>
                             <div class="form-group">
                                 <div class="input-group">
-                                    <label class="input-group-addon">Your password</label>
+                                    <!--<label class="input-group-addon">Your password</label>-->
                                     <input class="form-control" type="password" ng-model="credentials.password" required />
                                     <span class="input-group-btn">
                                         <button ng-click="login()" ng-disabled="loginForm.$invalid" class="btn btn-primary">
-                                            Open my wallet
+                                            Open my vault
                                         </button>
                                     </span>
                                 </div>
                             </div>
-
                         </form>
                     </div>
                 </div>

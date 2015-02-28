@@ -327,6 +327,10 @@ class EncryptedLocalStorageService {
     }
 }
 
+interface AssetChainRootScope extends ng.IRootScopeService {
+    IsLoggedIn: boolean;
+}
+
 /**
  * Service managing the identity of the user on the various backends.
  */
@@ -339,7 +343,11 @@ class IdentityService {
      */
     PrimaryProvider: IIdentityProvider;
 
-    constructor() {
+    $inject = ['$rootScope'];
+
+    constructor(
+        private $rootScope: AssetChainRootScope
+        ) {
         this.Providers = [];
     }
 
@@ -353,6 +361,9 @@ class IdentityService {
         // The first successful provider is the primary one.
         if (this.PrimaryProvider === undefined)
             this.PrimaryProvider = provider;
+
+        this.$rootScope.IsLoggedIn = true;
+
         return true;
     }
 
@@ -427,7 +438,7 @@ class ExpertsService {
 module AssetChain {
     'use strict';
 
-    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment'])
+    var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment', 'flow'])
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)

@@ -43,7 +43,12 @@
 
 <body>    
     <div ng-app="assetChainApp">
-        <div id="wrapper">
+        <!-- Login screen, only shown when not logged in. -->
+        <div ng-include="'views/login.html'"></div>
+
+        <!-- When not logged in, the whole wrapper is hidden. We use the property $rootScope.IsLoggedIn 
+            which is set to true after a succesful login.-->
+        <div id="wrapper" ng-show="IsLoggedIn">
             <!-- Navigation. The navbar view includes the NavigationController. -->
             <nav ng-include="'views/navbar.html'"></nav>
 
@@ -52,8 +57,6 @@
                 <!-- Main view. The view for the current ngRoute will be shown here. -->
                 <div ng-view></div>
 
-                <!--Login screen, only shown when not logged in.-->
-                <div ng-include="'views/login.html'"></div>
             </div>
 
             <!-- /#page-wrapper -->
@@ -80,8 +83,8 @@
     <script src="vendors/moment/min/moment.min.js"></script>
     <script src="vendors/angular-moment/angular-moment.min.js"></script>
 
-    <!--<script src="vendors/flow.js/dist/flow.min.js"></script>
-    <script src="vendors/ng-flow/dist/ng-flow.min.js"></script>-->
+    <script src="vendors/flow.js/dist/flow.min.js"></script>
+    <script src="vendors/ng-flow/dist/ng-flow.min.js"></script>
 
     <script src="vendors/underscore/underscore-min.js"></script>
 

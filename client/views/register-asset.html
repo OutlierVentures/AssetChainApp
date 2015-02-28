@@ -41,30 +41,39 @@
                                 <textarea class="form-control" name="comments" ng-model="asset.comments"></textarea>
                                 <p class="help-block">Add any comments describing the item.</p>
                             </div>
-                            <!--<div class="form-group">
+                            <div class="form-group" flow-init
+                                 flow-file-added="!!{png:1,gif:1,jpg:1,jpeg:1}[$file.getExtension()]"
+                                 flow-files-submitted="$flow.upload()">
                                 <label>Photos of your asset</label>
-                                
+                                <div class="row">
+                                    <div class="col-lg-6">
+                                        <div class="well text-center" flow-drop>
+                                            <h3>Drag and drop your files here.</h3>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-6" style="margin-bottom: 1em;">
+                                        <span class="btn btn-primary" flow-btn ng-hide="$flow.files.length"><i class="fa fa-file"></i> Select photos</span>
+                                        <span class="btn btn-primary" flow-btn ng-show="$flow.files.length"><i class="fa fa-file"></i> Select more photos</span>
+                                        <span class="btn btn-danger" ng-show="$flow.files.length"
+                                              ng-click="$flow.cancel()"><i class="fa fa-undo"></i> Clear</span>
+                                    </div>
+                                </div>
                                 <div class="thumbnail" ng-hide="$flow.files.length">
                                     <img src="http://www.placehold.it/200x150/EFEFEF/AAAAAA&text=no+image" />
                                 </div>
                                 <div class="thumbnail" ng-show="$flow.files.length">
-                                    <img flow-img="$flow.files[0]" />
+                                    <div class="row">
+                                        <div class="col-sm-6 col-md-4 col-lg-3" ng-repeat="file in $flow.files">
+                                            <p>{{file.name}}</p>
+                                            <img class="img-responsive img-rounded" flow-img="file" />
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <a class="btn" ng-hide="$flow.files.length" flow-btn flow-attrs="{accept:'image/*'}">Select image</a>
-                                    <a class="btn" ng-show="$flow.files.length" flow-btn flow-attrs="{accept:'image/*'}">Change</a>
-                                    <a class="btn btn-danger" ng-show="$flow.files.length"
-                                       ng-click="$flow.cancel()">
-                                        Remove
-                                    </a>
-                                </div>
-                                <p>
-                                    Only PNG, GIF, JPG files allowed.
-                                </p>
-                            </div>-->
-                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid" class="btn btn-primary">
+                            </div>
+                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid" class="btn btn-primary pull-right">
                                 Register asset
                             </button>
+
                         </form>
                     </div>
                 </div>
