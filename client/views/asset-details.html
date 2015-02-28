@@ -13,7 +13,10 @@
                     <h3>{{asset.name}}</h3>
                     <p>{{asset.category}}</p>
 
-                    <div ng-repeat="image in asset.images" style="display: inline-block"><img ng-src="img/assets/{{image.fileName}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;"></div>
+                    <div ng-repeat="image in asset.images" style="display: inline-block">
+                        <img ng-show="image.location=='local'" ng-src="img/assets/{{image.fileName}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                        <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                    </div>
                 </div>
                 <div class="col-lg-6">
                     <div class="row">

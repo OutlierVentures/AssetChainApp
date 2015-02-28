@@ -142,13 +142,34 @@ function SingleAssetController($scope, $location, $http, $routeParams, assetsSer
     });
 }
 
-function RegisterAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
+function RegisterAssetController($scope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
     $scope.save = function () {
-        assetsService.save($scope.asset, function (resp) {
-            // Redirect to the new asset page.
-            $location.path('/asset/' + resp.id);
+        // Load the photo data.
+        $scope.asset.images = [];
+
+        _.each($scope.assetform.flow.files, function (file: any) {
+            var fileReader = new FileReader();
+            fileReader.readAsDataURL(file.file);
+
+            fileReader.onload = function (event: any) {
+                $scope.asset.images.push({
+                    location: "dataUrl",
+                    fileName: file.name,
+                    dataUrl: event.target.result
+                });                
+            };
         });
 
+        // The data arrives asynchronously.
+        // Poor man's solution: wait 5 seconds.
+        // TODO: solve properly using async().
+        setTimeout(function () {
+            assetsService.save($scope.asset, function (resp) {
+                // Redirect to the new asset page.
+                $location.path('/asset/' + resp.id);
+                $scope.$apply();
+            });
+        }, 5000);
     }
 }
 

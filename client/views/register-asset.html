@@ -12,13 +12,8 @@
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <div class="row">
-                    <div class="col-lg-4">
-                    </div>
-                    <!-- /.table-responsive -->
-                </div>
                 <!-- /.col-lg-4 (nested) -->
-                <div class="col-lg-8">
+                <div class="col-lg-12">
                     <div>
                         <form role="form" name="assetform" novalidate>
                             <div class="form-group">
@@ -28,8 +23,6 @@
                                     <optgroup label="Jewelry"><option>Watch</option><option>Necklace</option><option>Diamond</option></optgroup>
                                     <optgroup label="Art"><option>Painting</option><option>Sculpture</option></optgroup>
                                 </select>
-                                <!--<p>Latitude:</p><input class="form-control" id="latitude" name="latitude" disabled>
-                                <p>Longitude:</p><input class="form-control" id="longitude" name="longitude" disabled>-->
                             </div>
                             <div class="form-group">
                                 <label>Name</label>
@@ -41,39 +34,35 @@
                                 <textarea class="form-control" name="comments" ng-model="asset.comments"></textarea>
                                 <p class="help-block">Add any comments describing the item.</p>
                             </div>
-                            <div class="form-group" flow-init
-                                 flow-file-added="!!{png:1,gif:1,jpg:1,jpeg:1}[$file.getExtension()]"
-                                 flow-files-submitted="$flow.upload()">
+                            <div class="form-group" flow-init flow-name="assetform.flow"
+                                 flow-file-added="!!{png:1,gif:1,jpg:1,jpeg:1}[$file.getExtension()]">
                                 <label>Photos of your asset</label>
                                 <div class="row">
-                                    <div class="col-lg-6">
-                                        <div class="well text-center" flow-drop>
-                                            <h3>Drag and drop your files here.</h3>
-                                        </div>
-                                    </div>
                                     <div class="col-lg-6" style="margin-bottom: 1em;">
-                                        <span class="btn btn-primary" flow-btn ng-hide="$flow.files.length"><i class="fa fa-file"></i> Select photos</span>
-                                        <span class="btn btn-primary" flow-btn ng-show="$flow.files.length"><i class="fa fa-file"></i> Select more photos</span>
+                                        Drag and drop photo's in the area below, or:
+                                        <span class="btn" flow-btn ng-hide="$flow.files.length"><i class="fa fa-file"></i> Select photos</span>
+                                        <span class="btn" flow-btn ng-show="$flow.files.length"><i class="fa fa-file"></i> Select more photos</span>
                                         <span class="btn btn-danger" ng-show="$flow.files.length"
-                                              ng-click="$flow.cancel()"><i class="fa fa-undo"></i> Clear</span>
+                                              ng-click="$flow.cancel()"><i class="fa fa-undo"></i>Clear</span>
                                     </div>
                                 </div>
-                                <div class="thumbnail" ng-hide="$flow.files.length">
-                                    <img src="http://www.placehold.it/200x150/EFEFEF/AAAAAA&text=no+image" />
-                                </div>
-                                <div class="thumbnail" ng-show="$flow.files.length">
+                                <div class="thumbnail" flow-drop flow-drag-enter="style={border:'4px solid green'}" flow-drag-leave="style={}"
+                                     ng-style="style">
                                     <div class="row">
                                         <div class="col-sm-6 col-md-4 col-lg-3" ng-repeat="file in $flow.files">
                                             <p>{{file.name}}</p>
-                                            <img class="img-responsive img-rounded" flow-img="file" />
+                                            <img class="img-responsive img-rounded" flow-img="file" ng-model="asset.images" />
+                                        </div>
+                                        <div class="col-sm-6 col-md-4 col-lg-3" ng-hide="$flow.files.length">
+                                            <img src="http://www.placehold.it/200x150/EFEFEF/AAAAAA&text=no image" />
                                         </div>
                                     </div>
                                 </div>
                             </div>
-                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid" class="btn btn-primary pull-right">
+                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid || assetform.$submitted" class="btn btn-primary pull-right">
                                 Register asset
                             </button>
-
+                            <p ng-show="assetform.$submitted">Saving your asset, please wait...</p>
                         </form>
                     </div>
                 </div>
