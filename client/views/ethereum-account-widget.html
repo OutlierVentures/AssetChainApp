@@ -1,0 +1,11 @@
+﻿<div ng-controller="EthereumAccountController">
+    <div ng-hide="vm.IsActive()">
+        <p>No connection to Ethereum node.</p>
+        <button class="btn-sm" ng-click="vm.Connect()">Connect</button>
+    </div>
+    <div ng-show="vm.IsActive()">
+        <h3>Your Ethereum account</h3>
+        <p>Address: {{Address}}</p>
+        <p>Account balance: {{Balance}}</p>
+    </div>
+</div>

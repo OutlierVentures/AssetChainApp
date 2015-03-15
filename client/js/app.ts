@@ -2,6 +2,21 @@
 
 var CryptoJS;
 
+
+// For lack of a complete type definition, stub type definitions so we can call web3 functions from TypeScript 
+// without compile errors.
+interface web3 {
+    eth: any;
+
+    toDecimal(value: string): string;
+    toAscii(value: string): string;
+
+    setProvider: any;
+    providers: any;
+}
+
+var web3: web3;
+
 interface SingleAssetCallback {
     (asset: Asset);
 }
@@ -442,6 +457,7 @@ module AssetChain {
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)
+        .controller('EthereumAccountController', EthereumAccountController)
 
     assetChainApp.config(function ($routeProvider: ng.route.IRouteProvider, $locationProvider: ng.ILocationProvider) {
         $routeProvider

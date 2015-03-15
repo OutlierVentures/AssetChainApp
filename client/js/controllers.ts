@@ -81,7 +81,7 @@ class ExpertVerificationController {
         this.assetsService.save(this.$scope.Asset, function (resp) {
             if (s.Location.path() == "/verify/expert/" + s.AssetID) {
                 // Step 1
-                s.verification.id = guid();     
+                s.verification.id = guid();
                 s.verification.date = moment().toISOString();
                 s.verification.IsPending = true;
                 if (s.Asset.Verifications == null)
@@ -156,7 +156,7 @@ function RegisterAssetController($scope, $location: ng.ILocationService, $http, 
                     location: "dataUrl",
                     fileName: file.name,
                     dataUrl: event.target.result
-                });                
+                });
             };
         });
 
@@ -267,4 +267,78 @@ function NotificationController($scope: NotificationScope, $location, $http, $ro
 
     // Latest notifications: get first N items.
     $scope.latestNotifications = $scope.notifications.slice(0, 3);
+}
+
+
+interface IEthereumAccountScope {
+    vm: EthereumAccountController;
+    Address: string;
+    Balance: string;
+}
+
+
+class EthereumAccountController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService",
+        "expertsService"];
+
+    constructor(
+        private $scope: IEthereumAccountScope,
+        private $location: ng.ILocationService) {
+        $scope.vm = this;
+
+        this.Connect();
+    }
+
+    Connect() {
+        // We'll be using JSON-RPC to talk to eth.
+        //var rpcUrl = getUrlParameterByName("jsonRpcUrl");
+        var rpcUrl;
+
+        if (rpcUrl == null) {
+            // AlethZero local
+            //web3.setProvider(new web3.providers.HttpSyncProvider('http://localhost:8080'));
+            // go-ethereum in VM
+            //web3.setProvider(new web3.providers.HttpSyncProvider('http://192.168.1.47:8081'));
+            // cpp-ethereum in VM
+            //rpcUrl = "http://192.168.1.40:8082";
+            // Virtualbox, NAT / port forwarding
+            rpcUrl = "http://192.168.56.1:8082";
+        }
+
+        web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
+
+        try {
+            this.$scope.Address = web3.eth.coinbase;
+            this._IsActive = true;
+        }
+        catch (e) {
+            console.log("Exception while trying to connect to Ethereum node: " + e);
+        }
+
+        if (this._IsActive) {
+            // For callback closure
+            var s = this.$scope;
+
+            // 'pending' is called on load, pending transactions and blocks.
+            web3.eth.watch('pending').changed(function () {
+                // Some update from the Ethereum chain. Update the scope variables
+                // to reflect this.
+                s.Address = web3.eth.coinbase;
+
+                // Display address balance.
+                // TODO: display nicely ("40 Ether", "981 Finney", etc)
+                s.Balance = web3.toDecimal(web3.eth.balanceAt(s.Address));
+            });
+        }
+    }
+
+    _IsActive: boolean;
+
+    IsActive(): boolean {
+        return this._IsActive;
+    }
 }

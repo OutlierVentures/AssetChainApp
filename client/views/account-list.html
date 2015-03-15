@@ -1,0 +1,27 @@
+﻿<div ng-show="isAuthenticated()">
+    <div class="row">
+        <div class="col-lg-12">
+            <h1 class="page-header" id="page-header">My ledger accounts</h1>
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+    <div class="row" ng-controller="EthereumAccountController" ng-show="IsActive()">
+        <div class="col-lg-12">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <i class="fa fa-home fa-fw"></i> Ethereum
+                </div>
+                <!-- /.panel-heading -->
+                <div class="panel-body">
+                    <h3>Your Ethereum account</h3>
+                    <p>Address: {{Address}}</p>
+                    <p>Account balance: {{Balance}}</p>
+                </div>
+                <!-- /.panel-body -->
+            </div>
+        </div>
+        <!-- /.col-lg-12 -->
+    </div>
+    <!-- /.row -->
+</div>

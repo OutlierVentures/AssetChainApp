@@ -93,17 +93,21 @@
     <script src="vendors/cryptojs/components/sha256-min.js"></script>
     <script src="vendors/cryptojs/rollups/aes.js"></script>
 
+    <script src="vendors/bignumber.js/bignumber.min.js"></script>
 
     <!--END from bower-->
 
-    <!-- Custom Theme JavaScript -->
+    <!-- Custom libraries and app -->
     <script src="js/vendor/sb-admin-2.js"></script>
 
-
-    <script src="js/app-no-angular.js"></script>
-
-    <script src="js/controllers.js"></script>
+    <script src="vendors-manual/ethereum/ethereum.min.js"></script>
+    <script>
+        // Require web3 from ethereum.js here to prevent Typescript build errors.
+        var web3 = require('web3');
+    </script>
+    <script src="js/controllers.js"></script>    
     <script src="js/app.js"></script>
+
 
 </body>
 

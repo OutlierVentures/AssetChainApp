@@ -6,7 +6,8 @@
     <ProjectGuid>{f6a679bc-cf9e-453c-bad2-eb175120b3ff}</ProjectGuid>
     <ProjectHome />
     <ProjectView>ShowAllFiles</ProjectView>
-    <StartupFile>client\js\app-no-angular.ts</StartupFile>
+    <StartupFile>
+    </StartupFile>
     <WorkingDirectory>.</WorkingDirectory>
     <OutputPath>.</OutputPath>
     <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
@@ -19,6 +20,8 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Compile Include="client\vendors-manual\ethereum\ethereum.js" />
+    <Compile Include="client\vendors-manual\ethereum\ethereum.min.js" />
     <Compile Include="Gruntfile.js" />
     <Content Include="asset-chain-logo.xcf" />
     <Content Include="client\bower.json" />
@@ -29,6 +32,9 @@
     <Content Include="client\img\backends\counterparty-logo.png" />
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
+    <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
+    <Content Include="client\views\account-list.html" />
+    <Content Include="client\views\ethereum-account-widget.html" />
     <Content Include="client\views\login.html" />
     <Content Include="client\views\asset-details.html" />
     <Content Include="client\views\notifications.html" />
@@ -42,7 +48,6 @@
     <Content Include="client\views\transfer-asset.html" />
     <Content Include="client\views\register-asset.html" />
     <Content Include="package.json" />
-    <TypeScriptCompile Include="client\js\app-no-angular.ts" />
     <Content Include="client\css\app.css" />
     <Content Include="client\css\bootstrap.css" />
     <Content Include="client\css\bootstrap.min.css" />
@@ -94,6 +99,8 @@
     <Folder Include="client\js\typings\moment\" />
     <Folder Include="client\js\typings\underscore\" />
     <Folder Include="client\js\vendor\" />
+    <Folder Include="client\vendors-manual\" />
+    <Folder Include="client\vendors-manual\ethereum\" />
     <Folder Include="client\vendors\" />
     <Folder Include="client\views\" />
     <Folder Include="client\plugins\" />
