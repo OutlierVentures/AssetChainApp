@@ -270,7 +270,7 @@ function NotificationController($scope: NotificationScope, $location, $http, $ro
 }
 
 
-interface IEthereumAccountScope {
+interface IEthereumAccountScope extends ng.IScope {
     vm: EthereumAccountController;
     Address: string;
     Balance: string;
@@ -306,7 +306,10 @@ class EthereumAccountController {
             // cpp-ethereum in VM
             //rpcUrl = "http://192.168.1.40:8082";
             // Virtualbox, NAT / port forwarding
-            rpcUrl = "http://192.168.56.1:8082";
+            // Node 1
+            //rpcUrl = "http://192.168.56.101:8081";
+            // Node 2
+            rpcUrl = "http://192.168.56.102:8082";
         }
 
         web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
@@ -332,6 +335,8 @@ class EthereumAccountController {
                 // Display address balance.
                 // TODO: display nicely ("40 Ether", "981 Finney", etc)
                 s.Balance = web3.toDecimal(web3.eth.balanceAt(s.Address));
+
+                s.$apply();
             });
         }
     }
