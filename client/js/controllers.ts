@@ -1,17 +1,41 @@
-﻿
-function LoginController($scope, $route, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
+﻿class Credentials {
+    password: string;
+}
 
-    $scope.isAuthenticated = function (): boolean {
-        return identityService.IsAuthenticated();
-    }
+interface ILoginScope extends ng.IScope {
+    credentials: Credentials;
+    isAuthenticated();
+    login();
+}
 
-    $scope.login = function () {
-        var provider = new AssetChainIdentityProvider();
-        
-        // TODO: check whether it's a valid wallet password (mnemonic)
-        provider.SetPassword($scope.credentials.password);
-        identityService.Logon(provider);
-        $route.reload();
+class LoginController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$route",
+        "identityService"];
+
+    constructor(
+        private $scope: ILoginScope,
+        private $location: ng.ILocationService,
+        private $route: ng.route.IRouteService,
+        private identityService: IdentityService) {
+
+        $scope.isAuthenticated = function (): boolean {
+            return identityService.IsAuthenticated();
+        }
+
+        $scope.login = function () {
+            // TODO: move to IsValidPassword function, check whether it's a valid wallet password (mnemonic)
+            if ($scope.credentials.password == null || $scope.credentials.password.length < 20)
+                return;
+
+            var provider = new AssetChainIdentityProvider();
+
+            provider.SetPassword($scope.credentials.password);
+            identityService.Logon(provider);
+            $route.reload();
+        }
     }
 }
 
@@ -280,10 +304,7 @@ interface IEthereumAccountScope extends ng.IScope {
 class EthereumAccountController {
     public static $inject = [
         "$scope",
-        "$location",
-        "$routeParams",
-        "assetsService",
-        "expertsService"];
+        "$location"];
 
     constructor(
         private $scope: IEthereumAccountScope,
@@ -346,4 +367,28 @@ class EthereumAccountController {
     IsActive(): boolean {
         return this._IsActive;
     }
+}
+
+interface IAccountScope extends ng.IScope {
+    vm: UserAccountController;
+}
+
+/**
+ * Controller for all things account-related. For example vault password, connected ledger accounts, 
+ * etc.
+ */
+class UserAccountController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService",
+        "expertsService"];
+
+    constructor(
+        private $scope: IAccountScope,
+        private $location: ng.ILocationService) {
+        $scope.vm = this;
+    }
+
 }

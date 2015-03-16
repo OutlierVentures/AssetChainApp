@@ -19,7 +19,7 @@
                             <div class="form-group">
                                 <div class="input-group">
                                     <!--<label class="input-group-addon">Your password</label>-->
-                                    <input class="form-control" type="password" ng-model="credentials.password" required />
+                                    <input class="form-control" type="password" ng-model="credentials.password" ng-minlength="20" required />
                                     <span class="input-group-btn">
                                         <button ng-click="login()" ng-disabled="loginForm.$invalid" class="btn btn-primary">
                                             Open my vault

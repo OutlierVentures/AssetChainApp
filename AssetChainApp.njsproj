@@ -75,7 +75,9 @@
     <Compile Include="client\js\plugins\morris\morris.js" />
     <Compile Include="client\js\plugins\morris\morris.min.js" />
     <Compile Include="client\js\plugins\morris\raphael.min.js" />
+    <TypeScriptCompile Include="client\js\models.ts" />
     <TypeScriptCompile Include="client\js\app.ts" />
+    <TypeScriptCompile Include="client\js\services.ts" />
     <TypeScriptCompile Include="client\js\controllers.ts" />
     <TypeScriptCompile Include="client\js\typings\angular\angular-route.d.ts" />
     <TypeScriptCompile Include="client\js\typings\angular\angular.d.ts" />
