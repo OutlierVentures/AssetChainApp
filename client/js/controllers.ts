@@ -301,42 +301,40 @@ interface IEthereumAccountScope extends ng.IScope {
 }
 
 
+
+
 class EthereumAccountController {
     public static $inject = [
         "$scope",
-        "$location"];
+        "$location",
+        "configurationService"];
+
+    private config: EthereumConfiguration;
 
     constructor(
         private $scope: IEthereumAccountScope,
-        private $location: ng.ILocationService) {
+        private $location: ng.ILocationService,
+        private configurationService: ConfigurationService) {
         $scope.vm = this;
+
+
 
         this.Connect();
     }
 
     Connect() {
-        // We'll be using JSON-RPC to talk to eth.
-        //var rpcUrl = getUrlParameterByName("jsonRpcUrl");
-        var rpcUrl;
-
-        if (rpcUrl == null) {
-            // AlethZero local
-            //web3.setProvider(new web3.providers.HttpSyncProvider('http://localhost:8080'));
-            // go-ethereum in VM
-            //web3.setProvider(new web3.providers.HttpSyncProvider('http://192.168.1.47:8081'));
-            // cpp-ethereum in VM
-            //rpcUrl = "http://192.168.1.40:8082";
-            // Virtualbox, NAT / port forwarding
-            // Node 1
-            //rpcUrl = "http://192.168.56.101:8081";
-            // Node 2
-            rpcUrl = "http://192.168.56.102:8082";
-        }
-
-        web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
-
         try {
-            this.$scope.Address = web3.eth.coinbase;
+            this.configurationService.load();
+            this.config = this.configurationService.Configuration.Ethereum;
+
+            // We'll be using JSON-RPC to talk to eth.
+            var rpcUrl = this.configurationService.Configuration.Ethereum.JsonRpcUrl;
+
+            web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
+
+            var coinbase: string;
+
+            coinbase = web3.eth.coinbase;
             this._IsActive = true;
         }
         catch (e) {
@@ -344,13 +342,20 @@ class EthereumAccountController {
         }
 
         if (this._IsActive) {
+            // Further configuration now that we know the connection to the node is successful.
+            if (this.config.CurrentAddress == null || this.config.CurrentAddress == "") {
+                this.config.CurrentAddress = coinbase;
+            }
+
+            this.$scope.Address = this.config.CurrentAddress;
+
             // For callback closure
             var s = this.$scope;
 
             // 'pending' is called on load, pending transactions and blocks.
             web3.eth.watch('pending').changed(function () {
-                // Some update from the Ethereum chain. Update the scope variables
-                // to reflect this.
+                // This code is called on any update from the Ethereum chain. Update 
+                // the scope variables to reflect this.
                 s.Address = web3.eth.coinbase;
 
                 // Display address balance.
@@ -367,10 +372,17 @@ class EthereumAccountController {
     IsActive(): boolean {
         return this._IsActive;
     }
+
+    IsEnabled(): boolean {
+        // Always enabled.
+        // TODO: make configurable.
+        return true;
+    }
 }
 
 interface IAccountScope extends ng.IScope {
     vm: UserAccountController;
+    ethereumJsonRpcUrl: string;
 }
 
 /**
@@ -381,14 +393,37 @@ class UserAccountController {
     public static $inject = [
         "$scope",
         "$location",
-        "$routeParams",
-        "assetsService",
-        "expertsService"];
+        "$route",
+        "configurationService",
+        "identityService"];
 
     constructor(
         private $scope: IAccountScope,
-        private $location: ng.ILocationService) {
+        private $route: ng.route.IRouteProvider,
+        private $location: ng.ILocationService,
+        private configurationService: ConfigurationService,
+        private identityService: IdentityService) {
         $scope.vm = this;
+
+        this.configurationService.load();
+
+        this.$scope.ethereumJsonRpcUrl = this.configurationService.Configuration.Ethereum.JsonRpcUrl;
     }
 
+    isAuthenticated(): boolean {
+        return this.identityService.IsAuthenticated();
+    }
+
+    IsEnabled(ledgerId: string) {
+        return true;
+    }
+
+    SaveConfiguration() {
+        this.configurationService.Configuration.Ethereum.JsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
+        this.configurationService.save();
+
+        // TODO: give EthereumController / -Service a notification to connect.
+
+        // this.Connect();
+    }
 }

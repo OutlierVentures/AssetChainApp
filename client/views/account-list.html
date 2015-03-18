@@ -1,4 +1,4 @@
-﻿<div ng-show="isAuthenticated()">
+﻿<div>
     <div class="row">
         <div class="col-lg-12">
             <h1 class="page-header" id="page-header">My ledger accounts</h1>
@@ -6,7 +6,7 @@
         <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
-    <div class="row" ng-controller="EthereumAccountController" ng-show="IsActive()">
+    <div class="row" ng-controller="UserAccountController" ng-show="vm.IsEnabled('ethereum')">
         <div class="col-lg-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -14,9 +14,21 @@
                 </div>
                 <!-- /.panel-heading -->
                 <div class="panel-body">
-                    <h3>Your Ethereum account</h3>
-                    <p>Address: {{Address}}</p>
-                    <p>Account balance: {{Balance}}</p>
+                    <div>
+                        <form role ="form" name="ethereumAccountForm" novalidate>
+                            <div class="form-group">
+                                <label for="ethereumJsonRpcUrl">Ethereum node URL</label>
+                                <p>Please provide the JSON RPC URL where your Ethereum node can be reached.</p>
+                                <input class="form-control" name="ethereumJsonRpcUrl" ng-model="ethereumJsonRpcUrl" />
+                            </div>
+                            <button class="btn btn-primary" value="Connect" ng-click="vm.SaveConfiguration()">Connect</button>
+                        </form>
+                    </div>
+                    <div ng-show="IsActive()">
+                        <h3>Your Ethereum account</h3>
+                        <p>Address: {{Address}}</p>
+                        <p>Account balance: {{Balance}}</p>
+                    </div>
                 </div>
                 <!-- /.panel-body -->
             </div>

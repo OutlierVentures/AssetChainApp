@@ -24,8 +24,6 @@ class AssetsService {
 
         // TODO: make storageService into a configurable, multi-backend data layer
         // For example, assets can be stored anywhere, but their verification cannot.
-
-        // TODO: inject and pass identityService
         this.backend = new EncryptedLocalStorageService(identityService);
 
         this.ensureAssets();
@@ -43,90 +41,8 @@ class AssetsService {
 
         this.loadDB();
 
-        if (this.assets != null)
-            return;
-
-        // Initialize with dummy data.
-        // TODO: get from server-side storage if available, cached in local storage.
-        this.assets = [
-            {
-                comments: "",
-                IsPendingClaim: false,
-                id: "3",
-                name: "Rolex Platinum Pearlmaster",
-                category: "Jewelry/Watch",
-                images: [
-                    {
-                        location: "local",
-                        fileName: "rolex-platinum-pearlmaster.jpg",
-                    },
-                    {
-                        location: "local",
-                        fileName: "rolex-platinum-pearlmaster-closeup.png",
-                    },
-                ],
-                securedOn: {
-                    name: "Premium security",
-                    ledgers:
-                    [
-                        {
-                            name: "Counterparty",
-                            logoImageFileName: "counterparty-logo.png",
-                            transactionUrl: "http://blockscan.com/txInfo/11570794"
-                        },
-                        {
-                            name: "Ethereum",
-                            logoImageFileName: "ethereum-logo.png",
-                        }
-                    ]
-                },
-                Verifications: [],
-            },
-            {
-                id: "2",
-                name: "Rolex Submariner for Cartier",
-                category: "Jewelry/Watch",
-                comments: null,
-                IsPendingClaim: false,
-                images: [
-                    {
-                        location: "local",
-                        fileName: "rolex-submariner-for-cartier.jpg",
-                    }
-                ],
-                securedOn: {
-                    name: "Premium security",
-                    ledgers:
-                    [
-                        {
-                            name: "Counterparty",
-                            logoImageFileName: "counterparty-logo.png",
-                            transactionUrl: "http://blockscan.com/txInfo/11545830"
-                        }
-                    ]
-                },
-                Verifications: [
-                    {
-                        id: "89489489485456",
-                        name: "Watches of Switzerland",
-                        address: "61 Brompton Road, London, London, SW3 1B, United Kingdom",
-                        date: '2015-01-13 15:34',
-                        comments: "",
-                        defects: "",
-                        IsPending: false,
-                    }
-                ]
-
-            },
-            {
-                id: "4",
-                name: "Diamond 1ct",
-                category: "Jewelry/Precious stones",
-                comments: null,
-                IsPendingClaim: false,
-                Verifications: [],
-            }
-        ];
+        if (this.assets == null)
+            this.assets = [];
     }
 
     private saveDB(): void {
@@ -185,6 +101,25 @@ class AssetsService {
 
     create(asset: Asset, cb: SingleAssetCallback) {
         asset.id = guid();
+
+        // STUB: dummy security
+        asset.securedOn = {
+            name: "Premium security",
+            ledgers:
+            [
+                {
+                    name: "Counterparty",
+                    logoImageFileName: "counterparty-logo.png",
+                    transactionUrl: "http://blockscan.com/txInfo/11570794"
+                },
+                {
+                    name: "Ethereum",
+                    logoImageFileName: "ethereum-logo.png",
+                    transactionUrl: null
+                }
+            ]
+        },
+
         this.assets.push(asset)
         cb(asset);
     }
@@ -425,5 +360,37 @@ class ExpertsService {
             }];
 
         }
+    }
+}
+
+/**
+ * The service for storing and retrieving application configuration.
+ */
+class ConfigurationService {
+    Configuration: Configuration;
+
+    private backend: IStorageService;
+
+    public static $inject = [
+        'identityService'
+    ];
+
+    // dependencies are injected via AngularJS $injector
+    constructor(
+        private identityService: IdentityService) {
+
+        this.backend = new EncryptedLocalStorageService(identityService);
+
+        // TODO: make sure configuration is loaded once identityService is initialized.
+    }
+
+    load() {
+        this.Configuration = this.backend.GetItem("configuration");
+        if (this.Configuration == null)
+            this.Configuration = new Configuration();
+    }
+
+    save() {
+        this.backend.SetItem("configuration", this.Configuration);
     }
 }

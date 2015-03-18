@@ -45,6 +45,7 @@ module AssetChain {
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)
         .controller('EthereumAccountController', EthereumAccountController)
+        .controller('UserAccountController', UserAccountController)
 
     assetChainApp.config(function ($routeProvider: ng.route.IRouteProvider, $locationProvider: ng.ILocationProvider) {
         $routeProvider
@@ -57,6 +58,7 @@ module AssetChain {
             .when('/verify/expert/:id/:verificationID', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert-step2.html' })
             .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: '/views/verify-ownership.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: '/views/notifications.html' })
+            .when('/user/settings/accounts', { controller: UserAccountController, templateUrl: '/views/account-list.html' })
             .when('/not-found', { templateUrl: '/views/not-found.html' })
             .otherwise({ redirectTo: 'not-found' })
         $locationProvider.html5Mode(false)
@@ -69,4 +71,6 @@ module AssetChain {
     assetChainApp.service('assetsService', AssetsService);
 
     assetChainApp.service('expertsService', ExpertsService);
+
+    assetChainApp.service('configurationService', ConfigurationService);
 }
