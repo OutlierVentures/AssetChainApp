@@ -14,18 +14,22 @@ class Asset {
 
 class AssetSecurity {
     name: string;
-    ledgers: LedgerSecurityPeg[];
+    // The backend ledgers on which this asset has been secured.
+    securityPegs: SecurityPeg[];
 }
 
 /**
  * Pointer to a transaction on a backend ledger where this asset was secured.
  */
-class LedgerSecurityPeg {
+class SecurityPeg {
     name: string;
     logoImageFileName: string;
     transactionUrl: string;
 }
 
+/**
+ * Verification of an asset by an expert.
+ */
 class Verification {
     id: string;
     name: string;

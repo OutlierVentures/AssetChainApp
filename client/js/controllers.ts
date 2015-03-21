@@ -307,47 +307,25 @@ class EthereumAccountController {
     public static $inject = [
         "$scope",
         "$location",
-        "configurationService"];
-
-    private config: EthereumConfiguration;
+        "configurationService",
+        "ethereumService"];
 
     constructor(
         private $scope: IEthereumAccountScope,
         private $location: ng.ILocationService,
-        private configurationService: ConfigurationService) {
+        private configurationService: ConfigurationService,
+        private ethereumService: EthereumService) {
         $scope.vm = this;
-
-
-
-        this.Connect();
+        
+        ethereumService.Connect();
     }
 
     Connect() {
-        try {
-            this.configurationService.load();
-            this.config = this.configurationService.Configuration.Ethereum;
+        this.ethereumService.Connect();
 
-            // We'll be using JSON-RPC to talk to eth.
-            var rpcUrl = this.configurationService.Configuration.Ethereum.JsonRpcUrl;
+        if (this.ethereumService.IsActive()) {
 
-            web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
-
-            var coinbase: string;
-
-            coinbase = web3.eth.coinbase;
-            this._IsActive = true;
-        }
-        catch (e) {
-            console.log("Exception while trying to connect to Ethereum node: " + e);
-        }
-
-        if (this._IsActive) {
-            // Further configuration now that we know the connection to the node is successful.
-            if (this.config.CurrentAddress == null || this.config.CurrentAddress == "") {
-                this.config.CurrentAddress = coinbase;
-            }
-
-            this.$scope.Address = this.config.CurrentAddress;
+            this.$scope.Address = this.ethereumService.Config.CurrentAddress;
 
             // For callback closure
             var s = this.$scope;
@@ -367,16 +345,8 @@ class EthereumAccountController {
         }
     }
 
-    _IsActive: boolean;
-
-    IsActive(): boolean {
-        return this._IsActive;
-    }
-
-    IsEnabled(): boolean {
-        // Always enabled.
-        // TODO: make configurable.
-        return true;
+    IsActive() {
+        return this.ethereumService.IsActive();
     }
 }
 
