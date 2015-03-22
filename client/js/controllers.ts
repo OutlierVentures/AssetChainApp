@@ -302,7 +302,9 @@ interface IEthereumAccountScope extends ng.IScope {
 
 
 
-
+/**
+ * Controller for connecting to Ethereum and managing accounts.
+ */
 class EthereumAccountController {
     public static $inject = [
         "$scope",
@@ -395,5 +397,32 @@ class UserAccountController {
         // TODO: give EthereumController / -Service a notification to connect.
 
         // this.Connect();
+    }
+}
+
+
+interface ISecureAssetScope extends ng.IScope {
+    vm: SecureAssetController;    
+}
+
+/**
+ * Controller for securing an asset on one or more ledgers. The controller is ledger-agnostic
+ * and delegates any specifics of the underlying ledgers to their specific controllers.
+ */
+class SecureAssetController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$route",
+        "configurationService",
+        "identityService"];
+
+    constructor(
+        private $scope: ISecureAssetScope,
+        private $route: ng.route.IRouteProvider,
+        private $location: ng.ILocationService,
+        private configurationService: ConfigurationService,
+        private identityService: IdentityService) {
+        $scope.vm = this;
     }
 }

@@ -40,11 +40,13 @@ interface AssetChainRootScope extends ng.IRootScopeService {
 module AssetChain {
     'use strict';
 
+    // All controllers are registered here.
     var assetChainApp = angular.module('assetChainApp', ['ngResource', 'ngRoute', 'ngSanitize', 'angularMoment', 'flow'])
         .controller('NavigationController', NavigationController)
         .controller('NotificationController', NotificationController)
         .controller('LoginController', LoginController)
         .controller('EthereumAccountController', EthereumAccountController)
+        .controller('SecureAssetController', SecureAssetController)
         .controller('UserAccountController', UserAccountController)
 
     assetChainApp.config(function ($routeProvider: ng.route.IRouteProvider, $locationProvider: ng.ILocationProvider) {
@@ -55,6 +57,7 @@ module AssetChain {
             .when('/asset/:id', { controller: SingleAssetController, templateUrl: '/views/asset-details.html' })
             .when('/transfer/:id', { controller: TransferAssetController, templateUrl: '/views/transfer-asset.html' })
             .when('/verify/expert/:id', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert.html' })
+            .when('/secure/:id', { controller: SecureAssetController, templateUrl: '/views/secure-asset-start.html' })
             .when('/verify/expert/:id/:verificationID', { controller: ExpertVerificationController, templateUrl: '/views/verify-expert-step2.html' })
             .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: '/views/verify-ownership.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: '/views/notifications.html' })
@@ -71,4 +74,11 @@ module AssetChain {
     assetChainApp.service('expertsService', ExpertsService);
     assetChainApp.service('configurationService', ConfigurationService);
     assetChainApp.service('ethereumService', EthereumService);
+}
+
+/**
+ * Shorthand method for getting an Angular service from the debug console.
+ */
+function angularGetService(serviceName: string) {
+    return angular.element(document.querySelector('.ng-scope')).injector().get(serviceName);
 }
