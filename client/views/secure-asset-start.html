@@ -8,25 +8,27 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <i class="fa fa-globe fa-fw"></i> Asset information
+                <i class="fa fa-lock fa-fw"></i> Security details
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
                 <!-- /.col-lg-4 (nested) -->
                 <div class="col-lg-12">
                     <div>
-                        <form role="form" name="assetform" novalidate>
+                        <p><strong>Asset:</strong> {{asset.name}}</p>
+                        <p class="small">Asset ID: {{assetID}}</p>
+                        <form role="form" name="secureAssetForm" novalidate>
                             <div class="form-group">
                                 <label>Security level</label>
                                 <p class="help-block">Choose the security level for securing your asset.</p>
                                 <select ng-model="level" required>
-                                    <option value="psremium">Premium</option>
+                                    <option value="premium">Premium</option>
                                 </select>
                             </div>
-                            <button name="saveButton" ng-click="save()" ng-disabled="assetform.$invalid || assetform.$submitted" class="btn btn-primary pull-right">
+                            <button name="saveButton" ng-click="vm.Save()" ng-disabled="secureAssetForm.$invalid || secureAssetForm.$submitted" class="btn btn-primary pull-right">
                                 Secure asset
                             </button>
-                            <p ng-show="assetform.$submitted">Initiating asset security, please wait...</p>
+                            <p ng-show="secureAssetForm.$submitted">Initiating asset security, please wait...</p>
                         </form>
                     </div>
                 </div>

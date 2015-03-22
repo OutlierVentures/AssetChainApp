@@ -109,22 +109,24 @@ class AssetsService {
         asset.id = guid();
 
         // STUB: dummy security
-        asset.securedOn = {
-            name: "Premium security",
-            securityPegs:
-            [
-                {
-                    name: "Counterparty",
-                    logoImageFileName: "counterparty-logo.png",
-                    transactionUrl: "http://blockscan.com/txInfo/11570794"
-                },
-                {
-                    name: "Ethereum",
-                    logoImageFileName: "ethereum-logo.png",
-                    transactionUrl: null
-                }
-            ]
-        },
+        //asset.securedOn = {
+        //    name: "Premium security",
+        //    securityPegs:
+        //    [
+        //        {
+        //            name: "Counterparty",
+        //            logoImageFileName: "counterparty-logo.png",
+        //            details: [],
+        //            transactionUrl: "http://blockscan.com/txInfo/11570794"
+        //        },
+        //        {
+        //            name: "Ethereum",
+        //            logoImageFileName: "ethereum-logo.png",
+        //            details: [],
+        //            transactionUrl: null
+        //        }
+        //    ]
+        //};
 
         this.assets.push(asset)
         cb(asset);
@@ -423,7 +425,7 @@ class EthereumService {
      */
     private AssetVaultContract: any;
 
-    Connect() {
+    Connect(): boolean {
         try {
             this.configurationService.load();
             this.Config = this.configurationService.Configuration.Ethereum;
@@ -457,7 +459,9 @@ class EthereumService {
             }
 
             this.LoadContract();
+            return true;
         }
+        return false;
     }
 
     private LoadContract() {
@@ -490,23 +494,53 @@ class EthereumService {
     }
 
     /**
+     * Ensure that we're connected, by calling Connect() if necessary.
+     */
+    EnsureConnect(): boolean {
+        if (this._IsActive)
+            // Already connected.
+            return true;
+
+        return this.Connect();
+    }
+
+    /**
      * Register the passed asset on this ledger.
      */
-    SecureAsset(asset: Asset, cb: SecurityPegCallback)  {
+    SecureAsset(asset: Asset, cb: SecurityPegCallback) {
         this.AssetVaultContract.CreateAsset(asset.id, asset.name);
-
+        var t = this;
         // Watch until the transaction is processed.
+        // TODO: apply web3.eth.filter once it's fully available.
         web3.eth.watch('pending').changed(function () {
-            // TODO: determine the block where the asset was processed.
+            // TODO: determine whether the transaction was actually processed, and in which block. This callback is called
+            // on any change of the ledger. We want to be notified just of the completion of our transaction.
+
             var peg: SecurityPeg = {
                 name: "Ethereum",
+                details: {
+                    Address: t.Config.CurrentAddress,
+                    // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
+                    // will be in the future when web3.eth.filter is finished.
+                    // TransactionHash: ...
+                },
+                // TODO: don't store this data with the asset in the vault; the logo can be added on load.
                 logoImageFileName: "ethereum-logo.png",
                 // Currently a dummy URL as there is no working block explorer.
                 transactionUrl: "http://ether.fund/block/1507",
             }
 
+            if (web3.eth.blockNumber !== undefined)
+                peg.details.BlockNumber = web3.eth.blockNumber;
+            else
+                // Deprecated JS API
+                peg.details.BlockNumber = web3.eth.number;
+
+            
+
             // TODO: remove this watch after we got the result. How?
             // TODO: update to latest JavaScript API web3.eth.filter (once backend is updated).
+            cb(peg);
         });
     }
 

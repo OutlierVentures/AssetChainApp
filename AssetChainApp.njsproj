@@ -22,9 +22,6 @@
   <ItemGroup>
     <Compile Include="client\vendors-manual\ethereum\ethereum.js" />
     <Compile Include="client\vendors-manual\ethereum\ethereum.min.js" />
-    <Compile Include="client\vendors\angular\angular.js" />
-    <Compile Include="client\vendors\angular\angular.min.js" />
-    <Compile Include="client\vendors\angular\index.js" />
     <Compile Include="Gruntfile.js" />
     <Content Include="asset-chain-logo.xcf" />
     <Content Include="client\.bowerrc" />
@@ -36,14 +33,7 @@
     <Content Include="client\img\backends\counterparty-logo.png" />
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
-    <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
-    <Content Include="client\vendors\angular\.bower.json" />
-    <Content Include="client\vendors\angular\angular-csp.css" />
-    <Content Include="client\vendors\angular\angular.min.js.gzip" />
-    <Content Include="client\vendors\angular\angular.min.js.map" />
-    <Content Include="client\vendors\angular\bower.json" />
-    <Content Include="client\vendors\angular\package.json" />
-    <Content Include="client\vendors\angular\README.md" />
+    <Content Include="client\vendors-manual\ethereum\ethereum.min.js.map" />
     <Content Include="client\views\account-list.html" />
     <Content Include="client\views\ethereum-account-widget.html" />
     <Content Include="client\views\login.html" />
@@ -117,7 +107,6 @@
     <Folder Include="client\vendors-manual\" />
     <Folder Include="client\vendors-manual\ethereum\" />
     <Folder Include="client\vendors\" />
-    <Folder Include="client\vendors\angular\" />
     <Folder Include="client\views\" />
     <Folder Include="client\plugins\" />
     <Folder Include="client\plugins\metisMenu\" />

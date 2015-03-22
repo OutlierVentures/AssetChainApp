@@ -47,9 +47,11 @@ function DashboardController($scope, $location, $http, $routeParams, assetsServi
     // Get some stats/charts
 }
 
-
 interface IAssetRouteParameters extends ng.route.IRouteParamsService {
     id: string;
+}
+
+interface IVerifyAssetRouteParameters extends IAssetRouteParameters {
     verificationID: string;
 }
 
@@ -76,7 +78,7 @@ class ExpertVerificationController {
     constructor(
         private $scope: IVerificationScope,
         private $location: ng.ILocationService,
-        private $routeParams: IAssetRouteParameters,
+        private $routeParams: IVerifyAssetRouteParameters,
         private assetsService: AssetsService,
         private expertsService: ExpertsService) {
         $scope.AssetID = $routeParams.id;
@@ -191,6 +193,7 @@ function RegisterAssetController($scope, $location: ng.ILocationService, $http, 
             assetsService.save($scope.asset, function (resp) {
                 // Redirect to the new asset page.
                 $location.path('/asset/' + resp.id);
+                // Apply scope changes to effect the redirect.
                 $scope.$apply();
             });
         }, 5000);
@@ -318,7 +321,7 @@ class EthereumAccountController {
         private configurationService: ConfigurationService,
         private ethereumService: EthereumService) {
         $scope.vm = this;
-        
+
         ethereumService.Connect();
     }
 
@@ -402,7 +405,11 @@ class UserAccountController {
 
 
 interface ISecureAssetScope extends ng.IScope {
-    vm: SecureAssetController;    
+    vm: SecureAssetController;
+    assetID: string;
+    asset: Asset;
+    level: string;
+    //securityPeg: SecurityPeg;
 }
 
 /**
@@ -414,15 +421,69 @@ class SecureAssetController {
         "$scope",
         "$location",
         "$route",
+        "$routeParams",
         "configurationService",
-        "identityService"];
+        "identityService",
+        "assetsService",
+        "ethereumService"];
 
     constructor(
         private $scope: ISecureAssetScope,
-        private $route: ng.route.IRouteProvider,
         private $location: ng.ILocationService,
+        private $route: ng.route.IRouteProvider,
+        private $routeParams: IAssetRouteParameters,
         private configurationService: ConfigurationService,
-        private identityService: IdentityService) {
+        private identityService: IdentityService,
+        private assetsService: AssetsService,
+        private ethereumService: EthereumService) {
         $scope.vm = this;
+        $scope.assetID = $routeParams.id;
+
+        assetsService.get($scope.assetID, function (resp) {
+            $scope.asset = resp;
+        });
     }
+
+    /**
+     * Create a security peg for the asset. To be called from the view.
+     */
+    Save() {
+        // Currently the only security level we support is "premium".
+        // TODO: support multiple security levels, storing data in different ways.
+        if (this.$scope.level != "premium")
+            return false;
+
+        var t = this;
+
+        if (this.ethereumService.EnsureConnect()) {
+            this.ethereumService.SecureAsset(this.$scope.asset, function (pegResp) {
+                // TODO: handle errors from Ethereum. No ether, etc.
+                // TODO: add notification that registering was completed.
+                var a = t.$scope.asset;
+                if (a.securedOn == null)
+                    a.securedOn = new AssetSecurity();
+
+                a.securedOn.name = "Premium";
+                if (a.securedOn.securityPegs == null)
+                    a.securedOn.securityPegs = [];
+
+                a.securedOn.securityPegs.push(pegResp);
+                t.assetsService.save(a, function (assetResp) {
+                    // TODO: handle any errors
+
+                    // Redirect to the new asset page.
+                    t.$location.path('/asset/' + assetResp.id);
+                    // Apply scope changes to effect the redirect.
+                    t.$scope.$apply();
+                });
+            })
+        }
+        else {
+            // TODO: show error message.
+        }
+
+
+
+    }
+
 }

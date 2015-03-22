@@ -38,10 +38,10 @@
                                                     </div>
                                                     <div class="panel-body">
                                                         <div class="row">
-                                                            <div ng-repeat="ledger in asset.securedOn.ledgers" class="col-lg-4" style="padding-bottom: 1em;">
-                                                                <p><img ng-src="img/backends/{{ledger.logoImageFileName}}" /> {{ledger.name}} </p>
-
-                                                                <a ng-hide="ledger.transactionUrl == null" class="btn btn-primary" href="{{ledger.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
+                                                            <div ng-repeat="peg in asset.securedOn.securityPegs" class="col-lg-4" style="padding-bottom: 1em;">
+                                                                <p><img ng-src="img/backends/{{peg.logoImageFileName}}" /> {{peg.name}} </p>
+                                                                <!-- TODO: display ledger-specific properties here. The controller should prepare them. -->
+                                                                <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
                                                             </div>
                                                         </div>
                                                     </div>

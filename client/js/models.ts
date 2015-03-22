@@ -22,9 +22,16 @@ class AssetSecurity {
  * Pointer to a transaction on a backend ledger where this asset was secured.
  */
 class SecurityPeg {
+    /**
+     * Ledger name.
+     */
     name: string;
     logoImageFileName: string;
     transactionUrl: string;
+    /**
+     * Ledger-specific details, as an object.
+     */
+    details: any;
 }
 
 /**
