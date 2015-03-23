@@ -514,7 +514,13 @@ class SecureAssetController {
                 return;
             }
 
-            this.ethereumService.SecureAsset(asset, savePeg);
+            this.ethereumService.SecureAsset(asset, function (peg) {
+                savePeg(peg);
+                // When changing location from a callback, scope has to be applied. When calling it 
+                // synchronously, scope may NOT be applied, so we can't include it in savePeg(). Hence
+                // include it here.
+                t.$scope.$apply();
+            });
 
         }
         else {
