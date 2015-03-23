@@ -20,17 +20,21 @@ var web3: web3;
 
 // Generate a guid.
 // TODO: move this to some general toolbox.
-var guid = (function () {
+// TODO: make it possible to call without parameter or with it.
+function guid(skipDashes: boolean) {
     function s4() {
         return Math.floor((1 + Math.random()) * 0x10000)
             .toString(16)
             .substring(1);
     }
-    return function () {
-        return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-            s4() + '-' + s4() + s4() + s4();
-    };
-})();
+
+    var separator = "";
+    if (!skipDashes)
+        separator = '-';
+
+    return s4() + s4() + separator + s4() + separator + s4() + separator +
+        s4() + separator + s4() + s4() + s4();
+};
 
 
 interface AssetChainRootScope extends ng.IRootScopeService {

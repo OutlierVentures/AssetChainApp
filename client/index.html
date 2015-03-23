@@ -95,12 +95,16 @@
 
     <script src="vendors/bignumber.js/bignumber.min.js"></script>
 
+    <!--Using manual ethereum for now as current ethereum.js from github is > PoC8-->
+    <!--<script src="vendors/ethereum.js/dist/ethereum.min.js"></script>-->
+
     <!--END from bower-->
 
     <!-- Custom libraries and app -->
     <script src="js/vendor/sb-admin-2.js"></script>
 
-    <script src="vendors-manual/ethereum/ethereum.min.js"></script>
+    <script src="vendors-manual/ethereum/ethereum.js"></script>
+
     <script>
         // Require web3 from ethereum.js here to prevent Typescript build errors.
         var web3 = require('web3');

@@ -16,6 +16,8 @@
     <EnableTypeScript>true</EnableTypeScript>
     <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">11.0</VisualStudioVersion>
     <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    <ToolsVersionPromptShown>1.4</ToolsVersionPromptShown>
+    <TypeScriptToolsVersion>1.4</TypeScriptToolsVersion>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
@@ -33,7 +35,7 @@
     <Content Include="client\img\backends\counterparty-logo.png" />
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
-    <Content Include="client\vendors-manual\ethereum\ethereum.min.js.map" />
+    <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
     <Content Include="client\views\account-list.html" />
     <Content Include="client\views\ethereum-account-widget.html" />
     <Content Include="client\views\login.html" />

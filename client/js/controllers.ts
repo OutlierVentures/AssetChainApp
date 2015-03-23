@@ -34,6 +34,7 @@ class LoginController {
 
             provider.SetPassword($scope.credentials.password);
             identityService.Logon(provider);
+
             $route.reload();
         }
     }
@@ -107,7 +108,7 @@ class ExpertVerificationController {
         this.assetsService.save(this.$scope.Asset, function (resp) {
             if (s.Location.path() == "/verify/expert/" + s.AssetID) {
                 // Step 1
-                s.verification.id = guid();
+                s.verification.id = guid(true);
                 s.verification.date = moment().toISOString();
                 s.verification.IsPending = true;
                 if (s.Asset.Verifications == null)
@@ -322,7 +323,9 @@ class EthereumAccountController {
         private ethereumService: EthereumService) {
         $scope.vm = this;
 
-        ethereumService.Connect();
+        // The controller is constructed on application load. At that point we don't have the configuration yet.
+        // So we can't connect; connections are manually started atm.
+        //ethereumService.Connect();
     }
 
     Connect() {
@@ -334,12 +337,13 @@ class EthereumAccountController {
 
             // For callback closure
             var s = this.$scope;
+            var t = this;
 
             // 'pending' is called on load, pending transactions and blocks.
             web3.eth.watch('pending').changed(function () {
                 // This code is called on any update from the Ethereum chain. Update 
                 // the scope variables to reflect this.
-                s.Address = web3.eth.coinbase;
+                s.Address = t.ethereumService.Config.CurrentAddress;
 
                 // Display address balance.
                 // TODO: display nicely ("40 Ether", "981 Finney", etc)
@@ -370,14 +374,16 @@ class UserAccountController {
         "$location",
         "$route",
         "configurationService",
-        "identityService"];
+        "identityService",
+        "ethereumService"];
 
     constructor(
         private $scope: IAccountScope,
         private $route: ng.route.IRouteProvider,
         private $location: ng.ILocationService,
         private configurationService: ConfigurationService,
-        private identityService: IdentityService) {
+        private identityService: IdentityService,
+        private ethereumService: EthereumService) {
         $scope.vm = this;
 
         this.configurationService.load();
@@ -399,7 +405,7 @@ class UserAccountController {
 
         // TODO: give EthereumController / -Service a notification to connect.
 
-        // this.Connect();
+        
     }
 }
 
@@ -445,6 +451,13 @@ class SecureAssetController {
     }
 
     /**
+     * Returns whether the user has any security ledgers configured and active.
+     */
+    HasLedgers(): boolean {
+        return this.ethereumService.IsActive();
+    }
+
+    /**
      * Create a security peg for the asset. To be called from the view.
      */
     Save() {
@@ -456,29 +469,56 @@ class SecureAssetController {
         var t = this;
 
         if (this.ethereumService.EnsureConnect()) {
-            this.ethereumService.SecureAsset(this.$scope.asset, function (pegResp) {
+            var asset = this.$scope.asset;
+
+            // Check: do we have a SecurityPeg for the asset on this ledger already?
+            if (asset.securedOn)
+                for (var i = 0; i < asset.securedOn.securityPegs.length; i++) {
+                    var peg = asset.securedOn.securityPegs[i];
+                    if (peg.name.toLowerCase() == this.ethereumService._LedgerName) {
+                        // Already secured on this ledger.
+
+                        // Redirect to the new asset page. We don't need a second apply() here because we're not in a callback.
+                        t.$location.path('/asset/' + this.$scope.asset.id);
+                        return;
+                    }
+                }
+
+            var savePeg = function (pegResp) {
                 // TODO: handle errors from Ethereum. No ether, etc.
                 // TODO: add notification that registering was completed.
-                var a = t.$scope.asset;
-                if (a.securedOn == null)
-                    a.securedOn = new AssetSecurity();
+                if (asset.securedOn == null)
+                    asset.securedOn = new AssetSecurity();
 
-                a.securedOn.name = "Premium";
-                if (a.securedOn.securityPegs == null)
-                    a.securedOn.securityPegs = [];
+                asset.securedOn.name = "Premium";
+                if (asset.securedOn.securityPegs == null)
+                    asset.securedOn.securityPegs = [];
 
-                a.securedOn.securityPegs.push(pegResp);
-                t.assetsService.save(a, function (assetResp) {
+                asset.securedOn.securityPegs.push(pegResp);
+                t.assetsService.save(asset, function (assetResp) {
                     // TODO: handle any errors
 
                     // Redirect to the new asset page.
                     t.$location.path('/asset/' + assetResp.id);
-                    // Apply scope changes to effect the redirect.
-                    t.$scope.$apply();
+                    t.$location.replace();
                 });
-            })
+            };
+
+            // Check: already secured on this ledger?
+            if (this.ethereumService.IsSecured(asset)) {
+                // Already secured.
+                // TODO: show message
+                var peg = this.ethereumService.GetSecurityPeg(asset);
+
+                savePeg(peg);
+                return;
+            }
+
+            this.ethereumService.SecureAsset(asset, savePeg);
+
         }
         else {
+            // No connection
             // TODO: show error message.
         }
 

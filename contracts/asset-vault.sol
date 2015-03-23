@@ -131,6 +131,7 @@
     function RequestTransfer(string32 assetID, address newOwner) returns (bool ok){
         // TODO: implement
         // Check: is the asset ID valid?
+        // Check: is the caller not already the owner of the asset?
         return 1;
     }
 
