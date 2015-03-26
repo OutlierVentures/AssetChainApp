@@ -43,40 +43,16 @@
 
     // Register an asset.
     function CreateAsset(string32 id, string32 name) {
-        // Check if the asset isn't already registered.
-        uint i = 0;
+        // Check: has the asset already been registered?
+        if(OwnerByAssetID[id] != 0x0)
+            // Asset with this ID has already been registered. No action.
+            return;
 
+        // Good to go. Register the asset.
         AssetCollection ac = AssetsByOwner[tx.origin];
 
-        // Only add new owner if they don't have a collection yet.
-        // TODO: use built-in function of mappings if/once it exists.
-        // Probably 
-        bool isExistingOwner = false;
-		
-        i = 0;
-        while (i <= OwnerCount) {
-            // Check existing asset ID. Don't allow registering it twice.
-            uint j = 0;
-            AssetCollection assetsForOwner = AssetsByOwner[Owners[i]];
-            while (j < assetsForOwner.AssetCount) {
-                mapping (uint => Asset) assetList = assetsForOwner.Assets;
-                if(assetList[j].ID == id) {
-                    // Asset with this ID has already been registered. No action.
-                    return;
-                }
-                j++;
-            }
-
-            // Check existing owner
-            if (Owners[i] == tx.origin) {
-                isExistingOwner = true;
-                // TODO: break loop, if possible
-            }
-
-            i++;
-        }
-
-        if(!isExistingOwner)
+        // Add a new owner if the owner wasn't registered before.
+        if(ac.AssetCount == 0)
             Owners[OwnerCount++] = tx.origin;
 		
         OwnerByAssetID[id] = tx.origin;
@@ -86,25 +62,8 @@
         a.Name = name;
     }
 
-    function GetOwnerOf(string32 assetID) returns (address ownerAddress) {
-        return OwnerByAssetID[assetID];
-    }
-
-    // Get a specific asset for an owner.
-    // Currently not usable because the JS inteface doesn't handle structs.
-    function GetAsset(address ownerAddress, uint assetIndex) returns (Asset b) {
-        AssetCollection ac = AssetsByOwner[ownerAddress];
-
-        return ac.Assets[assetIndex];
-    }
-
-    // Plumbing functions as workaround for functions that return structs.
-    function GetAssetCount(address ownerAddress) returns (uint assetCount){
-        AssetCollection ac = AssetsByOwner[ownerAddress];
-
-        return ac.AssetCount;
-    }
-	
+    // BEGIN plumbing functions to access properties of mappings that contain structs that 
+    // contain mappings.
     function GetAssetID(address ownerAddress, uint assetIndex) returns (string32 id){
         AssetCollection ac = AssetsByOwner[ownerAddress];
 
@@ -116,6 +75,8 @@
 
         return ac.Assets[assetIndex].Name;
     }
+    // END plumbing functions to access properties of mappings that contain structs that 
+    // contain mappings.
 	
     // Transfer ownership of an asset to a new owner. To be called by the prospective new owner.
     function RequestTransfer(string32 assetID) {
@@ -130,7 +91,7 @@
         }
 
         // Check: prevent duplicate requests.
-        // Is there already a transfer request for this asset by the requester? Then don't create 
+        // Is there already a transfer request for this asset by the same requester? Then don't create 
         // a new one.
         // TODO
 
