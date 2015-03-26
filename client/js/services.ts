@@ -441,8 +441,11 @@ class EthereumService {
             //web3.setProvider(new web3.providers.HttpProvider(rpcUrl));
 
             var coinbase: string;
+            var firstAddress: string;
 
             coinbase = web3.eth.coinbase;
+            //firstAddress = 
+
             this._IsActive = true;
         }
         catch (e) {
@@ -477,9 +480,6 @@ class EthereumService {
 
         // TODO: make address configurable
         this.AssetVaultContract = AssetVault("0x011109ed1e18a6d2a0360b81bc838997964a7879");
-
-        // Send transactions from coinbase as we allow choosing it through the UX.
-        this.AssetVaultContract._options["from"] = this.Config.CurrentAddress;
     }
 
     _LedgerName = "ethereum";
@@ -519,8 +519,13 @@ class EthereumService {
     SecureAsset(asset: Asset, cb: SecurityPegCallback) {
         var t = this;
 
-        // Check whether the asset is secured on the ledger, but we don't have a SecurityPeg yet.
-        // TODO
+        // COULD DO: Check whether the asset is secured on the ledger, but we don't have a SecurityPeg yet.
+        // Currently done within the controller. And calling the contract twice has no impact. So low prio.
+
+        // Send transactions from the currently active address. This has to be done
+        // before every transaction, because contract._options are cleared after every call.
+        // DISABLED because it gave problems, transactions wouldn't pass anymore.
+        //this.AssetVaultContract._options["from"] = this.Config.CurrentAddress;
 
         // The call to the transaction gives no result and doesn't support callbacks.
         this.AssetVaultContract.CreateAsset(asset.id, asset.name);
@@ -622,4 +627,22 @@ class EthereumService {
 
         return peg;
     }
+
+    /**
+     * Create a request to transfer an asset of another owner.
+     */
+    CreateTransferRequest(assetID: string) {
+        this.AssetVaultContract.call().OwnerByAssetID(assetID);
+
+
+        //var 
+    }
+
+    /**
+     * Confirm a received request to transfer an asset of another owner.
+     */
+    ConfirmTransferRequest(assetID: string) {
+        // TODO
+    }
+
 }
