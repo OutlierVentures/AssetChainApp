@@ -15,8 +15,10 @@
                     <p>{{asset.category}}</p>
 
                     <div ng-repeat="image in asset.images" style="display: inline-block">
-                        <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
-                        <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                        <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}"
+                             class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                        <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
+                             style="margin-bottom: 1em; margin-right: 1em;">
                     </div>
                 </div>
                 <div class="col-lg-8">
@@ -32,27 +34,30 @@
                                             <p><img ng-src="img/backends/{{peg.logoImageFileName}}" /> {{peg.name}} </p>
                                             <!-- TODO: display ledger-specific properties here. The controller should prepare them. -->
                                             <pre ng-show="peg.details">{{peg.details | json}}</pre>
-                                            <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
+                                            <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}"
+                                               target="_blank"><i class="fa fa-search"></i>View transaction</a>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                        <div ng-show="{{asset.Verifications}}" class="col-lg-12">
+                        <div ng-show="{{asset.verifications}}" class="col-lg-12">
                             <div class="panel panel-default">
                                 <div class="panel-heading">
                                     <i class="fa fa-check"></i> Verified by:
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="verification in asset.Verifications" class="col-lg-4" style="padding-bottom: 1em;">
+                                        <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
                                             <p>{{verification.name}} </p>
                                             <p class="small" ng-show="verification.date">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
                                             <p ng-show="verification.address">{{verification.address}}</p>
                                             <p ng-show="verification.comments">Your comments: {{verification.comments}}</p>
 
-                                            <a ng-show="verification.url" class="btn btn-primary" href="{{verification.url}}" target="_blank"><i class="fa fa-search"></i> View verification</a>
-                                            <p ng-show="verification.IsPending"><strong>This verification request is still pending.</strong></p>
+                                            <a ng-show="verification.url" class="btn btn-primary" href="{{verification.url}}" target="_blank">
+                                                <i class="fa fa-search"></i>View verification
+                                            </a>
+                                            <p ng-show="verification.isPending"><strong>This verification request is still pending.</strong></p>
                                         </div>
                                     </div>
                                 </div>
@@ -67,8 +72,10 @@
                                     <p>Other users have requested a transfer of ownership of this asset.</p>
                                     <div class="row">
                                         <div ng-repeat="transferRequest in transferRequests" class="col-lg-4" style="padding-bottom: 1em;">
-                                            <p><strong>Requester address:</strong> {{transferRequest.RequesterAddress}}</p>
-                                            <a class="btn btn-primary" href="#/transfer/process/{{asset.id}}/{{transferRequest.RequesterAddress}}"><i class="fa fa-play-circle"></i> Process this request</a>
+                                            <p><strong>Requester address:</strong> {{transferRequest.requesterAddress}}</p>
+                                            <a class="btn btn-primary" href="#/transfer/process/{{asset.id}}/{{transferRequest.requesterAddress}}">
+                                                <i class="fa fa-play-circle"></i> Process this request
+                                            </a>
                                         </div>
                                     </div>
                                 </div>

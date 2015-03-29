@@ -41,7 +41,7 @@ class AssetsService {
      * Ensure that initial data is loaded.
      */
     ensureAssets(): void {
-        if (!this.identityService.IsAuthenticated())
+        if (!this.identityService.isAuthenticated())
             return;
 
         if (this.assets != null)
@@ -57,11 +57,11 @@ class AssetsService {
         // TODO: encrypt by identityservice
         // TODO: use a unique key for the current account
         // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
-        this.backend.SetItem("assets", angular.copy(this.assets));
+        this.backend.setItem("assets", angular.copy(this.assets));
     }
 
     private loadDB(): void {
-        this.assets = this.backend.GetItem("assets");
+        this.assets = this.backend.getItem("assets");
     }
 
     reload(): void {
@@ -121,25 +121,25 @@ class AssetsService {
         });
     }
 
-    HasLedgers(): boolean {
-        return this.ethereumService.IsActive();
+    hasLedgers(): boolean {
+        return this.ethereumService.isActive();
     }
 
-    CreateTransferRequest(request: TransferRequest) {
+    createTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
-        this.ethereumService.CreateTransferRequest(request.AssetID);
+        this.ethereumService.createTransferRequest(request.assetID);
     }
 
-    ConfirmTransferRequest(request: TransferRequest) {
+    confirmTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
-        this.ethereumService.ConfirmTransferRequest(request);
+        this.ethereumService.confirmTransferRequest(request);
 
         // TODO: update local asset collection to show this asset is transferred. Archived? Grayed out?
     }
 
-    IgnoreTransferRequest(request: TransferRequest) {
+    ignoreTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
-        this.ethereumService.IgnoreTransferRequest(request);
+        this.ethereumService.ignoreTransferRequest(request);
 
         // TODO: update local asset collection to show this asset is transferred. Archived? Grayed out?
     }
@@ -147,8 +147,8 @@ class AssetsService {
     /**
      * Load and return any incoming transfer requests for the given asset.
      */
-    GetTransferRequests(asset: Asset): Array<TransferRequest> {
-        return this.ethereumService.GetTransferRequests(asset);
+    getTransferRequests(asset: Asset): Array<TransferRequest> {
+        return this.ethereumService.getTransferRequests(asset);
     }
 }
 
@@ -157,26 +157,26 @@ interface IIdentityProvider {
      * Get the identifier of the current user on the backend, for example the Ethereum address, Counterparty
      * wallet address, etc.
      */
-    GetIdentifier(): string;
+    getIdentifier(): string;
 
     /**
      * Log on at the identity backend. The provider needs to be initialized (with configuration, credentials etc)
      * before calling Logon().
      * @return Whether the logon attempt succeeded.
      */
-    Logon(): boolean;
+    logon(): boolean;
 
     /**
      * @return Whether the provider is currently logged on.
      */
-    IsAuthenticated(): boolean;
+    isAuthenticated(): boolean;
 
     /**
      * Encrypt the given data with the private key of this identity provider.
      */
-    Encrypt(unencryptedData: string): string;
+    encrypt(unencryptedData: string): string;
 
-    Decrypt(encryptedData: string): string;
+    decrypt(encryptedData: string): string;
 }
 
 /**
@@ -186,67 +186,66 @@ class AssetChainIdentityProvider {
     /**
      * Hash of the password of the user.
      */
-    private _PasswordHash: string;
+    private _passwordHash: string;
 
     /**
      * The unencrypted password of the user. Only stored in-memory.
      */
-    private _Password: string;
+    private _password: string;
 
-
-    GetIdentifier(): string {
-        return this._PasswordHash;
+    getIdentifier(): string {
+        return this._passwordHash;
     }
 
-    SetPassword(password: string) {
-        this._PasswordHash = CryptoJS.SHA256(password);
-        this._Password = password;
+    setPassword(password: string) {
+        this._passwordHash = CryptoJS.SHA256(password);
+        this._password = password;
     }
 
-    IsAuthenticated(): boolean {
-        return this._PasswordHash != null;
+    isAuthenticated(): boolean {
+        return this._passwordHash != null;
     }
 
-    Logon(): boolean {
+    logon(): boolean {
         // We only require a password to function. If it's not empty, we're good to go.
-        return this._PasswordHash != null;
+        return this._passwordHash != null;
     }
 
-    private GetPrivateKey(): string {
-        return this._Password;
+    private getPrivateKey(): string {
+        return this._password;
     }
 
-    Encrypt(unencryptedData: string): string {
-        return CryptoJS.AES.encrypt(unencryptedData, this.GetPrivateKey()).toString();
+    encrypt(unencryptedData: string): string {
+        return CryptoJS.AES.encrypt(unencryptedData, this.getPrivateKey()).toString();
     }
 
-    Decrypt(encryptedData: string): string {
+    decrypt(encryptedData: string): string {
         // TODO: check for errors
         // TODO: handle case that data is unencrypted, or encrypted with different alg
-        return CryptoJS.AES.decrypt(encryptedData, this.GetPrivateKey()).toString(CryptoJS.enc.Utf8);
+        return CryptoJS.AES.decrypt(encryptedData, this.getPrivateKey()).toString(CryptoJS.enc.Utf8);
     }
 
 }
 
 interface IStorageService {
-    SetItem(key: string, val: any);
+    setItem(key: string, val: any);
 
-    GetItem(key: string): any;
+    getItem(key: string): any;
 }
 
 /**
  * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
  */
 class EncryptedLocalStorageService {
-    private _IdentityService: IdentityService;
+    private _identityService: IdentityService;
 
-    private _KeyPrefix: string;
+    private _keyPrefix: string;
 
     constructor(identityService: IdentityService) {
-        this._IdentityService = identityService;
+        this._identityService = identityService;
     }
 
-    private GetFullKey(key: string): string {
+    private getFullKey(key: string): string {
         // Use the identifier of the identityService as a prefix for the local storage keys.
         // Effectively that means prefixing with SHA256 hashes, for example:
         // a5a28cfe2786537d28d4f57d4a15fe5813a973d3d6f9b9186033b8df50fac56b_assets
@@ -254,25 +253,25 @@ class EncryptedLocalStorageService {
         // This can only be done once _IdentityService.PrimaryProvider is logged on, i.e.
         // when we're good to go.
         // TODO: include checks for this.
-        this._KeyPrefix = this._IdentityService.PrimaryProvider.GetIdentifier();
+        this._keyPrefix = this._identityService.primaryProvider.getIdentifier();
 
-        return this._KeyPrefix + "_" + key;
+        return this._keyPrefix + "_" + key;
     }
 
-    SetItem(key: string, val: any) {
+    setItem(key: string, val: any) {
         var stringVar = JSON.stringify(val);
 
-        stringVar = this._IdentityService.PrimaryProvider.Encrypt(stringVar);
+        stringVar = this._identityService.primaryProvider.encrypt(stringVar);
 
-        localStorage.setItem(this.GetFullKey(key), stringVar);
+        localStorage.setItem(this.getFullKey(key), stringVar);
     }
 
-    GetItem(key: string): any {
-        var stringVar: string = localStorage.getItem(this.GetFullKey(key));
+    getItem(key: string): any {
+        var stringVar: string = localStorage.getItem(this.getFullKey(key));
         if (stringVar === null)
             return null;
 
-        stringVar = this._IdentityService.PrimaryProvider.Decrypt(stringVar);
+        stringVar = this._identityService.primaryProvider.decrypt(stringVar);
 
         return JSON.parse(stringVar);
     }
@@ -283,40 +282,42 @@ class EncryptedLocalStorageService {
  * Service managing the identity of the user on the various backends.
  */
 class IdentityService {
-    //
-    Providers: IIdentityProvider[];
+    /**
+     * All active providers.
+     */
+    providers: IIdentityProvider[];
 
     /**
      * The main identity provider. If this is null, we're not authenticated.
      */
-    PrimaryProvider: IIdentityProvider;
+    primaryProvider: IIdentityProvider;
 
     $inject = ['$rootScope'];
 
     constructor(
         private $rootScope: AssetChainRootScope
         ) {
-        this.Providers = [];
+        this.providers = [];
     }
 
     /**
      * Logon with this provider.
      */
-    Logon(provider: IIdentityProvider): boolean {
-        if (!provider.Logon())
+    logon(provider: IIdentityProvider): boolean {
+        if (!provider.logon())
             return false;
-        this.Providers.push(provider)
+        this.providers.push(provider)
         // The first successful provider is the primary one.
-        if (this.PrimaryProvider === undefined)
-            this.PrimaryProvider = provider;
+        if (this.primaryProvider === undefined)
+            this.primaryProvider = provider;
 
-        this.$rootScope.IsLoggedIn = true;
+        this.$rootScope.isLoggedIn = true;
 
         return true;
     }
 
-    IsAuthenticated(): boolean {
-        return this.PrimaryProvider != null && this.PrimaryProvider.IsAuthenticated();
+    isAuthenticated(): boolean {
+        return this.primaryProvider != null && this.primaryProvider.isAuthenticated();
     }
 }
 
@@ -327,10 +328,10 @@ class ExpertsService {
     /**
      * Returns a set of experts by search criteria.
      */
-    GetExperts(location: string, category: string) {
+    getExperts(location: string, category: string) {
         // Provide stub data, distinguished by category.
         // TODO: implement
-        if (category == "Jewelry/Watch") {
+        if (category == "Watch") {
             return [{
                 name: "London",
                 experts: [
@@ -344,7 +345,7 @@ class ExpertsService {
                     }]
             }];
         }
-        else if (category.indexOf("Jewelry") > 0) {
+        else if (category == "Necklace" || category == "Diamond") {
             return [{
                 name: "London",
                 experts: [
@@ -387,7 +388,7 @@ class ExpertsService {
  * The service for storing and retrieving application configuration.
  */
 class ConfigurationService {
-    Configuration: Configuration;
+    configuration: Configuration;
 
     private backend: IStorageService;
 
@@ -405,13 +406,13 @@ class ConfigurationService {
     }
 
     load() {
-        this.Configuration = this.backend.GetItem("configuration");
-        if (this.Configuration == null)
-            this.Configuration = new Configuration();
+        this.configuration = this.backend.getItem("configuration");
+        if (this.configuration == null)
+            this.configuration = new Configuration();
     }
 
     save() {
-        this.backend.SetItem("configuration", this.Configuration);
+        this.backend.setItem("configuration", this.configuration);
     }
 }
 
@@ -419,7 +420,7 @@ class ConfigurationService {
  * Service for communicating with the AssetVault Ethereum contracts.
  */
 class EthereumService {
-    public Config: EthereumConfiguration;
+    public config: EthereumConfiguration;
 
     public static $inject = [
         'configurationService'
@@ -438,15 +439,15 @@ class EthereumService {
     /**
      * The AssetVault contract from ABI.
      */
-    private AssetVaultContract: any;
+    private assetVaultContract: any;
 
-    Connect(): boolean {
+    connect(): boolean {
         try {
             this.configurationService.load();
-            this.Config = this.configurationService.Configuration.Ethereum;
+            this.config = this.configurationService.configuration.ethereum;
 
             // We'll be using JSON-RPC to talk to eth.
-            var rpcUrl = this.configurationService.Configuration.Ethereum.JsonRpcUrl;
+            var rpcUrl = this.configurationService.configuration.ethereum.jsonRpcUrl;
 
             web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
             // For new version of ethereum.js
@@ -458,57 +459,57 @@ class EthereumService {
             coinbase = web3.eth.coinbase;
             //firstAddress = 
 
-            this._IsActive = true;
+            this._isActive = true;
         }
         catch (e) {
             console.log("Exception while trying to connect to Ethereum node: " + e);
         }
 
-        if (this._IsActive) {
+        if (this._isActive) {
             // Further configuration now that we know the connection to the node is successful.
-            if (this.Config.CurrentAddress == null || this.Config.CurrentAddress == "") {
-                this.Config.CurrentAddress = coinbase;
+            if (this.config.currentAddress == null || this.config.currentAddress == "") {
+                this.config.currentAddress = coinbase;
             }
 
-            if (!_(web3.eth.accounts).contains(this.Config.CurrentAddress)) {
+            if (!_(web3.eth.accounts).contains(this.config.currentAddress)) {
                 // The configured address is not in the accounts of the eth node. That's probably an
                 // error.
                 // For now: just change it.
-                console.log("Configured address '" + this.Config.CurrentAddress + "' is not present in the current Ethereum node. Switching to default.");
-                this.Config.CurrentAddress = coinbase;
+                console.log("Configured address '" + this.config.currentAddress + "' is not present in the current Ethereum node. Switching to default.");
+                this.config.currentAddress = coinbase;
                 this.configurationService.save();
             }
 
-            this.LoadContract();
+            this.loadContract();
             return true;
         }
         return false;
     }
 
-    private LoadContract() {
+    private loadContract() {
         // The line below is generated by AlethZero when creating the contract. Copy/paste.
         // New syntax PoC9: .contract(...)
         var AssetVault = web3.eth.contractFromAbi([{ "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "CreateAsset", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "TransferRequests", "outputs": [{ "name": "AssetID", "type": "string32" }, { "name": "Requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "GetAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }, { "constant": true, "inputs": [], "name": "TransferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "OwnerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "ProcessTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "AssetsByOwner", "outputs": [{ "name": "AssetCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "CleanTransferRequests", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "Owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "GetAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "RequestTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "OwnerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }]);
 
         // TODO: make address configurable
-        this.AssetVaultContract = AssetVault("0x010244d47084cdee6cbb4c600132643a0b2efd97");
+        this.assetVaultContract = AssetVault("0x010244d47084cdee6cbb4c600132643a0b2efd97");
     }
 
-    _LedgerName = "ethereum";
+    _ledgerName = "ethereum";
 
-    _IsActive: boolean;
+    _isActive: boolean;
 
     /**
      * Returns whether there is an active connection to an Ethereum node.
      */
-    IsActive(): boolean {
-        return this._IsActive;
+    isActive(): boolean {
+        return this._isActive;
     }
 
     /**
      * Returns whether the Ethereum ledger is enabled. Currently always true.
      */
-    IsEnabled(): boolean {
+    isEnabled(): boolean {
         // Always enabled.
         // TODO: make configurable.
         return true;
@@ -517,18 +518,18 @@ class EthereumService {
     /**
      * Ensure that we're connected, by calling Connect() if necessary.
      */
-    EnsureConnect(): boolean {
-        if (this._IsActive)
+    ensureConnect(): boolean {
+        if (this._isActive)
             // Already connected.
             return true;
 
-        return this.Connect();
+        return this.connect();
     }
 
     /**
      * Register the passed asset on this ledger.
      */
-    SecureAsset(asset: Asset, cb: SecurityPegCallback) {
+    secureAsset(asset: Asset, cb: SecurityPegCallback) {
         var t = this;
 
         // COULD DO: Check whether the asset is secured on the ledger, but we don't have a SecurityPeg yet.
@@ -538,11 +539,6 @@ class EthereumService {
         // before every transaction, because contract._options are cleared after every call.
         // DISABLED because it gave problems, transactions wouldn't pass anymore.
         //this.AssetVaultContract._options["from"] = this.Config.CurrentAddress;
-
-        // The call to the transaction gives no result and doesn't support callbacks.
-        this.AssetVaultContract.CreateAsset(asset.id, asset.name);
-
-        // TODO: immediately make a SecurityPeg, but make it pending. Then send an update to show it as processed or failed.
 
         // Watch until the transaction is processed.
         // TODO: apply web3.eth.filter once it's fully available.
@@ -561,7 +557,7 @@ class EthereumService {
                 // We're on the same block. Definitely not processed.
                 return;
 
-            if (!t.IsSecured(asset)) {
+            if (!t.isSecured(asset)) {
                 // The asset hasn't been secured yet. This could mean:
                 // - The transaction wasn't processed.
                 // - The transaction was processed, but something went wrong. Invalid data, already registered, etc.
@@ -577,7 +573,7 @@ class EthereumService {
             var peg: SecurityPeg = {
                 name: "Ethereum",
                 details: {
-                    Address: t.Config.CurrentAddress,
+                    Address: t.config.currentAddress,
                     // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
                     // will be in the future when web3.eth.filter is finished.
                     // TransactionHash: ...
@@ -589,23 +585,29 @@ class EthereumService {
             }
 
             if (web3.eth.blockNumber !== undefined)
-                peg.details.BlockNumber = web3.eth.blockNumber;
+                peg.details.blockNumber = web3.eth.blockNumber;
             else
                 // Deprecated JS API
-                peg.details.BlockNumber = web3.eth.number;
+                peg.details.blockNumber = web3.eth.number;
 
             // Remove this watch after we got the result.
             waitingForTransactionFilter.uninstall();
 
             cb(peg);
         });
+
+        // The call to the transaction gives no result and doesn't support callbacks.
+        this.assetVaultContract.CreateAsset(asset.id, asset.name);
+
+        // TODO: immediately make a SecurityPeg, but make it pending. Then send an update to show it as processed or failed.
+
     }
 
     /**
      * Returns the ethereum address of the owner of this asset, or undefined if the asset isn't secured.
      */
-    GetOwnerAddress(asset: Asset): string {
-        var ownerAddress = this.AssetVaultContract.call().OwnerByAssetID(asset.id);
+    getOwnerAddress(asset: Asset): string {
+        var ownerAddress = this.assetVaultContract.call().OwnerByAssetID(asset.id);
         // For non-existing items the contract mapping returns 0 as 40-char hex. Return
         // null in this case.
         if (ownerAddress == "0x0000000000000000000000000000000000000000")
@@ -616,20 +618,20 @@ class EthereumService {
     /**
      * Returns whether the specified asset is secured on this ledger.
      */
-    IsSecured(asset: Asset): boolean {
-        var ownerAddress = this.GetOwnerAddress(asset);
+    isSecured(asset: Asset): boolean {
+        var ownerAddress = this.getOwnerAddress(asset);
         return ownerAddress != null;
     }
 
     /**
      * For an asset currently secured on this ledger, returns the SecurityPeg.
      */
-    GetSecurityPeg(asset: Asset): SecurityPeg {
+    getSecurityPeg(asset: Asset): SecurityPeg {
         // TODO: implement
         var peg = new SecurityPeg();
-        peg.name = this._LedgerName;
+        peg.name = this._ledgerName;
         peg.details = {
-            Account: this.GetOwnerAddress(asset)
+            Account: this.getOwnerAddress(asset)
             // TODO: determine block number of transaction. Is that possible? Could be when stored in the contract.
             //BlockNumber: 
         }
@@ -643,34 +645,34 @@ class EthereumService {
     /**
      * Create a request to transfer an asset of another owner.
      */
-    CreateTransferRequest(assetID: string) {
-        this.AssetVaultContract.RequestTransfer(assetID);
+    createTransferRequest(assetID: string) {
+        this.assetVaultContract.RequestTransfer(assetID);
     }
 
     /**
      * Confirm a received transfer request.
      */
-    ConfirmTransferRequest(request: TransferRequest) {
-        this.AssetVaultContract.ProcessTransfer(request.AssetID, request.RequesterAddress, true);
+    confirmTransferRequest(request: TransferRequest) {
+        this.assetVaultContract.ProcessTransfer(request.assetID, request.requesterAddress, true);
     }
 
     /**
         * Ignore a received transfer request.
         */
-    IgnoreTransferRequest(request: TransferRequest) {
-        this.AssetVaultContract.ProcessTransfer(request.AssetID, request.RequesterAddress, false);
+    ignoreTransferRequest(request: TransferRequest) {
+        this.assetVaultContract.ProcessTransfer(request.assetID, request.requesterAddress, false);
     }
 
     /**
      * Load and return any incoming transfer requests for the given asset.
      */
-    GetTransferRequests(asset: Asset): Array<TransferRequest> {
+    getTransferRequests(asset: Asset): Array<TransferRequest> {
         // Try to connect before this call.
         // TODO: create a more dependable way of managing the connection. The call could come from anywhere.
-        if (!this.Connect())
+        if (!this.connect())
             return null;
 
-        var transferRequestCount: number = this.AssetVaultContract.call().TransferRequestCount().toNumber();
+        var transferRequestCount: number = this.assetVaultContract.call().TransferRequestCount().toNumber();
 
         var transferRequests = new Array<TransferRequest>();
 
@@ -678,15 +680,15 @@ class EthereumService {
             // Get TransferRequest. Accessing the public mapping will always return an array, even if
             // no such TransferRequest exists. For non-existing transferRequestIDs, all its values 
             // will be empty.
-            var transferRequestData = this.AssetVaultContract.TransferRequests(i);
+            var transferRequestData = this.assetVaultContract.TransferRequests(i);
             var assetID: string = transferRequestData[0];
 
             if (assetID == asset.id) {
                 var requesterAddress: string = transferRequestData[1];
 
                 var tr: TransferRequest = {
-                    AssetID: assetID,
-                    RequesterAddress: requesterAddress,
+                    assetID: assetID,
+                    requesterAddress: requesterAddress,
                 };
 
                 transferRequests.push(tr);

@@ -1,8 +1,4 @@
-﻿class Credentials {
-    password: string;
-}
-
-interface ILoginScope extends ng.IScope {
+﻿interface ILoginScope extends ng.IScope {
     credentials: Credentials;
     isAuthenticated();
     login();
@@ -22,7 +18,7 @@ class LoginController {
         private identityService: IdentityService) {
 
         $scope.isAuthenticated = function (): boolean {
-            return identityService.IsAuthenticated();
+            return identityService.isAuthenticated();
         }
 
         $scope.login = function () {
@@ -32,8 +28,8 @@ class LoginController {
 
             var provider = new AssetChainIdentityProvider();
 
-            provider.SetPassword($scope.credentials.password);
-            identityService.Logon(provider);
+            provider.setPassword($scope.credentials.password);
+            identityService.logon(provider);
 
             $route.reload();
         }
@@ -57,12 +53,12 @@ interface IVerifyAssetRouteParameters extends IAssetRouteParameters {
 }
 
 interface IVerificationScope extends ng.IScope {
-    AssetID: string;
-    VerificationID: string;
-    Asset: Asset;
+    assetID: string;
+    verificationID: string;
+    asset: Asset;
     // TODO: define classes for experts and a dictionary of them.
-    ExpertsByLocation: any;
-    Location: ng.ILocationService;
+    expertsByLocation: any;
+    location: ng.ILocationService;
     vm: ExpertVerificationController;
     verification: Verification;
 }
@@ -82,58 +78,58 @@ class ExpertVerificationController {
         private $routeParams: IVerifyAssetRouteParameters,
         private assetsService: AssetsService,
         private expertsService: ExpertsService) {
-        $scope.AssetID = $routeParams.id;
-        $scope.VerificationID = $routeParams.verificationID;
+        $scope.assetID = $routeParams.id;
+        $scope.verificationID = $routeParams.verificationID;
         $scope.vm = this;
-        $scope.Location = $location;
+        $scope.location = $location;
 
-        assetsService.get($scope.AssetID, function (resp) {
-            $scope.Asset = resp;
+        assetsService.get($scope.assetID, function (resp) {
+            $scope.asset = resp;
 
-            if ($scope.VerificationID != null) {
+            if ($scope.verificationID != null) {
                 // Load the verification we worked on in an earlier step.
-                var verificationsWithId = _($scope.Asset.Verifications).select(v => v.id == $scope.VerificationID);
+                var verificationsWithId = _($scope.asset.verifications).select(v => v.id == $scope.verificationID);
                 $scope.verification = verificationsWithId[0];
             }
 
-            $scope.ExpertsByLocation = expertsService.GetExperts("London", $scope.Asset.category);
+            $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
         });
     }
 
-    Save() {
+    save() {
         // Provide the callback below access to the scope.
         // TODO: refactor.
         var s = this.$scope;
 
-        this.assetsService.save(this.$scope.Asset, function (resp) {
-            if (s.Location.path() == "/verify/expert/" + s.AssetID) {
+        this.assetsService.save(this.$scope.asset, function (resp) {
+            if (s.location.path() == "/verify/expert/" + s.assetID) {
                 // Step 1
                 s.verification.id = guid(true);
                 s.verification.date = moment().toISOString();
-                s.verification.IsPending = true;
-                if (s.Asset.Verifications == null)
-                    s.Asset.Verifications = [];
-                s.Asset.Verifications.push(s.verification);
-                s.Location.path("/verify/expert/" + s.AssetID + "/" + s.verification.id);
+                s.verification.isPending = true;
+                if (s.asset.verifications == null)
+                    s.asset.verifications = [];
+                s.asset.verifications.push(s.verification);
+                s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
             } else {
                 // Step 2
                 // Finished.
                 // TODO: show "finished" message.
                 // TODO: add item to notifications.
                 
-                s.Location.path("/");
+                s.location.path("/");
             }
         });
     }
 }
 
 function OwnershipVerificationController($scope, $location, $http, $routeParams, assetsService: AssetsService, expertsService: ExpertsService) {
-    var asset_id = $routeParams.id;
+    var assetID = $routeParams.id;
 
-    assetsService.get(asset_id, function (resp) {
+    assetsService.get(assetID, function (resp) {
         $scope.asset = resp;
 
-        $scope.expertsByLocation = expertsService.GetExperts("London", $scope.asset.category);
+        $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
     });
 }
 
@@ -169,43 +165,43 @@ class TransferRequestController {
                 $scope.asset = resp;
 
                 // And the transfer request
-                var requests = assetsService.GetTransferRequests($scope.asset);
+                var requests = assetsService.getTransferRequests($scope.asset);
 
                 // TODO: handle case that TR can't be found, is non-existing etc.                
                 $scope.transferRequest = _(requests).findWhere(function (tr: TransferRequest) {
-                    return tr.AssetID == $routeParams.assetID
-                        && tr.RequesterAddress == $routeParams.requesterAddress;
+                    return tr.assetID == $routeParams.assetID
+                        && tr.requesterAddress == $routeParams.requesterAddress;
                 });
             });
         }
     }
 
-    Create() {
-        this.assetsService.CreateTransferRequest(this.$scope.transferRequest);
+    create() {
+        this.assetsService.createTransferRequest(this.$scope.transferRequest);
         // TODO: show notification
         this.$location.path("/asset/list");
     }
 
-    HasLedgers(): boolean {
-        return this.assetsService.HasLedgers();
+    hasLedgers(): boolean {
+        return this.assetsService.hasLedgers();
     }
 
-    Confirm() {
-        this.assetsService.ConfirmTransferRequest(this.$scope.transferRequest);
+    confirm() {
+        this.assetsService.confirmTransferRequest(this.$scope.transferRequest);
             
         // TODO: show notification
 
         // Go to asset details to show current status.
-        this.$location.path("/asset/" + this.$scope.transferRequest.AssetID);
+        this.$location.path("/asset/" + this.$scope.transferRequest.assetID);
     }
 
-    Ignore() {
-        this.assetsService.IgnoreTransferRequest(this.$scope.transferRequest);
+    ignore() {
+        this.assetsService.ignoreTransferRequest(this.$scope.transferRequest);
             
         // TODO: show notification
 
         // Go to asset details to show current status.
-        this.$location.path("/asset/" + this.$scope.transferRequest.AssetID);
+        this.$location.path("/asset/" + this.$scope.transferRequest.assetID);
     }
 
 }
@@ -224,7 +220,7 @@ function AssetListController($scope, $location, $http, $routeParams, assetsServi
     }
 
     $scope.isAuthenticated = function (): boolean {
-        return identityService.IsAuthenticated();
+        return identityService.isAuthenticated();
     }
 }
 
@@ -256,7 +252,7 @@ class SingleAssetController {
         });
 
         // Check for any incoming TransferRequests for this asset.
-        $scope.transferRequests = assetsService.GetTransferRequests($scope.asset);
+        $scope.transferRequests = assetsService.getTransferRequests($scope.asset);
     }
 }
 
@@ -297,10 +293,15 @@ function IdentityController($scope, identityService: IdentityService) {
 
 }
 
+interface INavigationScope extends ng.IScope {
+    menuItems: Array<MenuItem>;
+    isAuthenticated(): boolean;
+}
+
 /**
  * Controller for the navigation bars.
  */
-function NavigationController($scope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
+function NavigationController($scope: INavigationScope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
     $scope.menuItems = [
         {
             name: "My assets",
@@ -326,22 +327,13 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
     ];
 
     $scope.isAuthenticated = function (): boolean {
-        return identityService.IsAuthenticated();
+        return identityService.isAuthenticated();
     }
 }
 
-class Notification {
-    title: string;
-    date: string;
-    details: string;
-    url: string;
-    icon: string;
-    seen: boolean;
-}
-
 interface NotificationScope {
-    notifications: Notification[];
-    latestNotifications: Notification[];
+    notifications: Array<Notification>;
+    latestNotifications: Array<Notification>;
 }
 
 function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService: AssetsService) {
@@ -392,11 +384,9 @@ function NotificationController($scope: NotificationScope, $location, $http, $ro
 
 interface IEthereumAccountScope extends ng.IScope {
     vm: EthereumAccountController;
-    Address: string;
-    Balance: string;
+    address: string;
+    balance: string;
 }
-
-
 
 /**
  * Controller for connecting to Ethereum and managing accounts.
@@ -420,12 +410,12 @@ class EthereumAccountController {
         //ethereumService.Connect();
     }
 
-    Connect() {
-        this.ethereumService.Connect();
+    connect() {
+        this.ethereumService.connect();
 
-        if (this.ethereumService.IsActive()) {
+        if (this.ethereumService.isActive()) {
 
-            this.$scope.Address = this.ethereumService.Config.CurrentAddress;
+            this.$scope.address = this.ethereumService.config.currentAddress;
 
             // For callback closure
             var s = this.$scope;
@@ -435,19 +425,19 @@ class EthereumAccountController {
             web3.eth.watch('pending').changed(function () {
                 // This code is called on any update from the Ethereum chain. Update 
                 // the scope variables to reflect this.
-                s.Address = t.ethereumService.Config.CurrentAddress;
+                s.address = t.ethereumService.config.currentAddress;
 
                 // Display address balance.
                 // TODO: display nicely ("40 Ether", "981 Finney", etc)
-                s.Balance = web3.toDecimal(web3.eth.balanceAt(s.Address));
+                s.balance = web3.toDecimal(web3.eth.balanceAt(s.address));
 
                 s.$apply();
             });
         }
     }
 
-    IsActive() {
-        return this.ethereumService.IsActive();
+    isActive() {
+        return this.ethereumService.isActive();
     }
 }
 
@@ -480,19 +470,19 @@ class UserAccountController {
 
         this.configurationService.load();
 
-        this.$scope.ethereumJsonRpcUrl = this.configurationService.Configuration.Ethereum.JsonRpcUrl;
+        this.$scope.ethereumJsonRpcUrl = this.configurationService.configuration.ethereum.jsonRpcUrl;
     }
 
     isAuthenticated(): boolean {
-        return this.identityService.IsAuthenticated();
+        return this.identityService.isAuthenticated();
     }
 
-    IsEnabled(ledgerId: string) {
+    isEnabled(ledgerId: string) {
         return true;
     }
 
-    SaveConfiguration() {
-        this.configurationService.Configuration.Ethereum.JsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
+    saveConfiguration() {
+        this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
         this.configurationService.save();
 
         // TODO: give EthereumController / -Service a notification to connect.
@@ -545,14 +535,14 @@ class SecureAssetController {
     /**
      * Returns whether the user has any security ledgers configured and active.
      */
-    HasLedgers(): boolean {
-        return this.ethereumService.IsActive();
+    hasLedgers(): boolean {
+        return this.ethereumService.isActive();
     }
 
     /**
      * Create a security peg for the asset. To be called from the view.
      */
-    Save() {
+    save() {
         // Currently the only security level we support is "premium".
         // TODO: support multiple security levels, storing data in different ways.
         if (this.$scope.level != "premium")
@@ -560,14 +550,14 @@ class SecureAssetController {
 
         var t = this;
 
-        if (this.ethereumService.EnsureConnect()) {
+        if (this.ethereumService.ensureConnect()) {
             var asset = this.$scope.asset;
 
             // Check: do we have a SecurityPeg for the asset on this ledger already?
             if (asset.securedOn)
                 for (var i = 0; i < asset.securedOn.securityPegs.length; i++) {
                     var peg = asset.securedOn.securityPegs[i];
-                    if (peg.name.toLowerCase() == this.ethereumService._LedgerName) {
+                    if (peg.name.toLowerCase() == this.ethereumService._ledgerName) {
                         // Already secured on this ledger.
 
                         // Redirect to the new asset page. We don't need a second apply() here because we're not in a callback.
@@ -597,16 +587,16 @@ class SecureAssetController {
             };
 
             // Check: already secured on this ledger?
-            if (this.ethereumService.IsSecured(asset)) {
+            if (this.ethereumService.isSecured(asset)) {
                 // Already secured.
                 // TODO: show message
-                var peg = this.ethereumService.GetSecurityPeg(asset);
+                var peg = this.ethereumService.getSecurityPeg(asset);
 
                 savePeg(peg);
                 return;
             }
 
-            this.ethereumService.SecureAsset(asset, function (peg) {
+            this.ethereumService.secureAsset(asset, function (peg) {
                 savePeg(peg);
                 // When changing location from a callback, scope has to be applied. When calling it 
                 // synchronously, scope may NOT be applied, so we can't include it in savePeg(). Hence

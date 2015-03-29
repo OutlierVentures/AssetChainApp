@@ -38,7 +38,7 @@ function guid(skipDashes: boolean) {
 
 
 interface AssetChainRootScope extends ng.IRootScopeService {
-    IsLoggedIn: boolean;
+    isLoggedIn: boolean;
 }
 
 module AssetChain {

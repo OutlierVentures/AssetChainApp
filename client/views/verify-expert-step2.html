@@ -8,8 +8,8 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <p><i class="fa fa-check fa-fw"></i> You are requesting expert verification of <strong>{{Asset.name}}</strong>.</p>
-                <p><span class="small">Asset ID: {{Asset.id}}</span></p>
+                <p><i class="fa fa-check fa-fw"></i> You are requesting expert verification of <strong>{{asset.name}}</strong>.</p>
+                <p><span class="small">Asset ID: {{asset.id}}</span></p>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
@@ -27,9 +27,9 @@
                                 <textarea class="form-control" name="comments" ng-model="verification.defects"></textarea>
                                 <p class="help-block">Does your asset have any defects? Please describe them in detail.</p>
                             </div>
-                            <button name="saveButton" ng-click="vm.Save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
+                            <button name="saveButton" ng-click="vm.save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
                                 Submit verification request
-                            </button>                            
+                            </button>
                         </form>
                     </div>
                 </div>

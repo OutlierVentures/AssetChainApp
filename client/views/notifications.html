@@ -20,7 +20,8 @@
                                 <div class="row">
                                     <div class="col-lg-12">
                                         <h3><i class="fa fa-{{notification.icon || 'comment' }} fa-fw"></i> {{notification.title}}</h3>
-                                        <span class="text-muted small" am-time-ago="notification.date" ng-attr-title="{{notification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}"></span>
+                                        <span class="text-muted small" am-time-ago="notification.date"
+                                              ng-attr-title="{{notification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}"></span>
                                         <p ng-bind-html="notification.details"></p>
                                     </div>
                                 </div>

@@ -4,7 +4,7 @@
     </div>
     <!-- /.col-lg-12 -->
 </div>
-<div class="row" id="transfer-request-form" ng-hide="vm.HasLedgers()">
+<div class="row" id="transfer-request-form" ng-hide="vm.hasLedgers()">
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -12,12 +12,15 @@
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <p>You don't have any accounts for decentralized ledgers configured and connected yet. Please <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.</p>
+                <p>
+                    You don't have any accounts for decentralized ledgers configured and connected yet. Please
+                    <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.
+                </p>
             </div>
         </div>
     </div>
 </div>
-<div class="row" id="secure-asset-form" ng-show="vm.HasLedgers()">
+<div class="row" id="secure-asset-form" ng-show="vm.hasLedgers()">
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -38,7 +41,8 @@
                                     <option value="premium">Premium</option>
                                 </select>
                             </div>
-                            <button name="saveButton" ng-click="vm.Save()" ng-disabled="secureAssetForm.$invalid || secureAssetForm.$submitted" class="btn btn-primary pull-right">
+                            <button name="saveButton" ng-click="vm.save()" ng-disabled="secureAssetForm.$invalid || secureAssetForm.$submitted"
+                                    class="btn btn-primary pull-right">
                                 Secure asset
                             </button>
                             <p ng-show="secureAssetForm.$submitted">Initiating asset security, please wait...</p>

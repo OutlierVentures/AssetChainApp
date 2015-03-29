@@ -44,8 +44,10 @@
                                         <p>{{asset.category}}</p>
 
                                         <div ng-repeat="image in asset.images" style="display: inline-block">
-                                            <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
-                                            <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                                            <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}"
+                                                 class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
+                                            <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
+                                                 style="margin-bottom: 1em; margin-right: 1em;">
                                         </div>
                                     </div>
                                     <div class="col-lg-6">
@@ -60,7 +62,9 @@
                                                             <div ng-repeat="peg in asset.securedOn.securityPegs" class="col-lg-4" style="padding-bottom: 1em;">
                                                                 <p><img ng-src="img/backends/{{peg.logoImageFileName}}" /> {{peg.name}} </p>
                                                                 <!-- TODO: display ledger-specific properties here. The controller should prepare them. -->
-                                                                <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}" target="_blank"><i class="fa fa-search"></i> View transaction</a>
+                                                                <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}" target="_blank">
+                                                                    <i class="fa fa-search"></i> View transaction
+                                                                </a>
                                                             </div>
                                                         </div>
                                                     </div>

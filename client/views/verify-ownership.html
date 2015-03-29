@@ -23,7 +23,10 @@
                         <form role="form" name="verificationform" novalidate>
                             <div class="form-group">
                                 <label>Expert</label>
-                                <p class="help-block">Choose the expert near you who will verify your asset. The expert will respond to your call to make an appointment.</p>
+                                <p class="help-block">
+                                    Choose the expert near you who will verify your asset. The expert will respond to
+                                    your call to make an appointment.
+                                </p>
                                 <select ng-model="verification.expert" required>
                                     <optgroup ng-repeat="location in expertsByLocation" label="{{location.name}}">
                                         <option ng-repeat="expert in location.experts">{{expert.name}}</option>
@@ -35,9 +38,9 @@
                                 <textarea class="form-control" name="comments" ng-model="verification.comments"></textarea>
                                 <p class="help-block">Add any comments with regard to the verification or your asset.</p>
                             </div>
-                            <button name="saveButton" ng-click="submit()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
+                            <button name="saveButton" ng-click="save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
                                 Begin verification request
-                            </button>                            
+                            </button>
                         </form>
                     </div>
                 </div>

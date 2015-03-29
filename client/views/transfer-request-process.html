@@ -4,7 +4,7 @@
     </div>
     <!-- /.col-lg-12 -->
 </div>
-<div class="row" id="transfer-request-form" ng-hide="vm.HasLedgers()">
+<div class="row" id="transfer-request-form" ng-hide="vm.hasLedgers()">
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -12,12 +12,15 @@
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
-                <p>You don't have any accounts for decentralized ledgers configured and connected yet. Please <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.</p>
+                <p>
+                    You don't have any accounts for decentralized ledgers configured and connected yet. Please
+                    <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.
+                </p>
             </div>
         </div>
     </div>
 </div>
-<div class="row" id="transfer-request-form" ng-show="vm.HasLedgers()">
+<div class="row" id="transfer-request-form" ng-show="vm.hasLedgers()">
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
@@ -28,10 +31,11 @@
                 <div class="row">
                     <div class="col-lg-12">
                         <p>
-                            You have received a transfer request for your asset <strong>{{asset.name}}</strong> from address <code>{{transferRequest.RequesterAddress}}</code>.
+                            You have received a transfer request for your asset <strong>{{asset.name}}</strong> from address
+                            <code>{{transferRequest.requesterAddress}}</code>.
                         </p>
-                        <a ng-click="vm.Ignore()" class="btn btn-primary">Ignore transfer request</a>
-                        <a ng-click="vm.Confirm()" class="btn">Confirm transfer request</a>
+                        <a ng-click="vm.ignore()" class="btn btn-primary">Ignore transfer request</a>
+                        <a ng-click="vm.confirm()" class="btn">Confirm transfer request</a>
                     </div>
                 </div>
             </div>

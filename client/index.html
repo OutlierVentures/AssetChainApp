@@ -46,9 +46,9 @@
         <!-- Login screen, only shown when not logged in. -->
         <div ng-include="'views/login.html'"></div>
 
-        <!-- When not logged in, the whole wrapper is hidden. We use the property $rootScope.IsLoggedIn 
+        <!-- When not logged in, the whole wrapper is hidden. We use the property $rootScope.isLoggedIn 
             which is set to true after a succesful login.-->
-        <div id="wrapper" ng-show="IsLoggedIn">
+        <div id="wrapper" ng-show="isLoggedIn">
             <!-- Navigation. The navbar view includes the NavigationController. -->
             <nav ng-include="'views/navbar.html'"></nav>
 

@@ -1,4 +1,12 @@
-﻿
+﻿/**
+ * Naming conventions:
+ * - Classes: PascalCase
+ * - Modules: PascalCase
+ * - Private properties: _camelCase
+ * - Everything else: camelCase
+ */
+
+
 /**
  * Class representing an asset (to be) registered on AssetChain.
  */
@@ -7,8 +15,8 @@ class Asset {
     name: string;
     category: string;
     comments: string;
-    IsPendingClaim: boolean = true;
-    Verifications: Verification[];
+    isPendingClaim: boolean = true;
+    verifications: Verification[];
     securedOn: AssetSecurity;
 }
 
@@ -43,23 +51,9 @@ class Verification {
     address: string;
     date: string;
     comments: string;
-    IsPending: boolean;
+    isPending: boolean;
     defects: string;
 }
-
-class EthereumConfiguration {
-    JsonRpcUrl: string;
-    CurrentAddress: string;
-}
-
-class Configuration {
-    Ethereum: EthereumConfiguration;
-
-    constructor() {
-        this.Ethereum = new EthereumConfiguration();
-    }
-}
-
 
 /**
  * Request for transfer of ownership of an asset.
@@ -68,10 +62,46 @@ class TransferRequest {
     /**
      * AssetChain ID of the asset that the requester wants to receive.
      */
-    AssetID: string;
+    assetID: string;
 
     /**
      * Address of the requester. Currently an Ethereum address.
      */
-    RequesterAddress: string;
+    requesterAddress: string;
 }
+
+/** BEGIN Application classes **/
+
+class EthereumConfiguration {
+    jsonRpcUrl: string;
+    currentAddress: string;
+}
+
+class Configuration {
+    ethereum: EthereumConfiguration;
+
+    constructor() {
+        this.ethereum = new EthereumConfiguration();
+    }
+}
+
+class Credentials {
+    password: string;
+}
+
+class MenuItem {
+    name: string;
+    url: string;
+    icon: string;
+}
+
+class Notification {
+    title: string;
+    date: string;
+    details: string;
+    url: string;
+    icon: string;
+    seen: boolean;
+}
+
+/** END Application classes **/

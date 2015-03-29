@@ -6,7 +6,7 @@
         <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
-    <div class="row" ng-controller="UserAccountController" ng-show="vm.IsEnabled('ethereum')">
+    <div class="row" ng-controller="UserAccountController" ng-show="vm.isEnabled('ethereum')">
         <div class="col-lg-12">
             <div class="panel panel-default">
                 <div class="panel-heading">
@@ -21,13 +21,13 @@
                                 <p>Please provide the JSON RPC URL where your Ethereum node can be reached.</p>
                                 <input class="form-control" name="ethereumJsonRpcUrl" ng-model="ethereumJsonRpcUrl" />
                             </div>
-                            <button class="btn btn-primary" value="Connect" ng-click="vm.SaveConfiguration()">Connect</button>
+                            <button class="btn btn-primary" ng-click="vm.saveConfiguration()">Save</button>
                         </form>
                     </div>
-                    <div ng-show="IsActive()">
+                    <div ng-show="isActive()">
                         <h3>Your Ethereum account</h3>
-                        <p>Address: {{Address}}</p>
-                        <p>Account balance: {{Balance}}</p>
+                        <p>Address: {{address}}</p>
+                        <p>Account balance: {{balance}}</p>
                     </div>
                 </div>
                 <!-- /.panel-body -->

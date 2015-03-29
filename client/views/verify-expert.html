@@ -8,8 +8,8 @@
     <div class="col-lg-12">
         <div class="panel panel-default">
             <div class="panel-heading">
-                <p><i class="fa fa-check fa-fw"></i> You are requesting expert verification of <strong>{{Asset.name}}</strong>.</p>
-                <p><span class="small">Asset ID: {{Asset.id}}</span></p>
+                <p><i class="fa fa-check fa-fw"></i> You are requesting expert verification of <strong>{{asset.name}}</strong>.</p>
+                <p><span class="small">Asset ID: {{asset.id}}</span></p>
             </div>
             <!-- /.panel-heading -->
             <div class="panel-body">
@@ -24,9 +24,12 @@
                         <form role="form" name="verificationform" novalidate>
                             <div class="form-group">
                                 <label>Expert</label>
-                                <p class="help-block">Choose the expert near you who will verify your asset. The expert will respond to your call to make an appointment.</p>
+                                <p class="help-block">
+                                    Choose the expert near you who will verify your asset. The expert will respond to
+                                    your call to make an appointment.
+                                </p>
                                 <select ng-model="verification.name" required>
-                                    <optgroup ng-repeat="location in ExpertsByLocation" label="{{location.name}}">
+                                    <optgroup ng-repeat="location in expertsByLocation" label="{{location.name}}">
                                         <option ng-repeat="expert in location.experts track by expert.id">{{expert.name}}</option>
                                     </optgroup>
                                 </select>
@@ -36,9 +39,9 @@
                                 <textarea class="form-control" name="comments" ng-model="verification.comments"></textarea>
                                 <p class="help-block">Add any comments with regard to the verification or your asset.</p>
                             </div>
-                            <button name="saveButton" ng-click="vm.Save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
+                            <button name="saveButton" ng-click="vm.save()" ng-disabled="verificationform.$invalid" class="btn btn-primary">
                                 Begin verification request
-                            </button>                            
+                            </button>
                         </form>
                     </div>
                 </div>
