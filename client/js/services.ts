@@ -573,7 +573,7 @@ class EthereumService {
             var peg: SecurityPeg = {
                 name: "Ethereum",
                 details: {
-                    Address: t.config.currentAddress,
+                    address: t.config.currentAddress,
                     // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
                     // will be in the future when web3.eth.filter is finished.
                     // TransactionHash: ...
