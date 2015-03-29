@@ -198,6 +198,16 @@ class TransferRequestController {
         // Go to asset details to show current status.
         this.$location.path("/asset/" + this.$scope.transferRequest.AssetID);
     }
+
+    Ignore() {
+        this.assetsService.IgnoreTransferRequest(this.$scope.transferRequest);
+            
+        // TODO: show notification
+
+        // Go to asset details to show current status.
+        this.$location.path("/asset/" + this.$scope.transferRequest.AssetID);
+    }
+
 }
 
 function AssetListController($scope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
@@ -302,11 +312,12 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
             url: "asset/register",
             icon: "plus-circle",
         },
-        {
-            name: "Verify assets",
-            url: "verify",
-            icon: "check",
-        },
+        // Disabled here, verification is initiated from asset detail page.
+        //{
+        //    name: "Verify assets",
+        //    url: "verify",
+        //    icon: "check",
+        //},
         {
             name: "Transfer assets",
             url: "transfer/create",

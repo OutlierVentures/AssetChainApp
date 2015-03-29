@@ -102,7 +102,7 @@
     }
 
     // Confirm ownership transfer of an asset to a new owner. To be called by the current owner.
-    function ConfirmTransfer(string32 assetID, address newOwner) {
+    function ProcessTransfer(string32 assetID, address newOwner, bool confirm) {
         // Check: is the asset ID valid?
         if(OwnerByAssetID[assetID] == 0x0) {
             return;
@@ -128,22 +128,25 @@
                 while(j <= acOwner.AssetCount) {
                     Asset a = acOwner.Assets[j];
                     if(a.ID == tr.AssetID){
-                        // Add it to the newOwners assets.
-                        AssetCollection acRequester = AssetsByOwner[newOwner];
-                        if(acRequester.AssetCount==0)
-                            // New owner, store it.
-                            Owners[OwnerCount++] = newOwner;
+                        // If the owner confirms the request, transfer it. Otherwise just delete the request.
+                        if(confirm) {
+                            // Add it to the newOwners assets.
+                            AssetCollection acRequester = AssetsByOwner[newOwner];
+                            if(acRequester.AssetCount==0)
+                                // New owner, store it.
+                                Owners[OwnerCount++] = newOwner;
 
-                        Asset transferredAsset = acRequester.Assets[acRequester.AssetCount++];
-                        transferredAsset.ID = a.ID;
-                        transferredAsset.Name = a.Name;
+                            Asset transferredAsset = acRequester.Assets[acRequester.AssetCount++];
+                            transferredAsset.ID = a.ID;
+                            transferredAsset.Name = a.Name;
 
-                        // Clear the values of the asset. This is the closest we get to deleting it.
-                        a.ID = "";
-                        a.Name = "";
+                            // Clear the values of the asset. This is the closest we get to deleting it.
+                            a.ID = "";
+                            a.Name = "";
 
-                        // Update OwnerByAssetID
-                        OwnerByAssetID[assetID] = newOwner;
+                            // Update OwnerByAssetID
+                            OwnerByAssetID[assetID] = newOwner;
+                        }
 
                         // Delete transfer request
                         tr.AssetID = "";
@@ -164,7 +167,6 @@
 
         // Check: clean up any other transfer requests
         // TODO
-
     }
 
     // Remove expired transfer requests
