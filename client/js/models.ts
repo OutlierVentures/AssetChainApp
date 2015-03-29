@@ -59,3 +59,19 @@ class Configuration {
         this.Ethereum = new EthereumConfiguration();
     }
 }
+
+
+/**
+ * Request for transfer of ownership of an asset.
+ */
+class TransferRequest {
+    /**
+     * AssetChain ID of the asset that the requester wants to receive.
+     */
+    AssetID: string;
+
+    /**
+     * Address of the requester. Currently an Ethereum address.
+     */
+    RequesterAddress: string;
+}

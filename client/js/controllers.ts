@@ -137,11 +137,67 @@ function OwnershipVerificationController($scope, $location, $http, $routeParams,
     });
 }
 
-function TransferAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
-    var asset_id = $routeParams.id;
-    assetsService.get(asset_id, function (resp) {
-        $scope.asset = resp;
-    });
+
+interface ITransferRequestScope extends ng.IScope {
+    vm: TransferRequestController;
+    transferRequest: TransferRequest;
+    asset: Asset;
+}
+
+interface ITransferRequestRouteParameters extends ng.route.IRouteParamsService {
+    assetID: string;
+    requesterAddress: string;
+}
+
+class TransferRequestController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService"];
+
+    constructor(
+        private $scope: ITransferRequestScope,
+        private $location: ng.ILocationService,
+        private $routeParams: ITransferRequestRouteParameters,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load asset data
+        if ($routeParams.assetID != undefined) {
+            assetsService.get($routeParams.assetID, function (resp) {
+                $scope.asset = resp;
+
+                // And the transfer request
+                var requests = assetsService.GetTransferRequests($scope.asset);
+
+                // TODO: handle case that TR can't be found, is non-existing etc.                
+                $scope.transferRequest = _(requests).findWhere(function (tr: TransferRequest) {
+                    return tr.AssetID == $routeParams.assetID
+                        && tr.RequesterAddress == $routeParams.requesterAddress;
+                });
+            });
+        }
+    }
+
+    Create() {
+        this.assetsService.CreateTransferRequest(this.$scope.transferRequest);
+        // TODO: show notification
+        this.$location.path("/asset/list");
+    }
+
+    HasLedgers(): boolean {
+        return this.assetsService.HasLedgers();
+    }
+
+    Confirm() {
+        this.assetsService.ConfirmTransferRequest(this.$scope.transferRequest);
+            
+        // TODO: show notification
+
+        // Go to asset details to show current status.
+        this.$location.path("/asset/" + this.$scope.transferRequest.AssetID);
+    }
 }
 
 function AssetListController($scope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
@@ -162,11 +218,36 @@ function AssetListController($scope, $location, $http, $routeParams, assetsServi
     }
 }
 
-function SingleAssetController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
-    var asset_id = $routeParams.id;
-    assetsService.get(asset_id, function (resp) {
-        $scope.asset = resp;
-    });
+
+interface ISingleAssetScope extends ng.IScope {
+    vm: SingleAssetController;
+    asset: Asset;
+    transferRequests: Array<TransferRequest>;
+}
+
+class SingleAssetController {
+    public static $inject = [
+        "$scope",
+        "$routeParams",
+        "$location",
+        "assetsService"];
+
+    constructor(
+        private $scope: ISingleAssetScope,
+        private $routeParams: IAssetRouteParameters,
+        private $location: ng.ILocationService,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load asset data
+        var asset_id = $routeParams.id;
+        assetsService.get(asset_id, function (resp) {
+            $scope.asset = resp;
+        });
+
+        // Check for any incoming TransferRequests for this asset.
+        $scope.transferRequests = assetsService.GetTransferRequests($scope.asset);
+    }
 }
 
 function RegisterAssetController($scope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
@@ -228,7 +309,7 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
         },
         {
             name: "Transfer assets",
-            url: "transfer",
+            url: "transfer/create",
             icon: "mail-forward",
         },
     ];
