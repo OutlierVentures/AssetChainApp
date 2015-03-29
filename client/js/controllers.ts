@@ -56,8 +56,7 @@ interface IVerificationScope extends ng.IScope {
     assetID: string;
     verificationID: string;
     asset: Asset;
-    // TODO: define classes for experts and a dictionary of them.
-    expertsByLocation: any;
+    expertsByLocation: Array<ExpertCollection>;
     location: ng.ILocationService;
     vm: ExpertVerificationController;
     verification: Verification;

@@ -328,7 +328,7 @@ class ExpertsService {
     /**
      * Returns a set of experts by search criteria.
      */
-    getExperts(location: string, category: string) {
+    getExperts(location: string, category: string) : Array<ExpertCollection> {
         // Provide stub data, distinguished by category.
         // TODO: implement
         if (category == "Watch") {
@@ -449,6 +449,10 @@ class EthereumService {
             // We'll be using JSON-RPC to talk to eth.
             var rpcUrl = this.configurationService.configuration.ethereum.jsonRpcUrl;
 
+            // No configuration? Don't try connecting.
+            if (rpcUrl == null || rpcUrl == "")
+                return false;
+
             web3.setProvider(new web3.providers.HttpSyncProvider(rpcUrl));
             // For new version of ethereum.js
             //web3.setProvider(new web3.providers.HttpProvider(rpcUrl));
@@ -457,7 +461,6 @@ class EthereumService {
             var firstAddress: string;
 
             coinbase = web3.eth.coinbase;
-            //firstAddress = 
 
             this._isActive = true;
         }
@@ -581,7 +584,7 @@ class EthereumService {
                 // TODO: don't store this data with the asset in the vault; the logo can be added on load.
                 logoImageFileName: "ethereum-logo.png",
                 // Currently a dummy URL as there is no working block explorer.
-                transactionUrl: "http://ether.fund/block/1507",
+                transactionUrl: "http://ether.fund/block/" + web3.eth.number,
             }
 
             if (web3.eth.blockNumber !== undefined)
@@ -637,7 +640,8 @@ class EthereumService {
         }
         peg.logoImageFileName = "ethereum-logo.png";
         // Currently a dummy URL as there is no working block explorer.
-        peg.transactionUrl = "http://ether.fund/block/1507";
+        // Can't determine the blockNumber from previous assets. Yet.
+        peg.transactionUrl = "http://ether.fund/block/" + 1507;
 
         return peg;
     }

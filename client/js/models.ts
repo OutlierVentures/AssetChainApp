@@ -42,6 +42,16 @@ class SecurityPeg {
     details: any;
 }
 
+class ExpertCollection {
+    name: string;
+    experts: Array<Expert>;
+}
+
+class Expert {
+    id: string;
+    name: string;
+}
+
 /**
  * Verification of an asset by an expert.
  */
