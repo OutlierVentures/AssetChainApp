@@ -11,6 +11,13 @@ interface SecurityPegCallback {
     (peg: SecurityPeg);
 }
 
+interface String {
+    capitalizeFirstLetter(): string;
+}
+
+String.prototype.capitalizeFirstLetter = function () {
+    return this.charAt(0).toUpperCase() + this.slice(1);
+}
 
 /**
  * The service for storing and retrieving assets in one or several backend storage methods.
@@ -644,7 +651,7 @@ class EthereumService {
             }
 
             var peg: SecurityPeg = {
-                name: "Ethereum",
+                name: t._ledgerName.capitalizeFirstLetter(),
                 details: {
                     asset: {
                         id: asset.id,
@@ -705,11 +712,11 @@ class EthereumService {
      */
     getSecurityPeg(asset: Asset): SecurityPeg {
         var peg = new SecurityPeg();
-        peg.name = this._ledgerName;
+        peg.name = this._ledgerName.capitalizeFirstLetter();
         peg.details = {
-            account: this.getOwnerAddress(asset),
+            address: this.getOwnerAddress(asset),
             // TODO: determine block number of transaction. Is that possible? Could be when stored in the contract.
-            //BlockNumber: 
+            //blockNumber: 
 
             asset: {
                 id: asset.id,
