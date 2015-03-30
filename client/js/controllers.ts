@@ -411,31 +411,43 @@ class EthereumAccountController {
 
     connect() {
         this.ethereumService.connect();
+        this.ensureWatch();
+    }
 
-        if (this.ethereumService.isActive()) {
+    private _watchConfigured: boolean;
 
-            this.$scope.address = this.ethereumService.config.currentAddress;
+    ensureWatch() {
+        if (this._watchConfigured)
+            return;
 
-            // For callback closure
-            var s = this.$scope;
-            var t = this;
+        if (!this.ethereumService.isActive())
+            return;
 
-            // 'pending' is called on load, pending transactions and blocks.
-            web3.eth.watch('pending').changed(function () {
-                // This code is called on any update from the Ethereum chain. Update 
-                // the scope variables to reflect this.
-                s.address = t.ethereumService.config.currentAddress;
+        this.$scope.address = this.ethereumService.config.currentAddress;
 
-                // Display address balance.
-                // TODO: display nicely ("40 Ether", "981 Finney", etc)
-                s.balance = web3.toDecimal(web3.eth.balanceAt(s.address));
+        // For callback closure
+        var s = this.$scope;
+        var t = this;
 
-                s.$apply();
-            });
-        }
+        // 'pending' is called on load, pending transactions and blocks.
+        web3.eth.watch('pending').changed(function () {
+            // This code is called on any update from the Ethereum chain. Update 
+            // the scope variables to reflect this.
+            s.address = t.ethereumService.config.currentAddress;
+
+            // Display address balance.
+            // TODO: display nicely ("40 Ether", "981 Finney", etc)
+            s.balance = web3.toDecimal(web3.eth.balanceAt(s.address));
+
+            s.$apply();
+        });
+
+        this._watchConfigured = true;
     }
 
     isActive() {
+        // Call ensureWatch to ensure update of the scope data even when connection is made in another place.
+        this.ensureWatch();
         return this.ethereumService.isActive();
     }
 }
