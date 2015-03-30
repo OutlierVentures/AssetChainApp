@@ -51,6 +51,63 @@ class AssetsService {
 
         if (this.assets == null)
             this.assets = [];
+
+        this.processDanglingAssets();
+    }
+
+    processDanglingAssets() {
+        if (this.ethereumService.connect()) {
+            if (this.loadDanglingAssets())
+                this.saveDB();
+        }
+    }
+
+    /**
+     * Load security pegs from backend ledgers for which no assets exist, and create assets for them.
+     * @returns Whether any dangling assets were found and added to the assets collection.
+     */
+    loadDanglingAssets(): boolean {
+        // All pegs for current address.
+        var allPegs = this.ethereumService.getAllSecurityPegs();
+        var t = this;
+
+        // Get pegs for assets we don't know about.
+        var newPegs = _(allPegs).filter(function (p) {
+            // See if there's an asset with this ID in our collection.
+            var assetWithID = _(t.assets).find(function (a) {
+                return a.id == p.details.asset.id;
+            });
+            return assetWithID == null;
+        });
+
+        var anyNew = false;
+
+        _(newPegs).each(function (p) {
+            // Create a new asset with the properties from the ledger.
+            var newAsset = new Asset();
+            newAsset.id = p.details.asset.id;
+            newAsset.name = p.details.asset.name;
+
+            // Store the security peg.
+            var sec = new AssetSecurity();
+
+            // ATM only one security level.
+            // TODO: make configurable.
+            sec.name = "Premium";
+
+            var pegs = new Array<SecurityPeg>();
+            pegs.push(p);
+            sec.securityPegs = pegs;
+
+            newAsset.securedOn = sec;
+
+            // TODO: mark it as incomplete, "needs more info". The asset details package should be loaded.
+
+            t.assets.push(newAsset);
+            anyNew = true;
+        });
+
+        return anyNew;
     }
 
     private saveDB(): void {
@@ -121,15 +178,24 @@ class AssetsService {
         });
     }
 
+    /**
+     * Returns whether any backend ledgers are active.
+     */
     hasLedgers(): boolean {
         return this.ethereumService.isActive();
     }
 
+    /**
+     * Create a transfer request for an asset of another user.
+     */
     createTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
         this.ethereumService.createTransferRequest(request.assetID);
     }
 
+    /**
+     * Confirm a received transfer request.
+     */
     confirmTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
         this.ethereumService.confirmTransferRequest(request);
@@ -137,6 +203,9 @@ class AssetsService {
         // TODO: update local asset collection to show this asset is transferred. Archived? Grayed out?
     }
 
+    /**
+     * Ignore/deny a received transfer request.
+     */
     ignoreTransferRequest(request: TransferRequest) {
         // TODO: wait for result; error handling
         this.ethereumService.ignoreTransferRequest(request);
@@ -328,7 +397,7 @@ class ExpertsService {
     /**
      * Returns a set of experts by search criteria.
      */
-    getExperts(location: string, category: string) : Array<ExpertCollection> {
+    getExperts(location: string, category: string): Array<ExpertCollection> {
         // Provide stub data, distinguished by category.
         // TODO: implement
         if (category == "Watch") {
@@ -432,8 +501,9 @@ class EthereumService {
 
         // The service is constructed when the app is loaded, e.g. before the configuration is unlocked.
         // So don't try to connect yet. Currently connection has to be done manually after logging in.
-        // TODO: lazy load this service.
-        //        this.Connect();
+        // TODO: lazy load this service, connect when initialized. Or listen to the configurationService
+        // being initialized.
+        //        this.connect();
     }
 
     /**
@@ -576,6 +646,10 @@ class EthereumService {
             var peg: SecurityPeg = {
                 name: "Ethereum",
                 details: {
+                    asset: {
+                        id: asset.id,
+                        name: asset.name
+                    },
                     address: t.config.currentAddress,
                     // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
                     // will be in the future when web3.eth.filter is finished.
@@ -630,13 +704,18 @@ class EthereumService {
      * For an asset currently secured on this ledger, returns the SecurityPeg.
      */
     getSecurityPeg(asset: Asset): SecurityPeg {
-        // TODO: implement
         var peg = new SecurityPeg();
         peg.name = this._ledgerName;
         peg.details = {
-            Account: this.getOwnerAddress(asset)
+            account: this.getOwnerAddress(asset),
             // TODO: determine block number of transaction. Is that possible? Could be when stored in the contract.
             //BlockNumber: 
+
+            asset: {
+                id: asset.id,
+                name: asset.name
+            }
+
         }
         peg.logoImageFileName = "ethereum-logo.png";
         // Currently a dummy URL as there is no working block explorer.
@@ -644,6 +723,33 @@ class EthereumService {
         peg.transactionUrl = "http://ether.fund/block/" + 1507;
 
         return peg;
+    }
+
+    /**
+     * Generates a list with all security pegs for the current address.
+     */
+    getAllSecurityPegs(): Array<SecurityPeg> {
+        var assetCount = this.assetVaultContract.call().assetsByOwner(this.config.currentAddress);
+
+        var pegs = new Array<SecurityPeg>();
+
+        for (var i = 0; i < assetCount; i++) {
+            var assetID = this.assetVaultContract.call().getAssetID(this.config.currentAddress, i);
+            if (assetID != "") {
+                var assetName = this.assetVaultContract.call().getAssetName(this.config.currentAddress, i);
+
+                // Create a dummy asset, and generate the peg object for it.
+                var asset = new Asset();
+                asset.id = assetID;
+                asset.name = assetName;
+
+                var peg = this.getSecurityPeg(asset);
+
+                pegs.push(peg);
+            }
+        }
+
+        return pegs;
     }
 
     /**

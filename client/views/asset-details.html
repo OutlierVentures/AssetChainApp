@@ -30,7 +30,7 @@
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="peg in asset.securedOn.securityPegs" class="col-lg-4" style="padding-bottom: 1em;">
+                                        <div ng-repeat="peg in asset.securedOn.securityPegs track by peg.name" class="col-lg-4" style="padding-bottom: 1em;">
                                             <p><img ng-src="img/backends/{{peg.logoImageFileName}}" /> {{peg.name}} </p>
                                             <!-- TODO: display ledger-specific properties here. The controller should prepare them. -->
                                             <pre ng-show="peg.details">{{peg.details | json}}</pre>
@@ -48,7 +48,7 @@
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="verification in asset.verifications" class="col-lg-4" style="padding-bottom: 1em;">
+                                        <div ng-repeat="verification in asset.verifications track by verification.name" class="col-lg-4" style="padding-bottom: 1em;">
                                             <p>{{verification.name}} </p>
                                             <p class="small" ng-show="verification.date">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
                                             <p ng-show="verification.address">{{verification.address}}</p>
