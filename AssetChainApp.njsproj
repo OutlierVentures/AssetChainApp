@@ -36,6 +36,7 @@
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
     <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
+    <Content Include="client\views\user-profile.html" />
     <Content Include="client\views\account-list.html" />
     <Content Include="client\views\ethereum-account-widget.html" />
     <Content Include="client\views\login.html" />

@@ -65,6 +65,9 @@
                                                                 <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}" target="_blank">
                                                                     <i class="fa fa-search"></i> View transaction
                                                                 </a>
+                                                                <div class="alert alert-danger" style="margin-top: 1em;" ng-hide="peg.isOwned">
+                                                                    <strong>Warning!</strong> This security peg is not linked to your current address. This could mean that ownership has been transferred to another user.
+                                                                </div>
                                                             </div>
                                                         </div>
                                                     </div>

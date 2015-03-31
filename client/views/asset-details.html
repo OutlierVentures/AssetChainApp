@@ -36,6 +36,9 @@
                                             <pre ng-show="peg.details">{{peg.details | json}}</pre>
                                             <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}"
                                                target="_blank"><i class="fa fa-search"></i>View transaction</a>
+                                            <div class="alert alert-danger" style="margin-top: 1em;" ng-hide="peg.isOwned">
+                                                <strong>Warning!</strong> This security peg is not linked to your current address. This could mean that ownership has been transferred to another user.
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
@@ -72,7 +75,7 @@
                                     <p>Other users have requested a transfer of ownership of this asset.</p>
                                     <div class="row">
                                         <div ng-repeat="transferRequest in transferRequests" class="col-lg-4" style="padding-bottom: 1em;">
-                                            <p><strong>Requester address:</strong> {{transferRequest.requesterAddress}}</p>
+                                            <p><strong>Requester address:</strong> <code>{{transferRequest.requesterAddress}}</code></p>
                                             <a class="btn btn-primary" href="#/transfer/process/{{asset.id}}/{{transferRequest.requesterAddress}}">
                                                 <i class="fa fa-play-circle"></i> Process this request
                                             </a>

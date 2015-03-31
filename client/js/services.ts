@@ -51,15 +51,33 @@ class AssetsService {
         if (!this.identityService.isAuthenticated())
             return;
 
-        if (this.assets != null)
-            return;
+        if (this.assets == null) {
 
-        this.loadDB();
+            this.loadDB();
 
-        if (this.assets == null)
-            this.assets = [];
+            if (this.assets == null)
+                this.assets = [];
+        }
 
+        // Process dangling assets from the security pegs. As this method is called often, this could become 
+        // a performance hog. Keep an eye on this.
+        // TODO: convert this to active checks from the ledgers (i.e. web3.eth.filter).
         this.processDanglingAssets();
+
+        // Check current ownership of the assets. Same goes for this.
+        this.checkAssets();
+    }
+
+    /**
+     * Check asset and security pegs status.
+     */
+    checkAssets() {
+        var t = this;
+
+        // Does this work by reference?
+        _(this.assets).each(function (a) {
+            t.ethereumService.checkAssetStatus(a);
+        });
     }
 
     processDanglingAssets() {
@@ -672,23 +690,25 @@ class EthereumService {
                 }
             }
 
-            var peg: SecurityPeg = {
-                name: t._ledgerName.capitalizeFirstLetter(),
-                details: {
-                    asset: {
-                        id: asset.id,
-                        name: asset.name
-                    },
-                    address: t.config.currentAddress,
-                    // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
-                    // will be in the future when web3.eth.filter is finished.
-                    // TransactionHash: ...
+            var peg = new SecurityPeg();
+
+            peg.name = t._ledgerName.capitalizeFirstLetter();
+            peg.details = {
+                asset: {
+                    id: asset.id,
+                    name: asset.name
                 },
-                // TODO: don't store this data with the asset in the vault; the logo can be added on load.
-                logoImageFileName: "ethereum-logo.png",
-                // Currently a dummy URL as there is no working block explorer.
-                transactionUrl: "http://ether.fund/block/" + web3.eth.number,
-            }
+                address: t.config.currentAddress,
+                // TODO: determine the transaction ID (hash). Not 100% possible from the call to the ABI yet, but
+                // will be in the future when web3.eth.filter is finished.
+                // TransactionHash: ...
+            };
+            // TODO: don't store this data with the asset in the vault; the logo can be added on load.
+            peg.logoImageFileName = "ethereum-logo.png";
+            // Currently a dummy URL as there is no working block explorer.
+            peg.transactionUrl = "http://ether.fund/block/" + web3.eth.number;
+
+            peg.isOwned = true;
 
             if (web3.eth.blockNumber !== undefined)
                 peg.details.blockNumber = web3.eth.blockNumber;
@@ -751,7 +771,41 @@ class EthereumService {
         // Can't determine the blockNumber from previous assets. Yet.
         peg.transactionUrl = "http://ether.fund/block/" + 1507;
 
+        this.checkStatus(peg);
+
         return peg;
+    }
+
+    /**
+     * Check the status of the asset on this ledger.
+     */
+    checkAssetStatus(a: Asset) {
+        var t = this;
+        if (a.securedOn) {
+            _(a.securedOn.securityPegs).each(function (p) {
+                if (p.name.toLowerCase() == t._ledgerName.toLowerCase());
+                var newPeg = t.getSecurityPeg(a);
+
+                if (newPeg == null) {
+                    p.isOwned = false;
+                } else {
+                    p.details.address = newPeg.details.address;
+                    t.checkStatus(p);
+                }
+            });
+        }
+    }
+
+    /**
+     * Check status of the peg.
+     */
+    checkStatus(peg: SecurityPeg) {
+        if (peg.details.address == this.config.currentAddress) {
+            peg.isOwned = true;
+        }
+        else {
+            peg.isOwned = false;
+        }
     }
 
     /**

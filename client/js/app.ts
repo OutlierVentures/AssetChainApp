@@ -67,6 +67,7 @@ module AssetChain {
             .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: '/views/verify-ownership.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: '/views/notifications.html' })
             .when('/user/settings/accounts', { controller: UserAccountController, templateUrl: '/views/account-list.html' })
+            .when('/user/profile', { controller: UserAccountController, templateUrl: '/views/user-profile.html' })
             .when('/not-found', { templateUrl: '/views/not-found.html' })
             .otherwise({ redirectTo: 'not-found' })
         $locationProvider.html5Mode(false)

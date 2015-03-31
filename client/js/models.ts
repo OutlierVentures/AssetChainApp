@@ -29,7 +29,7 @@ class AssetSecurity {
 /**
  * Pointer to a transaction on a backend ledger where this asset was secured.
  */
-class SecurityPeg {
+class SecurityPeg {    
     /**
      * Ledger name.
      */
@@ -40,6 +40,10 @@ class SecurityPeg {
      * Ledger-specific details, as an object.
      */
     details: any;
+
+    // We use simple properties for the status instead of methods, because they work better with 
+    // angular views.
+    isOwned: boolean;
 }
 
 class ExpertCollection {
