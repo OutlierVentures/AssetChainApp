@@ -295,12 +295,17 @@ function IdentityController($scope, identityService: IdentityService) {
 interface INavigationScope extends ng.IScope {
     menuItems: Array<MenuItem>;
     isAuthenticated(): boolean;
+    logoff();
 }
 
 /**
  * Controller for the navigation bars.
  */
-function NavigationController($scope: INavigationScope, $location, $http, $routeParams, assetsService: AssetsService, identityService: IdentityService) {
+function NavigationController($scope: INavigationScope, $location: ng.ILocationService, $http, $routeParams,
+    assetsService: AssetsService,
+    identityService: IdentityService,
+    $window: ng.IWindowService) {
+
     $scope.menuItems = [
         {
             name: "My assets",
@@ -327,6 +332,14 @@ function NavigationController($scope: INavigationScope, $location, $http, $route
 
     $scope.isAuthenticated = function (): boolean {
         return identityService.isAuthenticated();
+    }
+
+    $scope.logoff = function () {
+        // Reset path to the front page.
+        $location.path("/");
+
+        // Do a hard reload of the browser so all state data is cleared. This includes Angular controllers, services etc.
+        $window.location.reload();
     }
 }
 
@@ -414,6 +427,9 @@ class EthereumAccountController {
         this.ensureWatch();
     }
 
+    /**
+     * Variable that indicates whether the main watch for pending changes has been configured.
+     */
     private _watchConfigured: boolean;
 
     ensureWatch() {
@@ -465,14 +481,12 @@ class UserAccountController {
     public static $inject = [
         "$scope",
         "$location",
-        "$route",
         "configurationService",
         "identityService",
         "ethereumService"];
 
     constructor(
         private $scope: IAccountScope,
-        private $route: ng.route.IRouteProvider,
         private $location: ng.ILocationService,
         private configurationService: ConfigurationService,
         private identityService: IdentityService,
