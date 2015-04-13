@@ -25,3 +25,7 @@ See also the [Development Process Description](https://docs.google.com/document/
 * Services and controllers are TypeScript classes
 * Scopes defined as TypeScript interfaces
 * CSS: no framework like LESS is used as there has been no necessity for it. All styles are basic Bootstrap. Might be useful in the future.
+
+## Deployment
+
+Currently the ```client/``` tree is deployed in its entirety. Grunt is not used.
