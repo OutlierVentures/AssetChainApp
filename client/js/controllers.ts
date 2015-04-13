@@ -514,10 +514,6 @@ class UserAccountController {
 
         // Save configuration to the store.
         this.configurationService.save();
-
-        
-
-        
     }
 }
 
