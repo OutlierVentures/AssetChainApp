@@ -1,0 +1,67 @@
+﻿<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header" id="page-header">Request ownership transfer of an asset</h1>
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<div class="row" id="transfer-request-form" ng-hide="vm.hasLedgers()">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-lock fa-fw"></i> No accounts connected
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>
+                    You don't have any accounts for decentralized ledgers configured and connected yet. Please
+                    <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row" id="transfer-request-form" ng-show="vm.hasLedgers()">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-mail-forward fa-fw"></i> New transfer request
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>
+                            Transfer of ownership of an asset on AssetChain works in two steps:
+                        </p>
+                        <ol>
+                            <li>The AssetChain user wanting to receive the asset creates a <strong>Transfer request</strong>.</li>
+                            <li>The owner confirms the <strong>Transfer request</strong>.</li>
+                        </ol>
+                        <p>
+                            To create a transfer request, you first need to know the <strong>Asset ID</strong> of the asset you want
+                            to gain ownership of. The <strong>Asset ID</strong> is shown on the details page of the asset.
+                        </p>
+                        <form role="form" name="createTransferRequestForm" novalidate>
+                            <div class="form-group">
+                                <label>Asset ID</label>
+                                <p class="help-block">
+                                    Enter the Asset ID of the asset you want to receive. The Asset ID looks like this:
+                                    <code>a8499eb4a8499eb4a8499eb4a8499eb4</code>.
+                                </p>
+                                <input class="form-control" type="text" ng-model="transferRequest.assetID" required>
+                            </div>
+                            <button name="saveButton" ng-click="vm.create()" ng-disabled="createTransferRequestForm.$invalid" class="btn btn-primary">
+                                Create transfer request
+                            </button>
+                        </form>
+                    </div>
+                </div>
+                <!-- /.col-lg-8 (nested) -->
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->

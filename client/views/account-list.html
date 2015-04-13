@@ -1,39 +1,77 @@
 ﻿<div>
     <div class="row">
         <div class="col-lg-12">
-            <h1 class="page-header" id="page-header">My ledger accounts</h1>
+            <h1 class="page-header" id="page-header">My asset security accounts</h1>
         </div>
         <!-- /.col-lg-12 -->
     </div>
     <!-- /.row -->
-    <div class="row" ng-controller="UserAccountController" ng-show="vm.isEnabled('ethereum')">
-        <div class="col-lg-12">
-            <div class="panel panel-default">
-                <div class="panel-heading">
-                    <i class="fa fa-home fa-fw"></i> Ethereum
-                </div>
-                <!-- /.panel-heading -->
-                <div class="panel-body">
-                    <div>
-                        <form role ="form" name="ethereumAccountForm" novalidate>
-                            <div class="form-group">
-                                <label for="ethereumJsonRpcUrl">Ethereum node URL</label>
-                                <p>Please provide the JSON RPC URL where your Ethereum node can be reached.</p>
-                                <input class="form-control" name="ethereumJsonRpcUrl" ng-model="ethereumJsonRpcUrl" />
+    <div ng-controller="UserAccountController">
+        <p>Assets can be secured with different levels of security. On this page you can configure your credentials for various decentralized ledgers, so that you can use more security levels.</p>
+        <div class="row" ng-show="vm.isEnabled('ethereum')">
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <i class="fa fa-home fa-fw"></i> Ethereum
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-2 col-md-push-10 text-center"><img src="img/backends/ethereum-logo.png" style="padding: 1em;" /></div>
+                            <div class="col-md-10 col-md-pull-2">
+                                <form role="form" name="ethereumAccountForm" novalidate>
+                                    <div class="form-group">
+                                        <label for="ethereumJsonRpcUrl">Ethereum node URL</label>
+                                        <p>Please provide the JSON RPC URL where your Ethereum node can be reached.</p>
+                                        <input class="form-control" name="ethereumJsonRpcUrl" ng-model="ethereumJsonRpcUrl" />
+                                    </div>
+                                    <button class="btn btn-primary" ng-click="vm.saveConfiguration()">Save</button>
+                                </form>
                             </div>
-                            <button class="btn btn-primary" ng-click="vm.saveConfiguration()">Save</button>
-                        </form>
+                            <div ng-show="isActive()">
+                                <h3>Your Ethereum account</h3>
+                                <p>Address: {{address}}</p>
+                                <p>Account balance: {{balance}}</p>
+                            </div>
+                        </div>
                     </div>
-                    <div ng-show="isActive()">
-                        <h3>Your Ethereum account</h3>
-                        <p>Address: {{address}}</p>
-                        <p>Account balance: {{balance}}</p>
-                    </div>
+                    <!-- /.panel-body -->
                 </div>
-                <!-- /.panel-body -->
             </div>
+            <!-- /.col-lg-12 -->
         </div>
-        <!-- /.col-lg-12 -->
+        <!-- /.row --><div class="row" ng-show="vm.isEnabled('ethereum')">
+            <div class="col-lg-12">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
+                        <i class="fa fa-home fa-fw"></i> CoinPrism
+                    </div>
+                    <!-- /.panel-heading -->
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-md-2 col-md-push-10 text-center"><img src="img/backends/coinprism-logo.png" style="padding: 1em;" /></div>
+                            <div class="col-md-10 col-md-pull-2">
+                                <form role="form" name="coinPrismAccountForm" novalidate>
+                                    <div class="form-group">
+                                        <label for="ethereumJsonRpcUrl">User name</label>
+                                        <p>Your CoinPrism user name.</p>
+                                        <input class="form-control" name="coinPrismUsername" ng-model="coinPrismConfiguration.username" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="ethereumJsonRpcUrl">Password</label>
+                                        <p>Your CoinPrism password. Your password is stored in your vault in encrypted form. AssetChain employees don't have access to your credentials under any circumstances.</p>
+                                        <input class="form-control" type="password" name="coinPrismUsername" ng-model="coinPrismConfiguration.username" />
+                                    </div>
+                                    <button class="btn btn-primary" ng-click="vm.saveCoinPrismConfiguration()">Save</button>
+                                </form>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- /.panel-body -->
+                </div>
+            </div>
+            <!-- /.col-lg-12 -->
+        </div>
+        <!-- /.row -->
     </div>
-    <!-- /.row -->
 </div>

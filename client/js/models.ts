@@ -91,11 +91,18 @@ class EthereumConfiguration {
     currentAddress: string;
 }
 
+class CoinPrismConfiguration {
+    username: string;
+    password: string;
+}
+
 class Configuration {
     ethereum: EthereumConfiguration;
+    coinPrism: CoinPrismConfiguration;
 
     constructor() {
         this.ethereum = new EthereumConfiguration();
+        this.coinPrism = new CoinPrismConfiguration();
     }
 }
 

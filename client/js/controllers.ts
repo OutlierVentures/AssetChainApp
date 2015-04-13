@@ -471,6 +471,7 @@ class EthereumAccountController {
 interface IAccountScope extends ng.IScope {
     vm: UserAccountController;
     ethereumJsonRpcUrl: string;
+    coinPrismConfiguration: CoinPrismConfiguration;
 }
 
 /**
@@ -496,6 +497,7 @@ class UserAccountController {
         this.configurationService.load();
 
         this.$scope.ethereumJsonRpcUrl = this.configurationService.configuration.ethereum.jsonRpcUrl;
+        this.$scope.coinPrismConfiguration = this.configurationService.configuration.coinPrism;
     }
 
     isAuthenticated(): boolean {
@@ -507,10 +509,13 @@ class UserAccountController {
     }
 
     saveConfiguration() {
-        this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
+        // Is this even necessary? Or is the configuration object updated by reference?
+        this.configurationService.configuration.coinPrism = this.$scope.coinPrismConfiguration;
+
+        // Save configuration to the store.
         this.configurationService.save();
 
-        // TODO: give EthereumController / -Service a notification to connect.
+        
 
         
     }
