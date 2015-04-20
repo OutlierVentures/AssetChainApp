@@ -10,7 +10,7 @@ Current status: prototype.
 * AngularJS
 * TypeScript
 * Bootstrap
-* Ethereum.js (now Web3.js)
+* ethereum.js (now [web3.js](https://github.com/ethereum/web3.js/))
 
 For details see the  [Technology Stack Description](https://docs.google.com/document/d/1_wngicJ7PwaiTnXtJ2PvQABcCKqrrhiZIffTBaZ0q3g/).
 
