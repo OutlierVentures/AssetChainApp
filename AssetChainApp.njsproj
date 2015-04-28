@@ -22,6 +22,7 @@
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
   <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
   <ItemGroup>
+    <Compile Include="client\js\_all-references.js" />
     <Compile Include="client\vendors-manual\ethereum\ethereum.js" />
     <Compile Include="client\vendors-manual\ethereum\ethereum.min.js" />
     <Compile Include="Gruntfile.js" />
@@ -35,6 +36,7 @@
     <Content Include="client\img\backends\counterparty-logo.png" />
     <Content Include="client\img\backends\ethereum-logo.png" />
     <Content Include="client\index.html" />
+    <Content Include="client\js\_all-references.js.map" />
     <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
     <Content Include="client\views\user-profile.html" />
     <Content Include="client\views\account-list.html" />

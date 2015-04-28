@@ -510,6 +510,7 @@ class UserAccountController {
 
     saveConfiguration() {
         // Is this even necessary? Or is the configuration object updated by reference?
+        this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
         this.configurationService.configuration.coinPrism = this.$scope.coinPrismConfiguration;
 
         // Save configuration to the store.

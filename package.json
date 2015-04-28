@@ -1,10 +1,30 @@
-﻿{
+{
   "name": "assetchain-app",
+  "id": "assetchain",
   "version": "0.1.0",
+  "homepage": "http://assetcha.in",
+  "author": {
+    "name": "Outlier Ventures, Ltd.",
+    "url": "http://www.outlierventures.com"
+  },
   "devDependencies": {
     "grunt": "~0.4.5",
     "grunt-contrib-jshint": "~0.10.0",
     "grunt-contrib-nodeunit": "~0.4.1",
     "grunt-contrib-uglify": "~0.5.0"
-  }
+  },
+  "module_dependencies": [
+                   {
+                        "name" : "monk",
+                        "version" : "0.0.1",
+                        "data" : {
+                                  "peer_server_address": "111.111.111.111:9999",
+                                  "blockchain_id": "f858469a00e80e4f5eb536501eb7d98c7e1cc432",
+                  "root_contract": "0x08aa720515b409379b93200394bd7dace4a67938"
+                        }
+                }, {
+                        "name" : "ipfs",
+                        "version" : "0.0.1"
+                }        
+  ]
 }

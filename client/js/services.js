@@ -509,4 +509,57 @@ var CoinPrismService = (function () {
     ];
     return CoinPrismService;
 })();
+var DecerverApiService = (function () {
+    function DecerverApiService(configurationService) {
+        this.configurationService = configurationService;
+        this._ledgerName = "thelonious";
+    }
+    DecerverApiService.prototype.connect = function () {
+        return false;
+    };
+    DecerverApiService.prototype.disconnect = function () {
+    };
+    DecerverApiService.prototype.isActive = function () {
+        return this._isActive;
+    };
+    DecerverApiService.prototype.isEnabled = function () {
+        return true;
+    };
+    DecerverApiService.prototype.ensureConnect = function () {
+        if (this._isActive)
+            return true;
+        return this.connect();
+    };
+    DecerverApiService.prototype.secureAsset = function (asset, cb) {
+    };
+    DecerverApiService.prototype.getOwnerAddress = function (asset) {
+        return null;
+    };
+    DecerverApiService.prototype.isSecured = function (asset) {
+        return false;
+    };
+    DecerverApiService.prototype.getSecurityPeg = function (asset) {
+        return null;
+    };
+    DecerverApiService.prototype.checkAssetStatus = function (a) {
+    };
+    DecerverApiService.prototype.checkStatus = function (peg) {
+    };
+    DecerverApiService.prototype.getAllSecurityPegs = function () {
+        return null;
+    };
+    DecerverApiService.prototype.createTransferRequest = function (assetID) {
+    };
+    DecerverApiService.prototype.confirmTransferRequest = function (request) {
+    };
+    DecerverApiService.prototype.ignoreTransferRequest = function (request) {
+    };
+    DecerverApiService.prototype.getTransferRequests = function (asset) {
+        return null;
+    };
+    DecerverApiService.$inject = [
+        'configurationService'
+    ];
+    return DecerverApiService;
+})();
 //# sourceMappingURL=services.js.map

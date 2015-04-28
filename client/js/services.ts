@@ -893,7 +893,7 @@ class EthereumService {
 }
 
 /**
- * Service for communicating with the AssetVault Ethereum contracts.
+ * Service for communicating with the CoinPrism API for security pegs.
  */
 class CoinPrismService {
     public config: CoinPrismConfiguration;
@@ -926,6 +926,147 @@ class CoinPrismService {
     }
 
     _ledgerName = "coloredcoins";
+
+    _isActive: boolean;
+
+    /**
+     * Returns whether there is an active connection to an Ethereum node.
+     */
+    isActive(): boolean {
+        return this._isActive;
+    }
+
+    /**
+     * Returns whether the Ethereum ledger is enabled. Currently always true.
+     */
+    isEnabled(): boolean {
+        // Always enabled.
+        // TODO: make configurable.
+        return true;
+    }
+
+    /**
+     * Ensure that we're connected, by calling Connect() if necessary.
+     */
+    ensureConnect(): boolean {
+        if (this._isActive)
+            // Already connected.
+            return true;
+
+        return this.connect();
+    }
+
+    /**
+     * Register the passed asset on this ledger.
+     */
+    secureAsset(asset: Asset, cb: SecurityPegCallback) {
+
+    }
+
+    /**
+     * Returns the ethereum address of the owner of this asset, or undefined if the asset isn't secured.
+     */
+    getOwnerAddress(asset: Asset): string {
+        return null;
+    }
+
+    /**
+     * Returns whether the specified asset is secured on this ledger.
+     */
+    isSecured(asset: Asset): boolean {
+        return false;
+    }
+
+    /**
+     * For an asset currently secured on this ledger, returns the SecurityPeg.
+     */
+    getSecurityPeg(asset: Asset): SecurityPeg {
+        return null;
+    }
+
+    /**
+     * Check the status of the asset on this ledger.
+     */
+    checkAssetStatus(a: Asset) {
+
+    }
+
+    /**
+     * Check status of the peg.
+     */
+    checkStatus(peg: SecurityPeg) {
+
+    }
+
+    /**
+     * Generates a list with all security pegs for the current address.
+     */
+    getAllSecurityPegs(): Array<SecurityPeg> {
+        return null;
+    }
+
+    /**
+     * Create a request to transfer an asset of another owner.
+     */
+    createTransferRequest(assetID: string) {
+
+    }
+
+    /**
+     * Confirm a received transfer request.
+     */
+    confirmTransferRequest(request: TransferRequest) {
+
+    }
+
+    /**
+        * Ignore a received transfer request.
+        */
+    ignoreTransferRequest(request: TransferRequest) {
+
+    }
+
+    /**
+     * Load and return any incoming transfer requests for the given asset.
+     */
+    getTransferRequests(asset: Asset): Array<TransferRequest> {
+
+        return null;
+    }
+}
+
+/**
+ * Service for communicating with the Atë layer of the Decerver Dapp
+ */
+class DecerverApiService {
+    public static $inject = [
+        'configurationService'
+    ];
+
+    // dependencies are injected via AngularJS $injector
+    constructor(
+        private configurationService: ConfigurationService) {
+
+        // The service is constructed when the app is loaded, e.g. before the configuration is unlocked.
+        // So don't try to connect yet. Currently connection has to be done manually after logging in.
+        // TODO: lazy load this service, connect when initialized. Or listen to the configurationService
+        // being initialized.
+        //        this.connect();
+    }
+
+    connect(): boolean {
+
+        return false;
+    }
+
+    /**
+     * Disconnect from the API. Not applicable.
+     */
+    disconnect() {
+        // TODO: remove/deactivate any active watches/filters.
+    }
+
+    _ledgerName = "thelonious";
 
     _isActive: boolean;
 
