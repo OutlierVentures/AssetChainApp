@@ -378,6 +378,37 @@ class EncryptedLocalStorageService {
     }
 }
 
+/**
+ * Storage service using IPFS through Decerver.
+ */
+class EncryptedIpfsStorageService {
+    /**
+     * IdentityService used for encryption.
+     */
+    private _identityService: IdentityService;
+
+    constructor(identityService: IdentityService) {
+        this._identityService = identityService;
+    }
+
+    setItem(key: string, val: any) {
+        var stringVar = JSON.stringify(val);
+
+        stringVar = this._identityService.primaryProvider.encrypt(stringVar);
+
+        
+    }
+
+    getItem(key: string): any {
+        var stringVar: string = localStorage.getItem(this.getFullKey(key));
+        if (stringVar === null)
+            return null;
+
+        stringVar = this._identityService.primaryProvider.decrypt(stringVar);
+
+        return JSON.parse(stringVar);
+    }
+}
 
 /**
  * Service managing the identity of the user on the various backends.
@@ -499,15 +530,22 @@ class ConfigurationService {
     private backend: IStorageService;
 
     public static $inject = [
-        'identityService'
+        'identityService',
+        'locationService'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
-        private identityService: IdentityService) {
+        private identityService: IdentityService,
+        private locationService: ng.ILocationService) {
 
+        // Configuration is always stored in the local storage of the browser. This is where
+        // the end user stores their private data. 
         this.backend = new EncryptedLocalStorageService(identityService);
 
+        // TODO: The configuration could be stored in a backend service to make it 
+        // transferrable to other devices.
+        
         // TODO: make sure configuration is loaded once identityService is initialized.
     }
 
@@ -515,6 +553,11 @@ class ConfigurationService {
         this.configuration = this.backend.getItem("configuration");
         if (this.configuration == null)
             this.configuration = new Configuration();
+
+        if (this.configuration.decerver.baseUrl == undefined) {
+            // Setup Decerver configuration
+            this.configuration.decerver.baseUrl = this.locationService.protocol() + "://" + this.locationService.host() + ":" + this.locationService.port();
+        }
     }
 
     save() {

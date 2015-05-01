@@ -44,10 +44,19 @@ var CoinPrismConfiguration = (function () {
     }
     return CoinPrismConfiguration;
 })();
+var DecerverConfiguration = (function () {
+    function DecerverConfiguration() {
+    }
+    DecerverConfiguration.prototype.apiUrl = function () {
+        return this.baseUrl + "/apis/assetchain";
+    };
+    return DecerverConfiguration;
+})();
 var Configuration = (function () {
     function Configuration() {
         this.ethereum = new EthereumConfiguration();
         this.coinPrism = new CoinPrismConfiguration();
+        this.decerver = new DecerverConfiguration();
     }
     return Configuration;
 })();

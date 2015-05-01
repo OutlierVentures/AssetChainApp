@@ -167,6 +167,23 @@ var EncryptedLocalStorageService = (function () {
     };
     return EncryptedLocalStorageService;
 })();
+var EncryptedIpfsStorageService = (function () {
+    function EncryptedIpfsStorageService(identityService) {
+        this._identityService = identityService;
+    }
+    EncryptedIpfsStorageService.prototype.setItem = function (key, val) {
+        var stringVar = JSON.stringify(val);
+        stringVar = this._identityService.primaryProvider.encrypt(stringVar);
+    };
+    EncryptedIpfsStorageService.prototype.getItem = function (key) {
+        var stringVar = localStorage.getItem(this.getFullKey(key));
+        if (stringVar === null)
+            return null;
+        stringVar = this._identityService.primaryProvider.decrypt(stringVar);
+        return JSON.parse(stringVar);
+    };
+    return EncryptedIpfsStorageService;
+})();
 var IdentityService = (function () {
     function IdentityService($rootScope) {
         this.$rootScope = $rootScope;
@@ -252,20 +269,25 @@ var ExpertsService = (function () {
     return ExpertsService;
 })();
 var ConfigurationService = (function () {
-    function ConfigurationService(identityService) {
+    function ConfigurationService(identityService, locationService) {
         this.identityService = identityService;
+        this.locationService = locationService;
         this.backend = new EncryptedLocalStorageService(identityService);
     }
     ConfigurationService.prototype.load = function () {
         this.configuration = this.backend.getItem("configuration");
         if (this.configuration == null)
             this.configuration = new Configuration();
+        if (this.configuration.decerver.baseUrl == undefined) {
+            this.configuration.decerver.baseUrl = this.locationService.protocol() + "://" + this.locationService.host() + ":" + this.locationService.port();
+        }
     };
     ConfigurationService.prototype.save = function () {
         this.backend.setItem("configuration", this.configuration);
     };
     ConfigurationService.$inject = [
-        'identityService'
+        'identityService',
+        'locationService'
     ];
     return ConfigurationService;
 })();

@@ -96,13 +96,29 @@ class CoinPrismConfiguration {
     password: string;
 }
 
+/**
+ * Configuration for the Decerver backend.
+ */
+class DecerverConfiguration {
+    /**
+     * Base URL where the decerver is reached, for example "http://localhost:3000"
+     */
+    baseUrl: string;
+
+    public apiUrl(): string {
+        return this.baseUrl + "/apis/assetchain";
+    }
+}
+
 class Configuration {
     ethereum: EthereumConfiguration;
     coinPrism: CoinPrismConfiguration;
+    decerver: DecerverConfiguration;
 
     constructor() {
         this.ethereum = new EthereumConfiguration();
         this.coinPrism = new CoinPrismConfiguration();
+        this.decerver = new DecerverConfiguration();
     }
 }
 
