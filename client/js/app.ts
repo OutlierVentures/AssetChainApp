@@ -38,7 +38,7 @@ function guid(skipDashes: boolean) {
 
 
 interface AssetChainRootScope extends ng.IRootScopeService {
-    isLoggedIn: boolean;
+    isLoggedOn: boolean;
 }
 
 module AssetChain {
@@ -75,10 +75,10 @@ module AssetChain {
 
     // Note: the string name provided to angular has to match the parameter names as used in the controllers,
     // case-sensitive. E.g. we can't use 'AssetsService' here and use 'assetsService' in the controllers.
+    assetChainApp.service('configurationService', ConfigurationService);
     assetChainApp.service('identityService', IdentityService);
     assetChainApp.service('assetsService', AssetsService);
     assetChainApp.service('expertsService', ExpertsService);
-    assetChainApp.service('configurationService', ConfigurationService);
     assetChainApp.service('ethereumService', EthereumService);
 }
 

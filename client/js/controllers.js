@@ -161,11 +161,11 @@ function RegisterAssetController($scope, $location, $http, $routeParams, assetsS
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file.file);
             fileReader.onload = function (event) {
-                $scope.asset.images.push({
-                    location: "dataUrl",
-                    fileName: file.name,
-                    dataUrl: event.target.result
-                });
+                var img = new AssetImage();
+                img.location = "dataUrl";
+                img.fileName = file.name;
+                img.dataUrl = event.target.result;
+                $scope.asset.images.push(img);
             };
         });
         setTimeout(function () {

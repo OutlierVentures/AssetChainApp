@@ -25,21 +25,39 @@ String.prototype.capitalizeFirstLetter = function () {
 class AssetsService {
     assets: Asset[];
 
+    /**
+     * The primary storage for asset data.
+     */
     backend: IStorageService;
 
+    /**
+     * Backend for storing binary data like images and documents. The primary storage
+     * contains hashes referring to these files.
+     */
+    binaryBackend: IStorageService;
+
     public static $inject = [
+        '$http',
+        '$q',
+        '$window',
         'identityService',
-        'ethereumService'
+        'ethereumService',
+        'configurationService'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
+        private $http: ng.IHttpService,
+        private $q: ng.IQService,
+        private $window: ng.IWindowService,
         private identityService: IdentityService,
-        private ethereumService: EthereumService) {
+        private ethereumService: EthereumService,
+        private configurationService: ConfigurationService) {
 
         // TODO: make storageService into a configurable, multi-backend data layer
         // For example, assets can be stored anywhere, but their verification cannot.
         this.backend = new EncryptedLocalStorageService(identityService);
+        this.binaryBackend = new EncryptedIpfsStorageService(identityService, $http, $q, configurationService);
 
         this.ensureAssets();
     }
@@ -142,15 +160,92 @@ class AssetsService {
         this.assets = null;
     }
 
+    public saveAssetBinary(asset: Asset, data: Object, name: string) {
+    }
+
     private saveDB(): void {
-        // TODO: encrypt by identityservice
-        // TODO: use a unique key for the current account
-        // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
-        this.backend.setItem("assets", angular.copy(this.assets));
+        var t = this;
+
+        // Get all binaries from the asset array and store them in the binary backend if necessary.
+        var imageSavePromises = new Array();
+
+        _(this.assets).each(function (asset) {
+            _(asset.images).each(function (image) {
+                if (image.location == "dataUrl") {
+                    var saveImage = t.$q.defer();
+                    imageSavePromises.push(saveImage.promise);
+
+                    t.binaryBackend.setItem(image.fileName, image.dataUrl).then(function (data) {
+                        // The IPFS backend returns the IPFS hash.
+                        var hash = data;
+
+                        image.hash = hash;
+                        image.location = "ipfs";
+                        saveImage.resolve(image);
+                    }, function (reason) {
+                            saveImage.reject();
+                            // Error calling IPFS backend.
+                        });
+                }
+            });
+        });
+
+        this.$q.all(imageSavePromises).then(function (data) {
+            // All images have been processed. Save the data to the backend.
+
+            // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
+            var arrayForSave = angular.copy(t.assets);
+
+            // In the array to save, remove image data to keep it lean.
+            _(arrayForSave).each(function (asset) {
+                _(asset.images).each(function (image) {
+                    if (image.location == "ipfs")
+                        image.dataUrl = null;
+                });
+            });
+
+            // Save it to the backend.
+            t.backend.setItem("assets", arrayForSave);
+        });
     }
 
     private loadDB(): void {
         this.assets = this.backend.getItem("assets");
+
+        var t = this;
+
+        // Load image data for all images stored on backends
+        // TODO: do this per image, only on details, get thumbnails first etc
+        _(this.assets).each(function (asset) {
+            _(asset.images).each(function (image) {
+                // The images aren't deserialized as actual AssetImage
+                // objects, but as anonymous objects missing the functions. Therefore we
+                // copy the method from a prototype.
+                // TODO: find a better way to do this (this can't be how it's meant to be done).
+
+                var protoImage = new AssetImage();
+                image.isLoaded = protoImage.isLoaded;
+
+                // Only load image if it hasn't been loaded yet.
+                // DEV: always try to get it
+                if (!image.isLoaded()) {
+                    if (image.location === "ipfs" && image.hash) {
+                        // TODO: check whether the format of the data is right.
+                        // DEV: cat.jpg;
+
+                        //image.hash = "Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u";
+
+                        // The IPFS backend returns a promise.
+                        t.binaryBackend.getItem(image.hash).then(function (data) {
+                            // The IPFS service returns the decrypted image in dataURL format.                            
+                            image.dataUrl = data;
+                        }, function (reason) {
+                                // Error calling IPFS backend.
+                            });
+                    }
+                }
+            });
+        });
     }
 
     reload(): void {
@@ -336,6 +431,7 @@ interface IStorageService {
 
 /**
  * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
+ * Note: this is not an Angular service. It's a class thats instantiated by other objects.
  */
 class EncryptedLocalStorageService {
     private _identityService: IdentityService;
@@ -382,31 +478,68 @@ class EncryptedLocalStorageService {
  * Storage service using IPFS through Decerver.
  */
 class EncryptedIpfsStorageService {
-    /**
-     * IdentityService used for encryption.
-     */
-    private _identityService: IdentityService;
 
-    constructor(identityService: IdentityService) {
-        this._identityService = identityService;
+    constructor(
+        /**
+         * IdentityService used for encryption.
+         */
+        private identityService: IdentityService,
+        private $http: ng.IHttpService,
+        private $q: ng.IQService,
+        private configurationService: ConfigurationService) {
     }
 
-    setItem(key: string, val: any) {
+    setItem(key: string, val: any): ng.IPromise<string> {
         var stringVar = JSON.stringify(val);
 
-        stringVar = this._identityService.primaryProvider.encrypt(stringVar);
+        stringVar = this.identityService.primaryProvider.encrypt(stringVar);
 
-        
+        var ipfsHash: string;
+
+        var defer = this.$q.defer();
+
+        var jsonObj = { name: key, data: stringVar };
+
+        this.$http({
+            method: "POST",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/files',
+            data: JSON.stringify(jsonObj)
+        }).success(function (data) {
+            // The DAPI will return the IPFS hash. Also, the file name and hash are stored in the contract.
+            var ipfsHash: string = data["ipfsHash"];
+            defer.resolve(ipfsHash);
+        }).error(function (error) {
+            defer.reject('$http call failed');
+
+        });
+
+        return defer.promise;
     }
 
-    getItem(key: string): any {
-        var stringVar: string = localStorage.getItem(this.getFullKey(key));
-        if (stringVar === null)
-            return null;
+    getItem(key: string): ng.IPromise<string> {
+        // TODO: get from IPFS through decerver
+        var defer = this.$q.defer();
+        var t = this;
 
-        stringVar = this._identityService.primaryProvider.decrypt(stringVar);
+        this.$http({
+            method: "GET",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/ipfs/' + key,
+        }).success(function (data) {
+            var stringVar: string = data["data"];
+            if (stringVar === null)
+                return null;
+            try {
+                stringVar = t.identityService.primaryProvider.decrypt(stringVar);
+                defer.resolve(JSON.parse(stringVar));
+            }
+            catch (error) {
+                defer.reject("Error decrypting result '" + stringVar + "'.");
+            }
+        }).error(function () {
+            defer.reject('$http call failed');
+        });
 
-        return JSON.parse(stringVar);
+        return defer.promise;
     }
 }
 
@@ -443,7 +576,9 @@ class IdentityService {
         if (!this.primaryProvider)
             this.primaryProvider = provider;
 
-        this.$rootScope.isLoggedIn = true;
+        this.$rootScope.isLoggedOn = true;
+
+        this.$rootScope.$emit('loggedOn');
 
         return true;
     }
@@ -531,17 +666,26 @@ class ConfigurationService {
 
     public static $inject = [
         'identityService',
-        'locationService'
+        '$location',
+        '$rootScope'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
         private identityService: IdentityService,
-        private locationService: ng.ILocationService) {
+        private $location: ng.ILocationService,
+        private $rootScope: ng.IRootScopeService) {
 
         // Configuration is always stored in the local storage of the browser. This is where
         // the end user stores their private data. 
         this.backend = new EncryptedLocalStorageService(identityService);
+
+        var t = this;
+
+        // Load configuration after logon.
+        this.$rootScope.$on('loggedOn', function (event, data) {
+            t.load();
+        });
 
         // TODO: The configuration could be stored in a backend service to make it 
         // transferrable to other devices.
@@ -554,9 +698,14 @@ class ConfigurationService {
         if (this.configuration == null)
             this.configuration = new Configuration();
 
+        // Earlier saved config can miss new properties.
+        // TODO: ensure this in Configuration 
+        if (this.configuration.decerver == null)
+            this.configuration.decerver = new DecerverConfiguration();
+
         if (this.configuration.decerver.baseUrl == undefined) {
             // Setup Decerver configuration
-            this.configuration.decerver.baseUrl = this.locationService.protocol() + "://" + this.locationService.host() + ":" + this.locationService.port();
+            this.configuration.decerver.baseUrl = this.$location.protocol() + "://" + this.$location.host() + ":" + this.$location.port();
         }
     }
 

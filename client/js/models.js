@@ -4,6 +4,20 @@ var Asset = (function () {
     }
     return Asset;
 })();
+var AssetImage = (function () {
+    function AssetImage() {
+    }
+    AssetImage.prototype.isLoaded = function () {
+        if (this.dataUrl === undefined || this.dataUrl === null)
+            return false;
+        if (this.dataUrl.length < 5)
+            return false;
+        if (this.dataUrl.substr(0, 5) !== "data:")
+            return false;
+        return true;
+    };
+    return AssetImage;
+})();
 var AssetSecurity = (function () {
     function AssetSecurity() {
     }

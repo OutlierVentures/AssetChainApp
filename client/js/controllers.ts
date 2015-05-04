@@ -255,7 +255,13 @@ class SingleAssetController {
     }
 }
 
-function RegisterAssetController($scope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
+interface IRegisterAssetControllerScope extends ng.IScope {
+    save();
+    asset: Asset;
+    assetform: any;
+}
+
+function RegisterAssetController($scope: IRegisterAssetControllerScope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
     $scope.save = function () {
         // Load the photo data.
         $scope.asset.images = [];
@@ -265,11 +271,11 @@ function RegisterAssetController($scope, $location: ng.ILocationService, $http, 
             fileReader.readAsDataURL(file.file);
 
             fileReader.onload = function (event: any) {
-                $scope.asset.images.push({
-                    location: "dataUrl",
-                    fileName: file.name,
-                    dataUrl: event.target.result
-                });
+                var img = new AssetImage();
+                img.location = "dataUrl";
+                img.fileName = file.name;
+                img.dataUrl = event.target.result;
+                $scope.asset.images.push(img);
             };
         });
 

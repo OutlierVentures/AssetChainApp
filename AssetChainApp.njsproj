@@ -26,6 +26,8 @@
     <Compile Include="client\vendors-manual\ethereum\ethereum.js" />
     <Compile Include="client\vendors-manual\ethereum\ethereum.min.js" />
     <Compile Include="Gruntfile.js" />
+    <Compile Include="models\AssetChain.js" />
+    <Compile Include="models\DappHttpAPI.js" />
     <Content Include="asset-chain-logo.xcf" />
     <Content Include="client\.bowerrc" />
     <Content Include="client\bower.json" />
@@ -56,6 +58,7 @@
     <Content Include="client\views\transfer-request-start.html" />
     <Content Include="client\views\register-asset.html" />
     <Content Include="contracts\asset-vault.sol" />
+    <Content Include="models\config.json" />
     <Content Include="package.json" />
     <Content Include="client\css\app.css" />
     <Content Include="client\css\bootstrap.css" />
@@ -131,6 +134,7 @@
     <Folder Include="client\" />
     <Folder Include="client\js\typings\" />
     <Folder Include="contracts\" />
+    <Folder Include="models\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <!--Do not delete the following Import Project.  While this appears to do nothing it is a marker for setting TypeScript properties before our import that depends on them.-->

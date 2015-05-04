@@ -18,8 +18,43 @@ class Asset {
     isPendingClaim: boolean = true;
     verifications: Verification[];
     securedOn: AssetSecurity;
+    images: AssetImage[];
 }
 
+/**
+ * Image of an asset. Stored in any backend depending on 'location'.
+ */
+class AssetImage {
+    /**
+     * Location where the (encrypted) image data resides. Possible values:
+     * - 'dataUrl': the primary storage is the dataUrl property, i.e. the image
+     *  hasn't been saved to any backend.
+     * - 'ipfs': IPFS. The 'hash' contains the IPFS hash.
+     */
+    location: string;
+    fileName: string;
+    dataUrl: string;
+    hash: string;
+
+    /**
+     * Returns whether the image is loaded locally.
+     */
+    isLoaded(): boolean{
+        if (this.dataUrl === undefined || this.dataUrl === null)
+            return false;
+        if (this.dataUrl.length < 5)
+            return false;
+
+        if (this.dataUrl.substr(0, 5) !== "data:")
+            return false;
+
+        return true;
+    }
+}
+
+/**
+ * The security info of the asset including the level and any security pegs.
+ */
 class AssetSecurity {
     name: string;
     // The backend ledgers on which this asset has been secured.

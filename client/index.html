@@ -48,7 +48,7 @@
 
         <!-- When not logged in, the whole wrapper is hidden. We use the property $rootScope.isLoggedIn 
             which is set to true after a succesful login.-->
-        <div id="wrapper" ng-show="isLoggedIn">
+        <div id="wrapper" ng-show="isLoggedOn">
             <!-- Navigation. The navbar view includes the NavigationController. -->
             <nav ng-include="'views/navbar.html'"></nav>
 
@@ -75,7 +75,7 @@
     <!-- Metis Menu Plugin JavaScript -->
     <script src="vendors/metisMenu/dist/metisMenu.min.js"></script>
 
-    <script src="vendors/angular/angular.min.js"></script>
+    <script src="vendors/angular/angular.js"></script>
     <script src="vendors/angular-resource/angular-resource.min.js"></script>
     <script src="vendors/angular-route/angular-route.min.js"></script>
     <script src="vendors/angular-sanitize/angular-sanitize.min.js"></script>

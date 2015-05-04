@@ -2,10 +2,15 @@ String.prototype.capitalizeFirstLetter = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
 var AssetsService = (function () {
-    function AssetsService(identityService, ethereumService) {
+    function AssetsService($http, $q, $window, identityService, ethereumService, configurationService) {
+        this.$http = $http;
+        this.$q = $q;
+        this.$window = $window;
         this.identityService = identityService;
         this.ethereumService = ethereumService;
+        this.configurationService = configurationService;
         this.backend = new EncryptedLocalStorageService(identityService);
+        this.binaryBackend = new EncryptedIpfsStorageService(identityService, $http, $q, configurationService);
         this.ensureAssets();
     }
     AssetsService.prototype.ensureAssets = function () {
@@ -59,11 +64,55 @@ var AssetsService = (function () {
     AssetsService.prototype.unload = function () {
         this.assets = null;
     };
+    AssetsService.prototype.saveAssetBinary = function (asset, data, name) {
+    };
     AssetsService.prototype.saveDB = function () {
-        this.backend.setItem("assets", angular.copy(this.assets));
+        var t = this;
+        var imageSavePromises = new Array();
+        _(this.assets).each(function (asset) {
+            _(asset.images).each(function (image) {
+                if (image.location == "dataUrl") {
+                    var saveImage = t.$q.defer();
+                    imageSavePromises.push(saveImage.promise);
+                    t.binaryBackend.setItem(image.fileName, image.dataUrl).then(function (data) {
+                        var hash = data;
+                        image.hash = hash;
+                        image.location = "ipfs";
+                        saveImage.resolve(image);
+                    }, function (reason) {
+                        saveImage.reject();
+                    });
+                }
+            });
+        });
+        this.$q.all(imageSavePromises).then(function (data) {
+            var arrayForSave = angular.copy(t.assets);
+            _(arrayForSave).each(function (asset) {
+                _(asset.images).each(function (image) {
+                    if (image.location == "ipfs")
+                        image.dataUrl = null;
+                });
+            });
+            t.backend.setItem("assets", arrayForSave);
+        });
     };
     AssetsService.prototype.loadDB = function () {
         this.assets = this.backend.getItem("assets");
+        var t = this;
+        _(this.assets).each(function (asset) {
+            _(asset.images).each(function (image) {
+                var protoImage = new AssetImage();
+                image.isLoaded = protoImage.isLoaded;
+                if (!image.isLoaded()) {
+                    if (image.location === "ipfs" && image.hash) {
+                        t.binaryBackend.getItem(image.hash).then(function (data) {
+                            image.dataUrl = data;
+                        }, function (reason) {
+                        });
+                    }
+                }
+            });
+        });
     };
     AssetsService.prototype.reload = function () {
         this.loadDB();
@@ -113,8 +162,12 @@ var AssetsService = (function () {
         return this.ethereumService.getTransferRequests(asset);
     };
     AssetsService.$inject = [
+        '$http',
+        '$q',
+        '$window',
         'identityService',
-        'ethereumService'
+        'ethereumService',
+        'configurationService'
     ];
     return AssetsService;
 })();
@@ -168,19 +221,51 @@ var EncryptedLocalStorageService = (function () {
     return EncryptedLocalStorageService;
 })();
 var EncryptedIpfsStorageService = (function () {
-    function EncryptedIpfsStorageService(identityService) {
-        this._identityService = identityService;
+    function EncryptedIpfsStorageService(identityService, $http, $q, configurationService) {
+        this.identityService = identityService;
+        this.$http = $http;
+        this.$q = $q;
+        this.configurationService = configurationService;
     }
     EncryptedIpfsStorageService.prototype.setItem = function (key, val) {
         var stringVar = JSON.stringify(val);
-        stringVar = this._identityService.primaryProvider.encrypt(stringVar);
+        stringVar = this.identityService.primaryProvider.encrypt(stringVar);
+        var ipfsHash;
+        var defer = this.$q.defer();
+        var jsonObj = { name: key, data: stringVar };
+        this.$http({
+            method: "POST",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/files',
+            data: JSON.stringify(jsonObj)
+        }).success(function (data) {
+            var ipfsHash = data["ipfsHash"];
+            defer.resolve(ipfsHash);
+        }).error(function (error) {
+            defer.reject('$http call failed');
+        });
+        return defer.promise;
     };
     EncryptedIpfsStorageService.prototype.getItem = function (key) {
-        var stringVar = localStorage.getItem(this.getFullKey(key));
-        if (stringVar === null)
-            return null;
-        stringVar = this._identityService.primaryProvider.decrypt(stringVar);
-        return JSON.parse(stringVar);
+        var defer = this.$q.defer();
+        var t = this;
+        this.$http({
+            method: "GET",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/ipfs/' + key,
+        }).success(function (data) {
+            var stringVar = data["data"];
+            if (stringVar === null)
+                return null;
+            try {
+                stringVar = t.identityService.primaryProvider.decrypt(stringVar);
+                defer.resolve(JSON.parse(stringVar));
+            }
+            catch (error) {
+                defer.reject("Error decrypting result '" + stringVar + "'.");
+            }
+        }).error(function () {
+            defer.reject('$http call failed');
+        });
+        return defer.promise;
     };
     return EncryptedIpfsStorageService;
 })();
@@ -196,7 +281,8 @@ var IdentityService = (function () {
         this.providers.push(provider);
         if (!this.primaryProvider)
             this.primaryProvider = provider;
-        this.$rootScope.isLoggedIn = true;
+        this.$rootScope.isLoggedOn = true;
+        this.$rootScope.$emit('loggedOn');
         return true;
     };
     IdentityService.prototype.logoff = function () {
@@ -269,17 +355,24 @@ var ExpertsService = (function () {
     return ExpertsService;
 })();
 var ConfigurationService = (function () {
-    function ConfigurationService(identityService, locationService) {
+    function ConfigurationService(identityService, $location, $rootScope) {
         this.identityService = identityService;
-        this.locationService = locationService;
+        this.$location = $location;
+        this.$rootScope = $rootScope;
         this.backend = new EncryptedLocalStorageService(identityService);
+        var t = this;
+        this.$rootScope.$on('loggedOn', function (event, data) {
+            t.load();
+        });
     }
     ConfigurationService.prototype.load = function () {
         this.configuration = this.backend.getItem("configuration");
         if (this.configuration == null)
             this.configuration = new Configuration();
+        if (this.configuration.decerver == null)
+            this.configuration.decerver = new DecerverConfiguration();
         if (this.configuration.decerver.baseUrl == undefined) {
-            this.configuration.decerver.baseUrl = this.locationService.protocol() + "://" + this.locationService.host() + ":" + this.locationService.port();
+            this.configuration.decerver.baseUrl = this.$location.protocol() + "://" + this.$location.host() + ":" + this.$location.port();
         }
     };
     ConfigurationService.prototype.save = function () {
@@ -287,7 +380,8 @@ var ConfigurationService = (function () {
     };
     ConfigurationService.$inject = [
         'identityService',
-        'locationService'
+        '$location',
+        '$rootScope'
     ];
     return ConfigurationService;
 })();

@@ -46,7 +46,7 @@
                                         <div ng-repeat="image in asset.images" style="display: inline-block">
                                             <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}"
                                                  class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
-                                            <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
+                                            <img ng-show="image.location!='local' && image.dataUrl" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
                                                  style="margin-bottom: 1em; margin-right: 1em;">
                                         </div>
                                     </div>
