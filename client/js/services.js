@@ -2,9 +2,10 @@ String.prototype.capitalizeFirstLetter = function () {
     return this.charAt(0).toUpperCase() + this.slice(1);
 };
 var AssetsService = (function () {
-    function AssetsService($http, $q, $window, identityService, ethereumService, configurationService) {
+    function AssetsService($http, $q, $rootScope, $window, identityService, ethereumService, configurationService) {
         this.$http = $http;
         this.$q = $q;
+        this.$rootScope = $rootScope;
         this.$window = $window;
         this.identityService = identityService;
         this.ethereumService = ethereumService;
@@ -138,6 +139,15 @@ var AssetsService = (function () {
     AssetsService.prototype.create = function (asset, cb) {
         asset.id = guid(true);
         this.assets.push(asset);
+        var n = {
+            title: "New asset registered",
+            date: moment().toISOString(),
+            details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
+            url: "asset/" + asset.id,
+            icon: "plus-circle",
+            seen: false,
+        };
+        this.$rootScope.$emit('addNotification', n);
         cb(asset);
     };
     AssetsService.prototype.update = function (updatedAsset, cb) {
@@ -164,6 +174,7 @@ var AssetsService = (function () {
     AssetsService.$inject = [
         '$http',
         '$q',
+        '$rootScope',
         '$window',
         'identityService',
         'ethereumService',

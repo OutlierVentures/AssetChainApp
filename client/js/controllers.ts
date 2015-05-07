@@ -354,13 +354,45 @@ interface NotificationScope {
     latestNotifications: Array<Notification>;
 }
 
-function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService: AssetsService) {
+function NotificationController($scope: NotificationScope,
+    $location: ng.ILocationService,
+    $http: ng.IHttpService,
+    $routeParams: ng.route.IRouteParamsService,
+    $rootScope: ng.IRootScopeService,
+    assetsService: AssetsService) {
     var exampleDate: string;
+
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
 
+    // Add dummy notification data.
+
     // Note: using object initializers like this requires all properties to be set.
     $scope.notifications = [
+        {
+            title: "Entered on AssetChain",
+            date: '2015-01-13 19:01',
+            details: "You became an AssetChain user. Be welcome!",
+            url: '',
+            icon: "home",
+            seen: false,
+        },
+        {
+            title: "New asset registered",
+            date: '2015-01-13 12:43',
+            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
+            url: "asset/3",
+            icon: "plus-circle",
+            seen: true,
+        },        
+        {
+            title: "Asset transferred to you",
+            date: '2015-01-16 03:43',
+            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
+            url: "asset/4",
+            icon: "mail-forward",
+            seen: false,
+        },        
         {
             title: "Asset secured",
             date: exampleDate,
@@ -369,34 +401,32 @@ function NotificationController($scope: NotificationScope, $location, $http, $ro
             icon: "lock",
             seen: true,
         },
-        {
-            title: "Asset transferred to you",
-            date: '2015-01-16 03:43',
-            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            url: "asset/4",
-            icon: "mail-forward",
-            seen: false,
-        },
-
-        {
-            title: "New asset registered",
-            date: '2015-01-13 12:43',
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
-            url: "asset/3",
-            icon: "plus-circle",
-            seen: true,
-        },
-        {
-            title: "Entered on AssetChain",
-            date: '2015-01-13 19:01',
-            details: "You became an AssetChain user. Be welcome!",
-            url: '',
-            icon: "home",
-            seen: false,
-        }];
+        ];
 
     // Latest notifications: get first N items.
-    $scope.latestNotifications = $scope.notifications.slice(0, 3);
+    var updateLatestNotifications = function () {
+        $scope.notifications.reverse();
+        $scope.latestNotifications = $scope.notifications.slice(0, 3);
+        $scope.notifications.reverse();
+    }
+
+    updateLatestNotifications();
+
+    $rootScope.$on('addNotification', function (event: ng.IAngularEvent, data) {
+        var newNot = new Notification();
+        newNot.date = moment().toISOString();
+        newNot.details = data.details;
+        newNot.icon = data.icon;
+        newNot.seen = false;
+        newNot.title = data.title;
+        newNot.url = data.url;
+        
+        $scope.notifications.push(newNot);
+
+        updateLatestNotifications();
+    });
+
+
 }
 
 

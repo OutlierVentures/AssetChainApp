@@ -204,24 +204,16 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
         $window.location.reload();
     };
 }
-function NotificationController($scope, $location, $http, $routeParams, assetsService) {
+function NotificationController($scope, $location, $http, $routeParams, $rootScope, assetsService) {
     var exampleDate;
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
     $scope.notifications = [
         {
-            title: "Asset secured",
-            date: exampleDate,
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
-            url: "asset/3",
-            icon: "lock",
-            seen: true,
-        },
-        {
-            title: "Asset transferred to you",
-            date: '2015-01-16 03:43',
-            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            url: "asset/4",
-            icon: "mail-forward",
+            title: "Entered on AssetChain",
+            date: '2015-01-13 19:01',
+            details: "You became an AssetChain user. Be welcome!",
+            url: '',
+            icon: "home",
             seen: false,
         },
         {
@@ -233,15 +225,39 @@ function NotificationController($scope, $location, $http, $routeParams, assetsSe
             seen: true,
         },
         {
-            title: "Entered on AssetChain",
-            date: '2015-01-13 19:01',
-            details: "You became an AssetChain user. Be welcome!",
-            url: '',
-            icon: "home",
+            title: "Asset transferred to you",
+            date: '2015-01-16 03:43',
+            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
+            url: "asset/4",
+            icon: "mail-forward",
             seen: false,
-        }
+        },
+        {
+            title: "Asset secured",
+            date: exampleDate,
+            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
+            url: "asset/3",
+            icon: "lock",
+            seen: true,
+        },
     ];
-    $scope.latestNotifications = $scope.notifications.slice(0, 3);
+    var updateLatestNotifications = function () {
+        $scope.notifications.reverse();
+        $scope.latestNotifications = $scope.notifications.slice(0, 3);
+        $scope.notifications.reverse();
+    };
+    updateLatestNotifications();
+    $rootScope.$on('addNotification', function (event, data) {
+        var newNot = new Notification();
+        newNot.date = moment().toISOString();
+        newNot.details = data.details;
+        newNot.icon = data.icon;
+        newNot.seen = false;
+        newNot.title = data.title;
+        newNot.url = data.url;
+        $scope.notifications.push(newNot);
+        updateLatestNotifications();
+    });
 }
 var EthereumAccountController = (function () {
     function EthereumAccountController($scope, $location, configurationService, ethereumService) {

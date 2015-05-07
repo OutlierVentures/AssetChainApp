@@ -39,6 +39,7 @@ class AssetsService {
     public static $inject = [
         '$http',
         '$q',
+        '$rootScope',
         '$window',
         'identityService',
         'ethereumService',
@@ -49,6 +50,7 @@ class AssetsService {
     constructor(
         private $http: ng.IHttpService,
         private $q: ng.IQService,
+        private $rootScope: ng.IRootScopeService,
         private $window: ng.IWindowService,
         private identityService: IdentityService,
         private ethereumService: EthereumService,
@@ -294,7 +296,18 @@ class AssetsService {
     create(asset: Asset, cb: SingleAssetCallback) {
         asset.id = guid(true);
 
-        this.assets.push(asset)
+        this.assets.push(asset);
+
+        var n: Notification = {
+            title: "New asset registered",
+            date: moment().toISOString(),
+            details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
+            url: "asset/" + asset.id,
+            icon: "plus-circle",
+            seen: false,
+        };
+        this.$rootScope.$emit('addNotification', n);
+
         cb(asset);
     }
 
