@@ -57,6 +57,16 @@ var AssetsService = (function () {
             pegs.push(p);
             sec.securityPegs = pegs;
             newAsset.securedOn = sec;
+            var n = {
+                id: guid(true),
+                title: "Asset restored from security peg",
+                date: moment().toISOString(),
+                details: "The asset <strong>" + newAsset.name + "</strong> for which you control the security peg on the <strong>" + p.name + "</strong> ledger has been restored.",
+                url: "asset/" + newAsset.id,
+                icon: "lock",
+                seen: false,
+            };
+            t.$rootScope.$emit('addNotification', n);
             t.assets.push(newAsset);
             anyNew = true;
         });
@@ -140,6 +150,7 @@ var AssetsService = (function () {
         asset.id = guid(true);
         this.assets.push(asset);
         var n = {
+            id: guid(true),
             title: "New asset registered",
             date: moment().toISOString(),
             details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
@@ -384,6 +395,10 @@ var ConfigurationService = (function () {
             this.configuration.decerver = new DecerverConfiguration();
         if (this.configuration.decerver.baseUrl == undefined) {
             this.configuration.decerver.baseUrl = this.$location.protocol() + "://" + this.$location.host() + ":" + this.$location.port();
+        }
+        if (!this.configuration.decerver.apiUrl) {
+            var dummy = new DecerverConfiguration();
+            this.configuration.decerver.apiUrl = dummy.apiUrl;
         }
     };
     ConfigurationService.prototype.save = function () {

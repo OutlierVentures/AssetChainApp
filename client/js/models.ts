@@ -168,6 +168,7 @@ class MenuItem {
 }
 
 class Notification {
+    id: string;
     title: string;
     date: string;
     details: string;

@@ -359,8 +359,31 @@ function NotificationController($scope: NotificationScope,
     $http: ng.IHttpService,
     $routeParams: ng.route.IRouteParamsService,
     $rootScope: ng.IRootScopeService,
-    assetsService: AssetsService) {
+    assetsService: AssetsService,
+    identityService: IdentityService) {
     var exampleDate: string;
+
+    /**
+     * Backend for storing notifications.
+     */
+    var backend: IStorageService;
+
+    backend = new EncryptedLocalStorageService(identityService);
+
+    var load = function () {
+        $scope.notifications = backend.getItem("notifications");
+        updateLatestNotifications();
+    }
+
+    var save = function () {
+        backend.setItem("notifications", $scope.notifications);
+    }
+
+    $rootScope.$on("loggedOn", function () {
+        load();
+        ensureNotifications();
+        updateLatestNotifications();
+    });
 
     // Use a recent date to test moment display ("... minutes ago")
     exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
@@ -368,62 +391,82 @@ function NotificationController($scope: NotificationScope,
     // Add dummy notification data.
 
     // Note: using object initializers like this requires all properties to be set.
-    $scope.notifications = [
-        {
-            title: "Entered on AssetChain",
-            date: '2015-01-13 19:01',
-            details: "You became an AssetChain user. Be welcome!",
-            url: '',
-            icon: "home",
-            seen: false,
-        },
-        {
-            title: "New asset registered",
-            date: '2015-01-13 12:43',
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
-            url: "asset/3",
-            icon: "plus-circle",
-            seen: true,
-        },        
-        {
-            title: "Asset transferred to you",
-            date: '2015-01-16 03:43',
-            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            url: "asset/4",
-            icon: "mail-forward",
-            seen: false,
-        },        
-        {
-            title: "Asset secured",
-            date: exampleDate,
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
-            url: "asset/3",
-            icon: "lock",
-            seen: true,
-        },
-        ];
+    var ensureNotifications = function () {
+        // TODO: create real "entered on AssetChain" notification
+        // TODO: create real "asset was transferred" notification (as well as incoming transfer requests)
+        if (!$scope.notifications || $scope.notifications.length == 0) {
+            $scope.notifications = new Array<Notification>();
+            //$scope.notifications = [
+            //    {
+            //            id: guid(true),
+            //            title: "Entered on AssetChain",
+            //            date: '2015-01-13 19:01',
+            //            details: "You became an AssetChain user. Be welcome!",
+            //            url: '',
+            //            icon: "home",
+            //            seen: false,
+            //        },
+            //        {
+            //            id: guid(true),
+            //            title: "New asset registered",
+            //            date: '2015-01-13 12:43',
+            //            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
+            //            url: "asset/3",
+            //            icon: "plus-circle",
+            //            seen: true,
+            //        },
+            //        {
+            //            id: guid(true),
+            //            title: "Asset transferred to you",
+            //            date: '2015-01-16 03:43',
+            //            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
+            //            url: "asset/4",
+            //            icon: "mail-forward",
+            //            seen: false,
+            //        },
+            //        {
+            //            id: guid(true),
+            //            title: "Asset secured",
+            //            date: exampleDate,
+            //            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
+            //            url: "asset/3",
+            //            icon: "lock",
+            //            seen: true,
+            //        },
+            //    ];
+            //}
+        }
+
+        // Ensure all current notifications have a non-null ID
+        _($scope.notifications).each(function (not: Notification) {
+            if (!not.id)
+                not.id = guid(true);
+        });
+    }
 
     // Latest notifications: get first N items.
     var updateLatestNotifications = function () {
+        if (!$scope.notifications)
+            return;
         $scope.notifications.reverse();
         $scope.latestNotifications = $scope.notifications.slice(0, 3);
         $scope.notifications.reverse();
     }
 
-    updateLatestNotifications();
-
     $rootScope.$on('addNotification', function (event: ng.IAngularEvent, data) {
         var newNot = new Notification();
+        newNot.id = data.id;
         newNot.date = moment().toISOString();
         newNot.details = data.details;
         newNot.icon = data.icon;
         newNot.seen = false;
         newNot.title = data.title;
         newNot.url = data.url;
-        
+
         $scope.notifications.push(newNot);
 
         updateLatestNotifications();
+        save();
     });
 
 
@@ -573,6 +616,7 @@ class SecureAssetController {
         "$location",
         "$route",
         "$routeParams",
+        "$rootScope",
         "configurationService",
         "identityService",
         "assetsService",
@@ -583,6 +627,7 @@ class SecureAssetController {
         private $location: ng.ILocationService,
         private $route: ng.route.IRouteProvider,
         private $routeParams: IAssetRouteParameters,
+        private $rootScope: ng.IRootScopeService,
         private configurationService: ConfigurationService,
         private identityService: IdentityService,
         private assetsService: AssetsService,
@@ -631,7 +676,6 @@ class SecureAssetController {
 
             var savePeg = function (pegResp) {
                 // TODO: handle errors from Ethereum. No ether, etc.
-                // TODO: add notification that registering was completed.
                 if (asset.securedOn == null)
                     asset.securedOn = new AssetSecurity();
 
@@ -643,7 +687,21 @@ class SecureAssetController {
                 t.assetsService.save(asset, function (assetResp) {
                     // TODO: handle any errors
 
-                    // Redirect to the new asset page.
+                    // Add notification that registering the security peg was completed.
+                    var not: Notification =
+                        {
+                            id: guid(true),
+                            title: "Asset secured",
+                            date: moment().toISOString(),
+                            details: "Your asset <strong>" + asset.name + "</strong> has been secured with <strong>" + asset.securedOn.name + " security</strong>.",
+                            url: "asset/" + asset.id,
+                            icon: "lock",
+                            seen: false,
+                        };
+
+                    t.$rootScope.$emit("addNotification", not);
+
+                    // Redirect to the asset page.
                     t.$location.path('/asset/' + assetResp.id);
                     t.$location.replace();
                 });

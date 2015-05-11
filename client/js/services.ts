@@ -146,6 +146,18 @@ class AssetsService {
 
             newAsset.securedOn = sec;
 
+            // Emit notification
+            var n: Notification = {
+                id: guid(true),
+                title: "Asset restored from security peg",
+                date: moment().toISOString(),
+                details: "The asset <strong>" + newAsset.name + "</strong> for which you control the security peg on the <strong>" + p.name + "</strong> ledger has been restored.",
+                url: "asset/" + newAsset.id,
+                icon: "lock",
+                seen: false,
+            };
+            t.$rootScope.$emit('addNotification', n);
+
             // TODO: mark it as incomplete, "needs more info". The asset details package should be loaded.
 
             t.assets.push(newAsset);
@@ -299,6 +311,7 @@ class AssetsService {
         this.assets.push(asset);
 
         var n: Notification = {
+            id: guid(true),
             title: "New asset registered",
             date: moment().toISOString(),
             details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
@@ -713,12 +726,18 @@ class ConfigurationService {
 
         // Earlier saved config can miss new properties.
         // TODO: ensure this in Configuration 
+        // TODO: there must be a far better way to restore JSON arrays to classes with functions.
         if (this.configuration.decerver == null)
             this.configuration.decerver = new DecerverConfiguration();
 
         if (this.configuration.decerver.baseUrl == undefined) {
             // Setup Decerver configuration
             this.configuration.decerver.baseUrl = this.$location.protocol() + "://" + this.$location.host() + ":" + this.$location.port();
+        }
+
+        if (!this.configuration.decerver.apiUrl) {
+            var dummy = new DecerverConfiguration();
+            this.configuration.decerver.apiUrl = dummy.apiUrl;
         }
     }
 
