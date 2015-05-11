@@ -19,6 +19,7 @@ var AssetChain;
         $locationProvider.html5Mode(false);
     });
     assetChainApp.service('configurationService', ConfigurationService);
+    assetChainApp.service('notificationService', NotificationService);
     assetChainApp.service('identityService', IdentityService);
     assetChainApp.service('assetsService', AssetsService);
     assetChainApp.service('expertsService', ExpertsService);

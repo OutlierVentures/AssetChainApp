@@ -154,10 +154,13 @@ var SingleAssetController = (function () {
     ];
     return SingleAssetController;
 })();
-function RegisterAssetController($scope, $location, $http, $routeParams, assetsService) {
+function RegisterAssetController($scope, $location, $http, $routeParams, $q, assetsService) {
     $scope.save = function () {
         $scope.asset.images = [];
+        var loadFilePromises = new Array();
         _.each($scope.assetform.flow.files, function (file) {
+            var loadThisFile = $q.defer();
+            loadFilePromises.push(loadThisFile.promise);
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file.file);
             fileReader.onload = function (event) {
@@ -166,17 +169,22 @@ function RegisterAssetController($scope, $location, $http, $routeParams, assetsS
                 img.fileName = file.name;
                 img.dataUrl = event.target.result;
                 $scope.asset.images.push(img);
+                loadThisFile.resolve(img);
+            };
+            fileReader.onabort = function (event) {
+                loadThisFile.reject(event);
+            };
+            fileReader.onerror = function (event) {
+                loadThisFile.reject(event);
             };
         });
-        setTimeout(function () {
+        $q.all(loadFilePromises).then(function (data) {
             assetsService.save($scope.asset, function (resp) {
                 $location.path('/asset/' + resp.id);
                 $scope.$apply();
             });
-        }, 5000);
+        });
     };
-}
-function IdentityController($scope, identityService) {
 }
 function NavigationController($scope, $location, $http, $routeParams, assetsService, identityService, $window) {
     $scope.menuItems = [
@@ -204,53 +212,19 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
         $window.location.reload();
     };
 }
-function NotificationController($scope, $location, $http, $routeParams, $rootScope, assetsService, identityService) {
-    var exampleDate;
-    var backend;
-    backend = new EncryptedLocalStorageService(identityService);
-    var load = function () {
-        $scope.notifications = backend.getItem("notifications");
-        updateLatestNotifications();
-    };
-    var save = function () {
-        backend.setItem("notifications", $scope.notifications);
-    };
-    $rootScope.$on("loggedOn", function () {
-        load();
-        ensureNotifications();
-        updateLatestNotifications();
-    });
-    exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
-    var ensureNotifications = function () {
-        if (!$scope.notifications || $scope.notifications.length == 0) {
-            $scope.notifications = new Array();
-        }
-        _($scope.notifications).each(function (not) {
-            if (!not.id)
-                not.id = guid(true);
-        });
-    };
-    var updateLatestNotifications = function () {
-        if (!$scope.notifications)
-            return;
-        $scope.notifications.reverse();
-        $scope.latestNotifications = $scope.notifications.slice(0, 3);
-        $scope.notifications.reverse();
-    };
-    $rootScope.$on('addNotification', function (event, data) {
-        var newNot = new Notification();
-        newNot.id = data.id;
-        newNot.date = moment().toISOString();
-        newNot.details = data.details;
-        newNot.icon = data.icon;
-        newNot.seen = false;
-        newNot.title = data.title;
-        newNot.url = data.url;
-        $scope.notifications.push(newNot);
-        updateLatestNotifications();
-        save();
-    });
-}
+var NotificationController = (function () {
+    function NotificationController($scope, notificationService) {
+        this.$scope = $scope;
+        this.notificationService = notificationService;
+        $scope.notifications = notificationService.notifications;
+        $scope.latestNotifications = notificationService.latestNotifications;
+    }
+    NotificationController.$inject = [
+        "$scope",
+        "notificationService"
+    ];
+    return NotificationController;
+})();
 var EthereumAccountController = (function () {
     function EthereumAccountController($scope, $location, configurationService, ethereumService) {
         this.$scope = $scope;

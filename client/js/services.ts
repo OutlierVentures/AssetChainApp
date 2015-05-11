@@ -174,9 +174,6 @@ class AssetsService {
         this.assets = null;
     }
 
-    public saveAssetBinary(asset: Asset, data: Object, name: string) {
-    }
-
     private saveDB(): void {
         var t = this;
 
@@ -743,6 +740,109 @@ class ConfigurationService {
 
     save() {
         this.backend.setItem("configuration", this.configuration);
+    }
+}
+
+class NotificationService {
+    public static $inject = [
+        "$rootScope",
+        "identityService",
+    ]
+
+    /**
+     * Backend for storing notifications.
+     */
+    backend: IStorageService;
+
+    /**
+     * All notifications.
+     */
+    // Initialized as empty so controllers can bind to it.
+    notifications = new Array<Notification>();
+
+    /**
+     * Latest notifications
+     */
+    latestNotifications = new Array<Notification>();
+
+    constructor(
+        private $rootScope: ng.IRootScopeService,
+        private identityService: IdentityService) {
+        this.backend = new EncryptedLocalStorageService(identityService);
+
+        var t = this;
+        $rootScope.$on("loggedOn", function () {
+            t.load();
+            t.ensureNotifications();
+            t.updateLatestNotifications();
+        });
+
+        $rootScope.$on('addNotification', function (event: ng.IAngularEvent, data) {
+            var newNot = new Notification();
+            newNot.id = data.id;
+            newNot.date = moment().toISOString();
+            newNot.details = data.details;
+            newNot.icon = data.icon;
+            newNot.seen = false;
+            newNot.title = data.title;
+            newNot.url = data.url;
+
+            t.notifications.push(newNot);
+
+            t.updateLatestNotifications();
+            t.save();
+        });
+
+    }
+
+    load() {
+        this.notifications = this.backend.getItem("notifications");
+        this.updateLatestNotifications();
+    }
+
+    save() {
+        this.backend.setItem("notifications", this.notifications);
+    }
+
+
+    ensureNotifications() {
+        if (this.notifications.length == 0) {
+            // No stored notifications yet. This must be a new user. Add an initial notification.
+            // TODO: move this to an real "new vault" handling. Currently there is no such
+            // thing.
+            this.notifications.push(
+                {
+                    id: guid(true),
+                    title: "Entered on AssetChain",
+                    date: moment().toISOString(),
+                    details: "You became an AssetChain user. Be welcome!",
+                    url: '',
+                    icon: "home",
+                    seen: false,
+                });
+        }
+
+        // Ensure all current notifications have a non-null ID
+        _(this.notifications).each(function (not: Notification) {
+            if (!not.id)
+                not.id = guid(true);
+        });
+    }
+
+    // Latest notifications: get first N items.
+    updateLatestNotifications() {
+        // We can't recreate the latestNotifications array because it's bound by reference. Hence we clear
+        // and refill it.
+        var latestToShow = Math.min(3, this.notifications.length);
+
+        // Clear the latest notifications.
+        this.latestNotifications.length = 0;
+
+        // Take max N items and add them.
+        _(this.notifications)
+            .last(latestToShow) // Get the last N items
+            .reverse() // Sort them newest first
+            .forEach((n) => this.latestNotifications.push(n)); // Add them to latestNotifications
     }
 }
 

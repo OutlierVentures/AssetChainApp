@@ -75,8 +75,6 @@ var AssetsService = (function () {
     AssetsService.prototype.unload = function () {
         this.assets = null;
     };
-    AssetsService.prototype.saveAssetBinary = function (asset, data, name) {
-    };
     AssetsService.prototype.saveDB = function () {
         var t = this;
         var imageSavePromises = new Array();
@@ -410,6 +408,69 @@ var ConfigurationService = (function () {
         '$rootScope'
     ];
     return ConfigurationService;
+})();
+var NotificationService = (function () {
+    function NotificationService($rootScope, identityService) {
+        this.$rootScope = $rootScope;
+        this.identityService = identityService;
+        this.notifications = new Array();
+        this.latestNotifications = new Array();
+        this.backend = new EncryptedLocalStorageService(identityService);
+        var t = this;
+        $rootScope.$on("loggedOn", function () {
+            t.load();
+            t.ensureNotifications();
+            t.updateLatestNotifications();
+        });
+        $rootScope.$on('addNotification', function (event, data) {
+            var newNot = new Notification();
+            newNot.id = data.id;
+            newNot.date = moment().toISOString();
+            newNot.details = data.details;
+            newNot.icon = data.icon;
+            newNot.seen = false;
+            newNot.title = data.title;
+            newNot.url = data.url;
+            t.notifications.push(newNot);
+            t.updateLatestNotifications();
+            t.save();
+        });
+    }
+    NotificationService.prototype.load = function () {
+        this.notifications = this.backend.getItem("notifications");
+        this.updateLatestNotifications();
+    };
+    NotificationService.prototype.save = function () {
+        this.backend.setItem("notifications", this.notifications);
+    };
+    NotificationService.prototype.ensureNotifications = function () {
+        if (this.notifications.length == 0) {
+            this.notifications.push({
+                id: guid(true),
+                title: "Entered on AssetChain",
+                date: moment().toISOString(),
+                details: "You became an AssetChain user. Be welcome!",
+                url: '',
+                icon: "home",
+                seen: false,
+            });
+        }
+        _(this.notifications).each(function (not) {
+            if (!not.id)
+                not.id = guid(true);
+        });
+    };
+    NotificationService.prototype.updateLatestNotifications = function () {
+        var _this = this;
+        var latestToShow = Math.min(3, this.notifications.length);
+        this.latestNotifications.length = 0;
+        _(this.notifications).last(latestToShow).reverse().forEach(function (n) { return _this.latestNotifications.push(n); });
+    };
+    NotificationService.$inject = [
+        "$rootScope",
+        "identityService",
+    ];
+    return NotificationService;
 })();
 var EthereumService = (function () {
     function EthereumService(configurationService) {

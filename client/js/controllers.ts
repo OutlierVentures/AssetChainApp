@@ -132,7 +132,6 @@ function OwnershipVerificationController($scope, $location, $http, $routeParams,
     });
 }
 
-
 interface ITransferRequestScope extends ng.IScope {
     vm: TransferRequestController;
     transferRequest: TransferRequest;
@@ -261,41 +260,55 @@ interface IRegisterAssetControllerScope extends ng.IScope {
     assetform: any;
 }
 
-function RegisterAssetController($scope: IRegisterAssetControllerScope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
+function RegisterAssetController($scope: IRegisterAssetControllerScope,
+    $location: ng.ILocationService,
+    $http, $routeParams,
+    $q: ng.IQService,
+    assetsService: AssetsService) {
     $scope.save = function () {
         // Load the photo data.
         $scope.asset.images = [];
 
+        // The data arrives asynchronously. Use promises to keep track of them.
+        var loadFilePromises = new Array();
+
         _.each($scope.assetform.flow.files, function (file: any) {
+            var loadThisFile = $q.defer();
+            loadFilePromises.push(loadThisFile.promise);
+
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file.file);
 
             fileReader.onload = function (event: any) {
+                // File is loaded. Store it and resolve the promise.
                 var img = new AssetImage();
                 img.location = "dataUrl";
                 img.fileName = file.name;
                 img.dataUrl = event.target.result;
                 $scope.asset.images.push(img);
+                loadThisFile.resolve(img);
+            };
+
+            fileReader.onabort = function (event: any) {
+                loadThisFile.reject(event);
+            };
+            fileReader.onerror = function (event: any) {
+                loadThisFile.reject(event);
             };
         });
 
-        // The data arrives asynchronously.
-        // Poor man's solution: wait 5 seconds.
-        // TODO: solve properly using async().
-        setTimeout(function () {
+        // When all promises are done, save the asset data.
+        // Risk: a promise never resolved and no data is ever saved.
+        $q.all(loadFilePromises).then(function (data) {
+            // TODO: handle errors.
             assetsService.save($scope.asset, function (resp) {
                 // Redirect to the new asset page.
                 $location.path('/asset/' + resp.id);
                 // Apply scope changes to effect the redirect.
                 $scope.$apply();
             });
-        }, 5000);
+        });
     }
-}
-
-
-function IdentityController($scope, identityService: IdentityService) {
-
 }
 
 interface INavigationScope extends ng.IScope {
@@ -349,129 +362,25 @@ function NavigationController($scope: INavigationScope, $location: ng.ILocationS
     }
 }
 
-interface NotificationScope {
+interface INotificationScope extends ng.IScope {
     notifications: Array<Notification>;
     latestNotifications: Array<Notification>;
 }
 
-function NotificationController($scope: NotificationScope,
-    $location: ng.ILocationService,
-    $http: ng.IHttpService,
-    $routeParams: ng.route.IRouteParamsService,
-    $rootScope: ng.IRootScopeService,
-    assetsService: AssetsService,
-    identityService: IdentityService) {
-    var exampleDate: string;
+class NotificationController {
+    public static $inject = [
+        "$scope",
+        "notificationService"
+    ];
 
-    /**
-     * Backend for storing notifications.
-     */
-    var backend: IStorageService;
+    constructor(
+        private $scope: INotificationScope,
+        private notificationService: NotificationService) {
 
-    backend = new EncryptedLocalStorageService(identityService);
-
-    var load = function () {
-        $scope.notifications = backend.getItem("notifications");
-        updateLatestNotifications();
+        $scope.notifications = notificationService.notifications;
+        $scope.latestNotifications = notificationService.latestNotifications;
     }
-
-    var save = function () {
-        backend.setItem("notifications", $scope.notifications);
-    }
-
-    $rootScope.$on("loggedOn", function () {
-        load();
-        ensureNotifications();
-        updateLatestNotifications();
-    });
-
-    // Use a recent date to test moment display ("... minutes ago")
-    exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
-
-    // Add dummy notification data.
-
-    // Note: using object initializers like this requires all properties to be set.
-    var ensureNotifications = function () {
-        // TODO: create real "entered on AssetChain" notification
-        // TODO: create real "asset was transferred" notification (as well as incoming transfer requests)
-        if (!$scope.notifications || $scope.notifications.length == 0) {
-            $scope.notifications = new Array<Notification>();
-            //$scope.notifications = [
-            //    {
-            //            id: guid(true),
-            //            title: "Entered on AssetChain",
-            //            date: '2015-01-13 19:01',
-            //            details: "You became an AssetChain user. Be welcome!",
-            //            url: '',
-            //            icon: "home",
-            //            seen: false,
-            //        },
-            //        {
-            //            id: guid(true),
-            //            title: "New asset registered",
-            //            date: '2015-01-13 12:43',
-            //            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
-            //            url: "asset/3",
-            //            icon: "plus-circle",
-            //            seen: true,
-            //        },
-            //        {
-            //            id: guid(true),
-            //            title: "Asset transferred to you",
-            //            date: '2015-01-16 03:43',
-            //            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            //            url: "asset/4",
-            //            icon: "mail-forward",
-            //            seen: false,
-            //        },
-            //        {
-            //            id: guid(true),
-            //            title: "Asset secured",
-            //            date: exampleDate,
-            //            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
-            //            url: "asset/3",
-            //            icon: "lock",
-            //            seen: true,
-            //        },
-            //    ];
-            //}
-        }
-
-        // Ensure all current notifications have a non-null ID
-        _($scope.notifications).each(function (not: Notification) {
-            if (!not.id)
-                not.id = guid(true);
-        });
-    }
-
-    // Latest notifications: get first N items.
-    var updateLatestNotifications = function () {
-        if (!$scope.notifications)
-            return;
-        $scope.notifications.reverse();
-        $scope.latestNotifications = $scope.notifications.slice(0, 3);
-        $scope.notifications.reverse();
-    }
-
-    $rootScope.$on('addNotification', function (event: ng.IAngularEvent, data) {
-        var newNot = new Notification();
-        newNot.id = data.id;
-        newNot.date = moment().toISOString();
-        newNot.details = data.details;
-        newNot.icon = data.icon;
-        newNot.seen = false;
-        newNot.title = data.title;
-        newNot.url = data.url;
-
-        $scope.notifications.push(newNot);
-
-        updateLatestNotifications();
-        save();
-    });
-
-
 }
-
 
 interface IEthereumAccountScope extends ng.IScope {
     vm: EthereumAccountController;
