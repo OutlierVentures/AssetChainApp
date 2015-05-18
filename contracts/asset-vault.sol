@@ -104,10 +104,35 @@
         return ac.assets[assetIndex].name;
     }
 
-    // Plumbing function to get an asset index within its collection.
+    // Get the index of an asset in its owner's mapping.
+    function getAssetIndex(address ownerAddress, string32 assetID) returns (uint assetIndex){
+        AssetCollection ac = assetsByOwner[ownerAddress];
+
+        uint i = 0;
+        while(i < ac.assetCount){
+            Asset asset = ac.assets[i];
+            if(asset.id == assetID)
+                return i;
+            i++;
+        }
+
+        // TODO: signal situation that the asset wasn't found (return bool isFound?)
+    }
+
+    // Plumbing function to get all properties of an asset.
     // Currently not possible because return type must be a primitive type.
-    //function getAssetIndex(string32 assetID) returns (uint assetIndex){
-    //}
+    function getAsset(address ownerAddress, uint assetIndex) returns (string32 id, string32 name, uint verificationCount) {
+        AssetCollection ac = assetsByOwner[ownerAddress];
+
+        Asset a  = ac.assets[assetIndex];
+        id = a.id;
+        name = a.name;
+        verificationCount = a.verificationCount;
+    }
+
+    // Get an asset by its ID only. Convenience function.
+    function getAssetByID(string32 assetID) returns (string32 id, string32 name, uint verificationCount) {
+    }
 
     // END plumbing functions to access properties of mappings that contain structs that 
     // contain mappings.
@@ -246,9 +271,16 @@
 
     // Get info about a Verification of an asset.
     function getVerification(string32 assetID, uint verificationIndex) returns (address verifier, uint type, bool isConfirmed) {
-        verifier = 0x0;
-        type = 1;
-        isConfirmed = false;
+        address ownerAddress = ownerByAssetID[assetID];
+        uint assetIndex = getAssetIndex(ownerAddress, assetID);
+
+        Asset a = assetsByOwner[ownerAddress].assets[assetIndex];
+
+        Verification v = a.verifications[verificationIndex];
+
+        verifier = v.verifier;
+        type = v.type;
+        isConfirmed = v.isConfirmed;
     }
 
     function processVerification(string32 assetID, address verifier, uint type, bool confirm) returns (bool dummyForLayout) {
