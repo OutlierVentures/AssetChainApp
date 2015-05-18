@@ -253,20 +253,17 @@
             return;
         }
 
-
-        // Get the asset
+        // Get the asset. Because functions can't return structs (yet) we need various
+        // function calls and access the mapping directly. Still better than having a while loop 
+        // everywhere though.
+        uint aIndex = getAssetIndex(tx.origin, assetID);
         AssetCollection acOwner = assetsByOwner[ownerByAssetID[assetID]];
+        Asset a = acOwner.assets[aIndex];
             
-        uint aIndex = 0;
-        while(aIndex <= acOwner.assetCount) {
-            Asset a = acOwner.assets[aIndex++];
-            if(a.id == assetID){
-                // Add it to the asset verifications
-                Verification v = a.verifications[a.verificationCount++];
-                v.verifier = verifier;
-                v.type = type;
-            }
-        }
+        // Add it to the asset verifications
+        Verification v = a.verifications[a.verificationCount++];
+        v.verifier = verifier;
+        v.type = type;
     }
 
     // Get info about a Verification of an asset.
