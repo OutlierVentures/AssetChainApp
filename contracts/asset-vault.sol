@@ -108,12 +108,12 @@
     function getAssetIndex(address ownerAddress, string32 assetID) returns (uint assetIndex){
         AssetCollection ac = assetsByOwner[ownerAddress];
 
-        uint i = 0;
-        while(i < ac.assetCount){
-            Asset asset = ac.assets[i];
+        assetIndex = 0;
+        while(assetIndex < ac.assetCount){
+            Asset asset = ac.assets[assetIndex];
             if(asset.id == assetID)
-                return i;
-            i++;
+                return;
+            assetIndex++;
         }
 
         // TODO: signal situation that the asset wasn't found (return bool isFound?)
@@ -266,6 +266,24 @@
         v.type = type;
     }
 
+    // Get the index of a specific verification of an asset.
+    function getVerificationIndex(address ownerAddress, string32 assetID, address verifier) returns (uint verificationIndex) {
+        uint assetIndex = getAssetIndex(ownerAddress, assetID);
+
+        Asset a = assetsByOwner[ownerAddress].assets[assetIndex];
+
+        verificationIndex = 0;
+        while(verificationIndex < a.verificationCount){
+            Verification v = a.verifications[verificationIndex];
+            if(v.verifier == verifier)
+                return;
+
+            verificationIndex++;           
+        }
+
+        // TODO: distinguish between "not found" and "index = 0". Now both give the same result.
+    }
+
     // Get info about a Verification of an asset.
     function getVerification(string32 assetID, uint verificationIndex) returns (address verifier, uint type, bool isConfirmed) {
         address ownerAddress = ownerByAssetID[assetID];
@@ -280,17 +298,54 @@
         isConfirmed = v.isConfirmed;
     }
 
-    function processVerification(string32 assetID, address verifier, uint type, bool confirm) returns (bool dummyForLayout) {
+    // Process a pending verification. To be called by the verifier.
+    function processVerification(string32 assetID, uint type, bool confirm) returns (bool processedCorrectly) {
+        address ownerAddress = ownerByAssetID[assetID];
+
         // Check: is the asset ID valid?
-        if(ownerByAssetID[assetID] == 0x0) {
+        if(ownerAddress == 0x0) {
             return;
         }
 
-        // Find the verification
+        // Find the verification.
+        uint assetIndex = getAssetIndex(ownerAddress, assetID);
 
-        // Confirm? Set isConfirm to true.
-        // Not confirm? Set the verification to null, i.e. delete it.
+        Asset a = assetsByOwner[ownerAddress].assets[assetIndex];
 
+        // Try to find a verification request where the caller is the verifier. If not, the caller is not allowed
+        // to process.
+        uint verificationIndex = getVerificationIndex(ownerAddress, assetID, tx.origin);
+
+        // TODO: distinguish between "no such verification" and "index == 0".
+        //if(notExisting)
+        //    return;
+
+        // Get the verificationIndex
+        Verification v = a.verifications[verificationIndex];
+
+        // Check: is this a valid verification?
+        if(v.verifier == 0x0)
+            return;
+
+        // Check: is owned
+        if(v.verifier != tx.origin)
+            return;
+
+        // Check: already confirmed? Then no action.
+        if(v.isConfirmed)
+            return;
+
+        if(confirm) {
+            // Confirm? Set isConfirm to true.
+            v.isConfirmed = true;
+        } else {
+            // Not confirm? Set the verification to null, i.e. delete it.
+            v.verifier = 0x0;
+            v.type = 0;
+            v.isConfirmed = false;
+        }
+
+        processedCorrectly = true;
     }
 
 	
