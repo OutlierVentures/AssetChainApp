@@ -199,6 +199,10 @@
                             transferredAsset.id = a.id;
                             transferredAsset.name = a.name;
 
+                            // TODO: transfer any related data as well (verifications)
+                            // Better: just transfer the whole "object" to the asset collection of the new owner.
+                            // Is that possible? That means that items in a mapping are called by reference.
+
                             // Clear the values of the asset. This is the closest we get to deleting it.
                             a.id = "";
                             a.name = "";
@@ -267,7 +271,7 @@
     }
 
     // Get the index of a specific verification of an asset.
-    function getVerificationIndex(address ownerAddress, string32 assetID, address verifier) returns (uint verificationIndex) {
+    function getVerificationIndex(address ownerAddress, string32 assetID, address verifier, uint type) returns (uint verificationIndex) {
         uint assetIndex = getAssetIndex(ownerAddress, assetID);
 
         Asset a = assetsByOwner[ownerAddress].assets[assetIndex];
@@ -275,7 +279,7 @@
         verificationIndex = 0;
         while(verificationIndex < a.verificationCount){
             Verification v = a.verifications[verificationIndex];
-            if(v.verifier == verifier)
+            if(v.verifier == verifier && v.type == type)
                 return;
 
             verificationIndex++;           
@@ -314,7 +318,7 @@
 
         // Try to find a verification request where the caller is the verifier. If not, the caller is not allowed
         // to process.
-        uint verificationIndex = getVerificationIndex(ownerAddress, assetID, tx.origin);
+        uint verificationIndex = getVerificationIndex(ownerAddress, assetID, tx.origin, type);
 
         // TODO: distinguish between "no such verification" and "index == 0".
         //if(notExisting)
@@ -323,11 +327,11 @@
         // Get the verificationIndex
         Verification v = a.verifications[verificationIndex];
 
-        // Check: is this a valid verification?
+        // Check: is this a valid verification? (does it exist?)
         if(v.verifier == 0x0)
             return;
 
-        // Check: is owned
+        // Check: is the caller the verifier? Only then they may process it.
         if(v.verifier != tx.origin)
             return;
 
@@ -336,10 +340,10 @@
             return;
 
         if(confirm) {
-            // Confirm? Set isConfirm to true.
+            // Want to confirm? Set isConfirm to true.
             v.isConfirmed = true;
         } else {
-            // Not confirm? Set the verification to null, i.e. delete it.
+            // Want to deny? Set the verification to null, i.e. delete it.
             v.verifier = 0x0;
             v.type = 0;
             v.isConfirmed = false;
