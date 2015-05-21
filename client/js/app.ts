@@ -65,6 +65,7 @@ module AssetChain {
             .when('/secure/:id', { controller: SecureAssetController, templateUrl: 'views/secure-asset-start.html' })
             .when('/verify/expert/:id/:verificationID', { controller: ExpertVerificationController, templateUrl: 'views/verify-expert-step2.html' })
             .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: 'views/verify-ownership.html' })
+            .when('/verify/incoming', { controller: VerificationListController, templateUrl: 'views/incoming-verification-requests.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: 'views/notifications.html' })
             .when('/user/settings/accounts', { controller: UserAccountController, templateUrl: 'views/account-list.html' })
             .when('/user/profile', { controller: UserAccountController, templateUrl: 'views/user-profile.html' })

@@ -43,6 +43,11 @@ var Verification = (function () {
     }
     return Verification;
 })();
+var VerificationRequest = (function () {
+    function VerificationRequest() {
+    }
+    return VerificationRequest;
+})();
 var TransferRequest = (function () {
     function TransferRequest() {
     }

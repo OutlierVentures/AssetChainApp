@@ -221,6 +221,11 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
             icon: "plus-circle",
         },
         {
+            name: "Verify assets",
+            url: "verify/incoming",
+            icon: "check",
+        },
+        {
             name: "Transfer assets",
             url: "transfer/create",
             icon: "mail-forward",
@@ -399,5 +404,20 @@ var SecureAssetController = (function () {
         "ethereumService"
     ];
     return SecureAssetController;
+})();
+var VerificationListController = (function () {
+    function VerificationListController($scope, $location, assetsService) {
+        this.$scope = $scope;
+        this.$location = $location;
+        this.assetsService = assetsService;
+        $scope.vm = this;
+        $scope.verificationRequests = assetsService.getIncomingVerificationRequests();
+    }
+    VerificationListController.$inject = [
+        "$scope",
+        "$location",
+        "assetsService"
+    ];
+    return VerificationListController;
 })();
 //# sourceMappingURL=controllers.js.map

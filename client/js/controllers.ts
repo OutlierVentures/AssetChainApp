@@ -378,12 +378,11 @@ function NavigationController($scope: INavigationScope, $location: ng.ILocationS
             url: "asset/register",
             icon: "plus-circle",
         },
-        // Disabled here, verification is initiated from asset detail page.
-        //{
-        //    name: "Verify assets",
-        //    url: "verify",
-        //    icon: "check",
-        //},
+        {
+            name: "Verify assets",
+            url: "verify/incoming",
+            icon: "check",
+        },
         {
             name: "Transfer assets",
             url: "transfer/create",
@@ -681,9 +680,29 @@ class SecureAssetController {
             // No connection
             // TODO: show error message.
         }
-
-
-
     }
 
+}
+
+interface IVerificationListScope extends ng.IScope {
+    vm: VerificationListController;
+    verificationRequests: Array<VerificationRequest>;
+}
+
+
+class VerificationListController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "assetsService"];
+
+    constructor(
+        private $scope: IVerificationListScope,
+        private $location: ng.ILocationService,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load incoming verification request data.
+        $scope.verificationRequests = assetsService.getIncomingVerificationRequests();
+    }
 }

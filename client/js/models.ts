@@ -143,8 +143,17 @@ class Verification {
      */
     // Currently this information is not stored in the backend.
     expert: Expert;
-
 }
+
+/**
+ * Incoming verification request.
+ */
+class VerificationRequest {
+    asset: Asset;
+    ownerAddress: string;
+    verification: Verification;
+}
+
 
 /**
  * Request for transfer of ownership of an asset.
