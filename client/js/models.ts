@@ -95,12 +95,24 @@ class Expert {
  * Verification of an asset by an expert.
  */
 class Verification {
+    /**
+     * Unique ID on the client side.
+     */
     id: string;
-    name: string;
-    address: string;
+
+    /**
+     * Index of the verification on the contract backend.
+     */
+    index: number;
+
+    /**
+     * Address of the expert that is requested to verify the asset. Currently an Ethereum address.
+     */
+    verifierAddress: string;
     date: string;
-    comments: string;
     isPending: boolean;
+    // The below properties are currently not saved in the contract backend.
+    comments: string;
     defects: string;
 }
 
@@ -121,8 +133,18 @@ class TransferRequest {
 
 /** BEGIN Application classes **/
 
+/**
+ * Configuration for the backend Ethereum node.
+ */
 class EthereumConfiguration {
+    /**
+     * URL where the JSON RPC interface can be reached.
+     */
     jsonRpcUrl: string;
+
+    /**
+     * Address to use for outgoing transactions.
+     */
     currentAddress: string;
 }
 
@@ -140,11 +162,20 @@ class DecerverConfiguration {
      */
     baseUrl: string;
 
+    /**
+     * Returns the complete URL of the API.
+     */
+    // When the configuration is deserialized from storage, this method is not included. As a workaround,
+    // it's recreated when the configuration is loaded. 
+    // TODO: introduce a better way to do this.
     public apiUrl(): string {
         return this.baseUrl + "/apis/assetchain";
     }
 }
 
+/**
+ * Application configuration.
+ */
 class Configuration {
     ethereum: EthereumConfiguration;
     coinPrism: CoinPrismConfiguration;
@@ -157,16 +188,25 @@ class Configuration {
     }
 }
 
+/**
+ * Credentials that identify an AssetChain user account.
+ */
 class Credentials {
     password: string;
 }
 
+/**
+ * A link in the main menu.
+ */
 class MenuItem {
     name: string;
     url: string;
     icon: string;
 }
 
+/**
+ * A notification to be shown to the user in the notifications pane; possibly in e-mail or other channels.
+ */
 class Notification {
     id: string;
     title: string;

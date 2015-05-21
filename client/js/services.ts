@@ -936,7 +936,7 @@ class EthereumService {
         var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
 
         // TODO: make address configurable
-        this.assetVaultContract = AssetVault("0x5d2e6bde6fb2ef92d697fa394b5bafe50a16b2e4");
+        this.assetVaultContract = AssetVault("0xe5694af17323e7567f66ec95a33195e26c994b92");
     }
 
     _ledgerName = "ethereum";
@@ -1029,8 +1029,9 @@ class EthereumService {
             };
             // TODO: don't store this data with the asset in the vault; the logo can be added on load.
             peg.logoImageFileName = "ethereum-logo.png";
-            // Currently a dummy URL as there is no working block explorer.
-            peg.transactionUrl = "http://ether.fund/block/" + web3.eth.number;
+            
+            // Real URL to the Etherapps block explorer. However since we use a local testchain, the blocks don't match up.
+            peg.transactionUrl = "http://etherapps.info/block/" + web3.eth.number;
 
             peg.isOwned = true;
 
