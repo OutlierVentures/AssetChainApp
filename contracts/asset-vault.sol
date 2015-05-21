@@ -131,8 +131,8 @@
     }
 
     // Get an asset by its ID only. Convenience function.
-    function getAssetByID(string32 assetID) returns (string32 id, string32 name, uint verificationCount) {
-    }
+    //function getAssetByID(string32 assetID) returns (string32 id, string32 name, uint verificationCount) {
+    //}
 
     // END plumbing functions to access properties of mappings that contain structs that 
     // contain mappings.
@@ -173,61 +173,69 @@
         }	    
         
         // Find a TransferRequest for this asset and newOwner address.
+        // TODO: refactor this loop to getTransferRequestIndex(assetID, requesterAddress);
+
         uint trIndex = 0;        
         while(trIndex <= transferRequestCount) {
             TransferRequest tr = transferRequests[trIndex];
 
             if (tr.assetID == assetID && tr.requester == newOwner) {
                 // Correct request found. Effectuate transfer and clear it.
-                // TODO: refactor to private function transferAsset(assetID, currentOwner, newOwner).
 
                 // Remove it from the current owners assets.
                 AssetCollection acOwner = assetsByOwner[tx.origin];
-                uint aIndex = 0;
-                while(aIndex <= acOwner.assetCount) {
-                    Asset a = acOwner.assets[aIndex++];
-                    if(a.id == tr.assetID){
-                        // If the owner confirms the request, transfer it. Otherwise just delete the request.
-                        if(confirm) {
-                            // Add it to the newOwners assets.
-                            AssetCollection acRequester = assetsByOwner[newOwner];
-                            if(acRequester.assetCount==0)
-                                // New owner, store it.
-                                owners[ownerCount++] = newOwner;
+                uint aIndex = getAssetIndex(tx.origin, assetID);
+                
+                Asset a = acOwner.assets[aIndex];
+                // If the owner confirms the request, transfer it. In any case delete the request after processing.
+                if(confirm) {
+                    // TODO: refactor to private function transferAsset(assetID, currentOwner, newOwner).
 
-                            Asset transferredAsset = acRequester.assets[acRequester.assetCount++];
-                            transferredAsset.id = a.id;
-                            transferredAsset.name = a.name;
+                    // Add it to the newOwners assets.
+                    AssetCollection acRequester = assetsByOwner[newOwner];
+                    if(acRequester.assetCount==0)
+                        // New owner, store it.
+                        owners[ownerCount++] = newOwner;
 
-                            // TODO: transfer any related data as well (verifications)
-                            // Better: just transfer the whole "object" to the asset collection of the new owner.
-                            // Is that possible? That means that items in a mapping are called by reference.
+                    // Transfer the whole asset by assigning it to the new mapping.
+                    acRequester.assets[acRequester.assetCount++] = a;
 
-                            // Clear the values of the asset. This is the closest we get to deleting it.
-                            a.id = "";
-                            a.name = "";
+                    // BEGIN WORKAROUND
+                    // This way of assigning includes the mapping of verifications. However, all properties 
+                    // of the verifications are set to null. This is likely a bug in Solidity PoC8. 
+                    // We work around this by deep copying the individual properties.
+                    Asset newAsset = acRequester.assets[acRequester.assetCount - 1];
 
-                            // Update OwnerByAssetID
-                            ownerByAssetID[assetID] = newOwner;
-                        }
-
-                        // Delete transfer request
-                        tr.assetID = "";
-                        tr.requester = 0x0;
-
-                        // COULD DO: remove previous owner from Owners if they don't have any assets left.
-
-                        // Transfer completed, done.
-                        return;
+                    uint verificationIndex = 0;
+                    while(verificationIndex < newAsset.verificationCount){
+                        newAsset.verifications[verificationIndex].verifier = a.verifications[verificationIndex].verifier;
+                        newAsset.verifications[verificationIndex].type = a.verifications[verificationIndex].type;
+                        newAsset.verifications[verificationIndex].isConfirmed = a.verifications[verificationIndex].isConfirmed;
+                        verificationIndex++;
                     }
+                    // END WORKAROUND
+                                                        
+                    // Delete the asset of the old owner.                            
+                    delete acOwner.assets[aIndex];
+
+                    // Update OwnerByAssetID
+                    ownerByAssetID[assetID] = newOwner;
                 }
+                
+                // Delete transfer request
+                delete transferRequests[trIndex];
+                
+                // COULD DO: remove previous owner from Owners if they don't have any assets left.
+
+                // Transfer completed, done.
+                return;
             }
 
             trIndex++;
         }
 
 
-        // Check: clean up any other transfer requests
+        // Check: clean up any other transfer requests for this asset
         // TODO
     }
 
@@ -343,10 +351,8 @@
             // Want to confirm? Set isConfirm to true.
             v.isConfirmed = true;
         } else {
-            // Want to deny? Set the verification to null, i.e. delete it.
-            v.verifier = 0x0;
-            v.type = 0;
-            v.isConfirmed = false;
+            // Want to deny? Delete it.
+            delete a.verifications[verificationIndex];
         }
 
         processedCorrectly = true;
