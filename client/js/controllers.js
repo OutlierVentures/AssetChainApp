@@ -27,10 +27,11 @@ var LoginController = (function () {
 function DashboardController($scope, $location, $http, $routeParams, assetsService) {
 }
 var ExpertVerificationController = (function () {
-    function ExpertVerificationController($scope, $location, $routeParams, assetsService, expertsService) {
+    function ExpertVerificationController($scope, $location, $routeParams, $rootScope, assetsService, expertsService) {
         this.$scope = $scope;
         this.$location = $location;
         this.$routeParams = $routeParams;
+        this.$rootScope = $rootScope;
         this.assetsService = assetsService;
         this.expertsService = expertsService;
         $scope.assetID = $routeParams.id;
@@ -43,30 +44,52 @@ var ExpertVerificationController = (function () {
                 var verificationsWithId = _($scope.asset.verifications).select(function (v) { return v.id == $scope.verificationID; });
                 $scope.verification = verificationsWithId[0];
             }
+            else {
+                $scope.verification = new Verification();
+                $scope.verification.verificationType = 2;
+            }
             $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
         });
     }
     ExpertVerificationController.prototype.save = function () {
         var s = this.$scope;
-        this.assetsService.save(this.$scope.asset, function (resp) {
-            if (s.location.path() == "/verify/expert/" + s.assetID) {
-                s.verification.id = guid(true);
-                s.verification.date = moment().toISOString();
-                s.verification.isPending = true;
-                if (s.asset.verifications == null)
-                    s.asset.verifications = [];
-                s.asset.verifications.push(s.verification);
-                s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
-            }
-            else {
+        var t = this;
+        if (s.location.path() == "/verify/expert/" + s.assetID) {
+            s.verification.id = guid(true);
+            s.verification.date = moment().toISOString();
+            s.verification.isPending = true;
+            s.verification.expert = t.expertsService.getExpertByID(s.expertID);
+            if (s.asset.verifications == null)
+                s.asset.verifications = [];
+            s.asset.verifications.push(s.verification);
+            s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
+        }
+        else {
+            s.verification.shouldBeSaved = true;
+            t.assetsService.save(t.$scope.asset, function (resp) {
+                var expertName = "";
+                if (s.verification)
+                    if (s.verification.expert)
+                        expertName = s.verification.expert.name;
+                var not = {
+                    id: guid(true),
+                    title: "Asset verification requested",
+                    date: moment().toISOString(),
+                    details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>" + expertName + "</strong>.",
+                    url: "asset/" + s.asset.id,
+                    icon: "check",
+                    seen: false,
+                };
+                t.$rootScope.$emit("addNotification", not);
                 s.location.path("/");
-            }
-        });
+            });
+        }
     };
     ExpertVerificationController.$inject = [
         "$scope",
         "$location",
         "$routeParams",
+        "$rootScope",
         "assetsService",
         "expertsService"
     ];
@@ -181,7 +204,6 @@ function RegisterAssetController($scope, $location, $http, $routeParams, $q, ass
         $q.all(loadFilePromises).then(function (data) {
             assetsService.save($scope.asset, function (resp) {
                 $location.path('/asset/' + resp.id);
-                $scope.$apply();
             });
         });
     };

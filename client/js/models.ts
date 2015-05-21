@@ -101,19 +101,49 @@ class Verification {
     id: string;
 
     /**
-     * Index of the verification on the contract backend.
+     * Internal boolean to indicate whether the verification should be processed for saving in the backend.
+     */
+    shouldBeSaved: boolean;
+
+    /**
+     * Index of the verification on the contract backend. Currently never set. It's not particularly useful 
+     * in the client anyway, so it might be removed.
      */
     index: number;
+
+    /**
+     * Type of verification. 1 = ownership, 2 = quality.
+     * TODO: use enum.
+     */
+    verificationType: number;
 
     /**
      * Address of the expert that is requested to verify the asset. Currently an Ethereum address.
      */
     verifierAddress: string;
+
+    /**
+     * Date that the verification has taken place. Should be taken from the block chain later,
+     * by looking at the block in which the verification was confirmed.
+     */
     date: string;
+
+    /**
+     * Shows whether this verification yet has to be confirmed.
+     */
     isPending: boolean;
-    // The below properties are currently not saved in the contract backend.
+
+    // The below properties are currently not saved in the contract backend, only locally.
     comments: string;
     defects: string;
+
+
+    /**
+     * The expert carrying out this verification.
+     */
+    // Currently this information is not stored in the backend.
+    expert: Expert;
+
 }
 
 /**

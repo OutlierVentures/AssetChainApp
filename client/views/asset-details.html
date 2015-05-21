@@ -51,10 +51,10 @@
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="verification in asset.verifications track by verification.name" class="col-lg-4" style="padding-bottom: 1em;">
-                                            <p>{{verification.name}} </p>
+                                        <div ng-repeat="verification in asset.verifications track by verification.id" class="col-lg-4" style="padding-bottom: 1em;">
+                                            <p>{{verification.expert.name}} </p>
                                             <p class="small" ng-show="verification.date">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
-                                            <p ng-show="verification.address">{{verification.address}}</p>
+                                            <p class="small" ng-show="verification.verifierAddress">Verifier address: {{verification.verifierAddress}}</p>
                                             <p ng-show="verification.comments">Your comments: {{verification.comments}}</p>
 
                                             <a ng-show="verification.url" class="btn btn-primary" href="{{verification.url}}" target="_blank">

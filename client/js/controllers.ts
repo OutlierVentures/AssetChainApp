@@ -4,6 +4,9 @@
     login();
 }
 
+/**
+ * Controller for the logon box.
+ */
 class LoginController {
     public static $inject = [
         "$scope",
@@ -37,6 +40,8 @@ class LoginController {
 }
 
 function DashboardController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
+    // TODO: implement.
+
     // Get latest notifications
 
     // Get all assets (not only current user)
@@ -59,6 +64,7 @@ interface IVerificationScope extends ng.IScope {
     expertsByLocation: Array<ExpertCollection>;
     location: ng.ILocationService;
     vm: ExpertVerificationController;
+    expertID: string;
     verification: Verification;
 }
 
@@ -68,6 +74,7 @@ class ExpertVerificationController {
         "$scope",
         "$location",
         "$routeParams",
+        "$rootScope",
         "assetsService",
         "expertsService"];
 
@@ -75,6 +82,7 @@ class ExpertVerificationController {
         private $scope: IVerificationScope,
         private $location: ng.ILocationService,
         private $routeParams: IVerifyAssetRouteParameters,
+        private $rootScope: ng.IRootScopeService,
         private assetsService: AssetsService,
         private expertsService: ExpertsService) {
         $scope.assetID = $routeParams.id;
@@ -86,9 +94,14 @@ class ExpertVerificationController {
             $scope.asset = resp;
 
             if ($scope.verificationID != null) {
-                // Load the verification we worked on in an earlier step.
+                // Load the verification we worked on in an earlier step. The scope doesn't survive page changes,
+                // so we'll have to get it from the asset.
                 var verificationsWithId = _($scope.asset.verifications).select(v => v.id == $scope.verificationID);
                 $scope.verification = verificationsWithId[0];
+            }
+            else {
+                $scope.verification = new Verification();
+                $scope.verification.verificationType = 2; // quality
             }
 
             $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
@@ -99,26 +112,55 @@ class ExpertVerificationController {
         // Provide the callback below access to the scope.
         // TODO: refactor.
         var s = this.$scope;
+        var t = this;
 
-        this.assetsService.save(this.$scope.asset, function (resp) {
-            if (s.location.path() == "/verify/expert/" + s.assetID) {
-                // Step 1
-                s.verification.id = guid(true);
-                s.verification.date = moment().toISOString();
-                s.verification.isPending = true;
-                if (s.asset.verifications == null)
-                    s.asset.verifications = [];
-                s.asset.verifications.push(s.verification);
-                s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
-            } else {
-                // Step 2
-                // Finished.
-                // TODO: show "finished" message.
-                // TODO: add item to notifications.
-                
+        if (s.location.path() == "/verify/expert/" + s.assetID) {
+            // Step 1
+            s.verification.id = guid(true);
+            s.verification.date = moment().toISOString();
+            s.verification.isPending = true;
+            s.verification.expert = t.expertsService.getExpertByID(s.expertID);
+
+            // The verification has to be added to the asset array in order to load it in the second step.
+            // We don't want the asset service to save it yet though, as it isn't complete.
+            if (s.asset.verifications == null)
+                s.asset.verifications = [];
+
+            s.asset.verifications.push(s.verification);
+
+            s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
+        } else {
+            // Step 2
+            // Finished.
+
+            // Mark it as "to be saved".
+            s.verification.shouldBeSaved = true;
+
+            // Save the asset including the verification.
+            t.assetsService.save(t.$scope.asset, function (resp) {
+                // Show notification.
+                var expertName = "";
+                if (s.verification)
+                    if (s.verification.expert)
+                        expertName = s.verification.expert.name;
+
+                var not: Notification =
+                    {
+                        id: guid(true),
+                        title: "Asset verification requested",
+                        date: moment().toISOString(),
+                        details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>"
+                            + expertName + "</strong>.",
+                        url: "asset/" + s.asset.id,
+                        icon: "check",
+                        seen: false,
+                    };
+
+                t.$rootScope.$emit("addNotification", not);
+
                 s.location.path("/");
-            }
-        });
+            });
+        }
     }
 }
 
@@ -305,7 +347,7 @@ function RegisterAssetController($scope: IRegisterAssetControllerScope,
                 // Redirect to the new asset page.
                 $location.path('/asset/' + resp.id);
                 // Apply scope changes to effect the redirect.
-                $scope.$apply();
+                //$scope.$apply();
             });
         });
     }

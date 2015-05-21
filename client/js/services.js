@@ -94,7 +94,25 @@ var AssetsService = (function () {
                 }
             });
         });
-        this.$q.all(imageSavePromises).then(function (data) {
+        var verificationSavePromises = new Array();
+        _(this.assets).each(function (asset) {
+            _(asset.verifications).each(function (verification) {
+                if (verification.shouldBeSaved && verification.verifierAddress && verification.verifierAddress) {
+                    var saveVerification = t.$q.defer();
+                    verificationSavePromises.push(saveVerification.promise);
+                    try {
+                        t.ethereumService.requestVerification(asset, verification);
+                        verification.shouldBeSaved = false;
+                        saveVerification.resolve(verification);
+                    }
+                    catch (e) {
+                        saveVerification.reject(e);
+                    }
+                    ;
+                }
+            });
+        });
+        this.$q.all(imageSavePromises.concat(verificationSavePromises)).then(function (data) {
             var arrayForSave = angular.copy(t.assets);
             _(arrayForSave).each(function (asset) {
                 _(asset.images).each(function (image) {
@@ -316,6 +334,28 @@ var IdentityService = (function () {
 })();
 var ExpertsService = (function () {
     function ExpertsService() {
+        this.allExperts = new ExpertCollection();
+        this.allExperts.experts = new Array();
+        this.allExperts.experts.push({
+            id: "5615641",
+            name: "Royal Exchange Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "1564156",
+            name: "Jonathan Geeves Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "9486451",
+            name: "Tawny Phillips"
+        });
+        this.allExperts.experts.push({
+            id: "1859159",
+            name: "The Watch Gallery (Rolex Boutique)"
+        });
+        this.allExperts.experts.push({
+            id: "41859189",
+            name: "Watches of Switzerland"
+        });
     }
     ExpertsService.prototype.getExperts = function (location, category) {
         if (category == "Watch") {
@@ -371,6 +411,12 @@ var ExpertsService = (function () {
                 ]
             }];
         }
+    };
+    ExpertsService.prototype.getExpertByID = function (expertID) {
+        var es = function (e) {
+            return e.id == expertID;
+        };
+        return _(this.allExperts.experts).find(es);
     };
     return ExpertsService;
 })();
@@ -444,6 +490,8 @@ var NotificationService = (function () {
         this.backend.setItem("notifications", this.notifications);
     };
     NotificationService.prototype.ensureNotifications = function () {
+        if (!this.notifications)
+            this.notifications = new Array();
         if (this.notifications.length == 0) {
             this.notifications.push({
                 id: guid(true),
@@ -462,6 +510,8 @@ var NotificationService = (function () {
     };
     NotificationService.prototype.updateLatestNotifications = function () {
         var _this = this;
+        if (!this.notifications)
+            return;
         var latestToShow = Math.min(3, this.notifications.length);
         this.latestNotifications.length = 0;
         _(this.notifications).last(latestToShow).reverse().forEach(function (n) { return _this.latestNotifications.push(n); });
@@ -473,7 +523,8 @@ var NotificationService = (function () {
     return NotificationService;
 })();
 var EthereumService = (function () {
-    function EthereumService(configurationService) {
+    function EthereumService($q, configurationService) {
+        this.$q = $q;
         this.configurationService = configurationService;
         this._ledgerName = "ethereum";
     }
@@ -511,7 +562,7 @@ var EthereumService = (function () {
         web3.setProvider(null);
     };
     EthereumService.prototype.loadContract = function () {
-        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
+        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "requestVerification", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }], "name": "getAssetIndex", "outputs": [{ "name": "assetIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "getAssetByID", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "getVerificationIndex", "outputs": [{ "name": "verificationIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verificationIndex", "type": "uint256" }], "name": "getVerification", "outputs": [{ "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }, { "name": "isConfirmed", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "type", "type": "uint256" }, { "name": "confirm", "type": "bool" }], "name": "processVerification", "outputs": [{ "name": "processedCorrectly", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAsset", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
         this.assetVaultContract = AssetVault("0xe5694af17323e7567f66ec95a33195e26c994b92");
     };
     EthereumService.prototype.isActive = function () {
@@ -654,7 +705,12 @@ var EthereumService = (function () {
         }
         return transferRequests;
     };
+    EthereumService.prototype.requestVerification = function (asset, verification) {
+        var t = this;
+        this.assetVaultContract.requestVerification(asset.id, verification.verifierAddress, verification.verificationType);
+    };
     EthereumService.$inject = [
+        '$q',
         'configurationService'
     ];
     return EthereumService;

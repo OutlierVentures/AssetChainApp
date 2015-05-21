@@ -201,23 +201,57 @@ class AssetsService {
             });
         });
 
-        this.$q.all(imageSavePromises).then(function (data) {
-            // All images have been processed. Save the data to the backend.
+        // Store all verifications that haven't been stored before.
+        var verificationSavePromises = new Array();
 
-            // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
-            var arrayForSave = angular.copy(t.assets);
+        _(this.assets).each(function (asset) {
+            _(asset.verifications).each(function (verification) {
+                // Valid verifications that should be saved to the backend.
+                if (verification.shouldBeSaved
+                    && verification.verifierAddress
+                    && verification.verifierAddress) {
+                    var saveVerification = t.$q.defer();
 
-            // In the array to save, remove image data to keep it lean.
-            _(arrayForSave).each(function (asset) {
-                _(asset.images).each(function (image) {
-                    if (image.location == "ipfs")
-                        image.dataUrl = null;
+                    verificationSavePromises.push(saveVerification.promise);
+
+                    try {
+                        t.ethereumService.requestVerification(asset, verification);
+                    
+                        // Verification save on blockchain backend was requested. We don't know when it
+                        // will be complete.
+
+                        verification.shouldBeSaved = false;
+                        //verification.index = vres;
+
+                        saveVerification.resolve(verification);
+                    }
+                    catch (e) {
+                        saveVerification.reject(e);
+                        // TODO: handle error.
+                    };
+                }
+            });
+        });
+
+        // Save the asset data to the backend after all secondary items have been saved.
+        //this.$q.all([imagesSaved.promise, verificationsSaved.promise]).then(
+        this.$q.all(imageSavePromises.concat(verificationSavePromises)).then(
+            function (data) {
+                // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
+                var arrayForSave = angular.copy(t.assets);
+
+                // In the array to save, remove image data to keep it lean.
+                _(arrayForSave).each(function (asset) {
+                    _(asset.images).each(function (image) {
+                        if (image.location == "ipfs")
+                            image.dataUrl = null;
+                    });
                 });
+
+                // Save it to the backend.
+                t.backend.setItem("assets", arrayForSave);
             });
 
-            // Save it to the backend.
-            t.backend.setItem("assets", arrayForSave);
-        });
     }
 
     private loadDB(): void {
@@ -294,6 +328,9 @@ class AssetsService {
     save(asset: Asset, cb: SingleAssetCallback) {
         this.ensureAssets();
 
+        // The callback is called directly after persisting the asset to the in-memory array. Saving 
+        // happens afterwards.
+        // TODO: change that to a promise, called after saving is complete.
         if (asset.id === undefined)
             this.create(asset, cb);
         else
@@ -369,6 +406,8 @@ class AssetsService {
     getTransferRequests(asset: Asset): Array<TransferRequest> {
         return this.ethereumService.getTransferRequests(asset);
     }
+
+
 }
 
 interface IIdentityProvider {
@@ -620,6 +659,37 @@ class IdentityService {
  * Service around experts who execute verifications of assets.
  */
 class ExpertsService {
+    allExperts: ExpertCollection;
+    constructor() {
+        // Initialize dummy data.
+        // TODO: realize a directory of experts with their blockchain addresses and metadata.
+
+        // TODO: add a blockchain address for each of these dummy experts so we can request verifications.
+        this.allExperts = new ExpertCollection();
+        this.allExperts.experts = new Array<Expert>();
+
+        this.allExperts.experts.push({
+            id: "5615641",
+            name: "Royal Exchange Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "1564156",
+            name: "Jonathan Geeves Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "9486451",
+            name: "Tawny Phillips"
+        });
+        this.allExperts.experts.push({
+            id: "1859159",
+            name: "The Watch Gallery (Rolex Boutique)"
+        });
+        this.allExperts.experts.push({
+            id: "41859189",
+            name: "Watches of Switzerland"
+        });
+    }
+
     /**
      * Returns a set of experts by search criteria.
      */
@@ -676,6 +746,11 @@ class ExpertsService {
             }];
 
         }
+    }
+
+    getExpertByID(expertID: string): Expert {
+        var es = function (e: Expert) { return e.id == expertID };
+        return _(this.allExperts.experts).find(es);
     }
 }
 
@@ -806,6 +881,11 @@ class NotificationService {
 
 
     ensureNotifications() {
+        // Even though the array is initialized in the members, it happens that it is undefined. Hence 
+        // create it.
+        if (!this.notifications)
+            this.notifications = new Array<Notification>();
+
         if (this.notifications.length == 0) {
             // No stored notifications yet. This must be a new user. Add an initial notification.
             // TODO: move this to an real "new vault" handling. Currently there is no such
@@ -833,6 +913,9 @@ class NotificationService {
     updateLatestNotifications() {
         // We can't recreate the latestNotifications array because it's bound by reference. Hence we clear
         // and refill it.
+        if (!this.notifications)
+            return;
+
         var latestToShow = Math.min(3, this.notifications.length);
 
         // Clear the latest notifications.
@@ -853,11 +936,13 @@ class EthereumService {
     public config: EthereumConfiguration;
 
     public static $inject = [
+        '$q',
         'configurationService'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
+        private $q: ng.IQService,
         private configurationService: ConfigurationService) {
 
         // The service is constructed when the app is loaded, e.g. before the configuration is unlocked.
@@ -933,7 +1018,7 @@ class EthereumService {
     private loadContract() {
         // The line below is generated by AlethZero when creating the contract. Copy/paste.
         // New syntax PoC9: .contract(...)
-        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
+        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "requestVerification", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }], "name": "getAssetIndex", "outputs": [{ "name": "assetIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "getAssetByID", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "getVerificationIndex", "outputs": [{ "name": "verificationIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verificationIndex", "type": "uint256" }], "name": "getVerification", "outputs": [{ "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }, { "name": "isConfirmed", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "type", "type": "uint256" }, { "name": "confirm", "type": "bool" }], "name": "processVerification", "outputs": [{ "name": "processedCorrectly", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAsset", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
 
         // TODO: make address configurable
         this.assetVaultContract = AssetVault("0xe5694af17323e7567f66ec95a33195e26c994b92");
@@ -1214,6 +1299,42 @@ class EthereumService {
         }
 
         return transferRequests;
+    }
+
+
+    //requestVerification(asset: Asset, verification: Verification): ng.IPromise<number> {
+    requestVerification(asset: Asset, verification: Verification) {
+        //var resultPromise = this.$q.defer<number>();
+        var t = this;
+
+        //try {
+        this.assetVaultContract.requestVerification(
+            asset.id,
+            verification.verifierAddress,
+            verification.verificationType
+            );
+
+        // The currently used version of web3 doesn't support callbacks.
+        // The latest does:
+        // https://github.com/ethereum/wiki/wiki/JavaScript-API#using-callbacks
+        // When using that version, a callback and promise should be used.
+
+        //        function (data) {
+        //            // Get the index of the new verification.
+        //            // TODO: handle exceptions.
+        //            var verificationIndex = t.assetVaultContract.getVerificationIndex(
+        //                t.config.currentAddress,
+        //                asset.id,
+        //                verification.verifierAddress,
+        //                verification.verificationType);
+        //            resultPromise.resolve(verificationIndex);
+        //        }
+        //        );
+        //}
+        //catch (e) {
+        //    resultPromise.reject(e);
+        //}
+        //return resultPromise.promise;
     }
 }
 
