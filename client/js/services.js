@@ -144,7 +144,8 @@ var AssetsService = (function () {
                     if (!v.isPending)
                         return;
                     var verificationFromLedger = t.ethereumService.getOwnVerificationRequest(v.verifierAddress, asset.id, v.verificationType, null);
-                    v.isPending = verificationFromLedger.verification.isPending;
+                    if (verificationFromLedger != null && verificationFromLedger.verification != null)
+                        v.isPending = verificationFromLedger.verification.isPending;
                 });
             }
         });
@@ -596,7 +597,7 @@ var EthereumService = (function () {
     };
     EthereumService.prototype.loadContract = function () {
         var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "requestVerification", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }], "name": "getAssetIndex", "outputs": [{ "name": "assetIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "getAssetByID", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "getVerificationIndex", "outputs": [{ "name": "verificationIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verificationIndex", "type": "uint256" }], "name": "getVerification", "outputs": [{ "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }, { "name": "isConfirmed", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "type", "type": "uint256" }, { "name": "confirm", "type": "bool" }], "name": "processVerification", "outputs": [{ "name": "processedCorrectly", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAsset", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
-        this.assetVaultContract = AssetVault("0xb1249d6712059401c618abf4f15a17cdd920b8d3");
+        this.assetVaultContract = AssetVault("0x388104e955c95bbe3e25b22d1f824b0855ae622a");
     };
     EthereumService.prototype.isActive = function () {
         return this._isActive;
@@ -643,6 +644,7 @@ var EthereumService = (function () {
             waitingForTransactionFilter.uninstall();
             cb(peg);
         });
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.createAsset(asset.id, asset.name);
     };
     EthereumService.prototype.getOwnerAddress = function (asset) {
@@ -712,6 +714,7 @@ var EthereumService = (function () {
         return pegs;
     };
     EthereumService.prototype.createTransferRequest = function (assetID) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.requestTransfer(assetID);
     };
     EthereumService.prototype.confirmTransferRequest = function (request) {
@@ -719,6 +722,7 @@ var EthereumService = (function () {
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, true);
     };
     EthereumService.prototype.ignoreTransferRequest = function (request) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, false);
     };
     EthereumService.prototype.getTransferRequests = function (asset) {
@@ -803,6 +807,7 @@ var EthereumService = (function () {
     };
     EthereumService.prototype.requestVerification = function (asset, verification) {
         var t = this;
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.requestVerification(asset.id, verification.verifierAddress, verification.verificationType);
     };
     EthereumService.prototype.processVerification = function (vr, confirm) {

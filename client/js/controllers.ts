@@ -537,6 +537,12 @@ class UserAccountController {
         return true;
     }
 
+    //isActive(ledgerId: string): boolean {
+    //    if (ledgerId == this.ethereumService._ledgerName) {
+    //        return this.ethereumService.isActive();
+    //    }
+    //}
+
     saveConfiguration() {
         // Is this even necessary? Or is the configuration object updated by reference?
         this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
@@ -544,6 +550,8 @@ class UserAccountController {
 
         // Save configuration to the store.
         this.configurationService.save();
+
+        this.ethereumService.connect();
     }
 }
 

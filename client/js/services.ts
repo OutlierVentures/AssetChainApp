@@ -303,7 +303,9 @@ class AssetsService {
 
                     var verificationFromLedger = t.ethereumService.getOwnVerificationRequest(v.verifierAddress, asset.id, v.verificationType, null);
 
-                    v.isPending = verificationFromLedger.verification.isPending;
+                    if (verificationFromLedger != null
+                        && verificationFromLedger.verification != null)
+                        v.isPending = verificationFromLedger.verification.isPending;
                 });
 
                 // TODO: check for dangling verifications, i.e. verifications that have been created from another 
@@ -1091,7 +1093,7 @@ class EthereumService {
         var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "requestVerification", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }], "name": "getAssetIndex", "outputs": [{ "name": "assetIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "getAssetByID", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "getVerificationIndex", "outputs": [{ "name": "verificationIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verificationIndex", "type": "uint256" }], "name": "getVerification", "outputs": [{ "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }, { "name": "isConfirmed", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "type", "type": "uint256" }, { "name": "confirm", "type": "bool" }], "name": "processVerification", "outputs": [{ "name": "processedCorrectly", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAsset", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
 
         // TODO: make address configurable
-        this.assetVaultContract = AssetVault("0xb1249d6712059401c618abf4f15a17cdd920b8d3");
+        this.assetVaultContract = AssetVault("0x388104e955c95bbe3e25b22d1f824b0855ae622a");
     }
 
     _ledgerName = "ethereum";
@@ -1137,6 +1139,7 @@ class EthereumService {
         // Send transactions from the currently active address. This has to be done
         // before every transaction, because contract._options are cleared after every call.
         // DISABLED because it gave problems, transactions wouldn't pass anymore.
+        // 2015-05-26 ENABLED because AlethZero started using a different account as "from". No problems up to now.
         this.assetVaultContract._options["from"] = this.config.currentAddress;
 
         // Watch until the transaction is processed.
@@ -1203,6 +1206,7 @@ class EthereumService {
         });
 
         // The call to the transaction gives no result and doesn't support callbacks.
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.createAsset(asset.id, asset.name);
 
         // TODO: immediately make a SecurityPeg, but make it pending. Then send an update to show it as processed or failed.
@@ -1319,6 +1323,7 @@ class EthereumService {
      * Create a request to transfer an asset of another owner.
      */
     createTransferRequest(assetID: string) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.requestTransfer(assetID);
     }
 
@@ -1334,6 +1339,7 @@ class EthereumService {
         * Ignore a received transfer request.
         */
     ignoreTransferRequest(request: TransferRequest) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, false);
     }
 
@@ -1493,6 +1499,7 @@ class EthereumService {
         var t = this;
 
         //try {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.requestVerification(
             asset.id,
             verification.verifierAddress,

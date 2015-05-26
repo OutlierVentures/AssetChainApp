@@ -313,6 +313,7 @@ var UserAccountController = (function () {
         this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
         this.configurationService.configuration.coinPrism = this.$scope.coinPrismConfiguration;
         this.configurationService.save();
+        this.ethereumService.connect();
     };
     UserAccountController.$inject = [
         "$scope",
