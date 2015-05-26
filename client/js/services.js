@@ -203,6 +203,17 @@ var AssetsService = (function () {
             return this.ethereumService.getIncomingVerificationRequests();
         }
     };
+    AssetsService.prototype.getIncomingVerificationRequest = function (assetID, verificationType) {
+        if (this.ethereumService.connect()) {
+            return this.ethereumService.getIncomingVerificationRequest(assetID, verificationType);
+        }
+    };
+    AssetsService.prototype.confirmVerificationRequest = function (request) {
+        this.ethereumService.processVerification(request, true);
+    };
+    AssetsService.prototype.ignoreVerificationRequest = function (request) {
+        this.ethereumService.processVerification(request, false);
+    };
     AssetsService.$inject = [
         '$http',
         '$q',
@@ -533,6 +544,15 @@ var EthereumService = (function () {
         this.configurationService = configurationService;
         this._ledgerName = "ethereum";
     }
+    EthereumService.prototype.normalizeAddress = function (address) {
+        if (address == null)
+            return address;
+        if (address.length < 10)
+            return address;
+        if (address.substring(0, 2) == "0x")
+            return address;
+        return "0x" + address;
+    };
     EthereumService.prototype.connect = function () {
         try {
             this.configurationService.load();
@@ -583,6 +603,7 @@ var EthereumService = (function () {
     };
     EthereumService.prototype.secureAsset = function (asset, cb) {
         var t = this;
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         var blockAtStart = web3.eth.number;
         var maxWaitBlocks = 5;
         var waitingForTransactionFilter = web3.eth.watch('pending');
@@ -686,6 +707,7 @@ var EthereumService = (function () {
         this.assetVaultContract.requestTransfer(assetID);
     };
     EthereumService.prototype.confirmTransferRequest = function (request) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, true);
     };
     EthereumService.prototype.ignoreTransferRequest = function (request) {
@@ -711,9 +733,13 @@ var EthereumService = (function () {
         return transferRequests;
     };
     EthereumService.prototype.getIncomingVerificationRequests = function () {
-        return this.getVerificationRequests(this.config.currentAddress);
+        return this.getVerificationRequests(this.config.currentAddress, null, null);
     };
-    EthereumService.prototype.getVerificationRequests = function (verifierAddress) {
+    EthereumService.prototype.getIncomingVerificationRequest = function (filterAssetID, filterVerificationType) {
+        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType);
+        return vrs[0];
+    };
+    EthereumService.prototype.getVerificationRequests = function (verifierAddress, filterAssetID, filterVerificationType) {
         var verifications = new Array();
         var ownerCount = this.assetVaultContract.call().ownerCount().toNumber();
         for (var oi = 0; oi < ownerCount; oi++) {
@@ -723,27 +749,29 @@ var EthereumService = (function () {
                 for (var ai = 0; ai < assetCount; ai++) {
                     var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
                     if (assetID != "") {
-                        var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
-                        var verificationCount = assetInfo[2].toNumber();
-                        if (verificationCount > 0) {
-                            for (var vi = 0; vi < verificationCount; vi++) {
-                                var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
-                                var verifier = verificationInfo[0];
-                                var verificationType = verificationInfo[1].toNumber();
-                                var confirmed = verificationInfo[2];
-                                if (verifier == verifierAddress && !confirmed) {
-                                    var vr = new VerificationRequest();
-                                    verifications.push(vr);
-                                    vr.ownerAddress = ownerAddress;
-                                    var asset = new Asset();
-                                    vr.asset = asset;
-                                    asset.id = assetID;
-                                    asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
-                                    var verification = new Verification();
-                                    vr.verification = verification;
-                                    verification.verificationType = verificationType;
-                                    verification.verifierAddress = verifier;
-                                    verification.isPending = true;
+                        if (filterAssetID == undefined || filterAssetID == assetID) {
+                            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
+                            var verificationCount = assetInfo[2].toNumber();
+                            if (verificationCount > 0) {
+                                for (var vi = 0; vi < verificationCount; vi++) {
+                                    var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+                                    var verifier = verificationInfo[0];
+                                    var verificationType = verificationInfo[1].toNumber();
+                                    var confirmed = verificationInfo[2];
+                                    if (verifier == verifierAddress && !confirmed && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
+                                        var vr = new VerificationRequest();
+                                        verifications.push(vr);
+                                        vr.ownerAddress = ownerAddress;
+                                        var asset = new Asset();
+                                        vr.asset = asset;
+                                        asset.id = assetID;
+                                        asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+                                        var verification = new Verification();
+                                        vr.verification = verification;
+                                        verification.verificationType = verificationType;
+                                        verification.verifierAddress = verifier;
+                                        verification.isPending = true;
+                                    }
                                 }
                             }
                         }
@@ -751,12 +779,15 @@ var EthereumService = (function () {
                 }
             }
         }
-        this.assetVaultContract;
         return verifications;
     };
     EthereumService.prototype.requestVerification = function (asset, verification) {
         var t = this;
         this.assetVaultContract.requestVerification(asset.id, verification.verifierAddress, verification.verificationType);
+    };
+    EthereumService.prototype.processVerification = function (vr, confirm) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
+        this.assetVaultContract.processVerification(vr.asset.id, vr.verification.verificationType, confirm);
     };
     EthereumService.$inject = [
         '$q',

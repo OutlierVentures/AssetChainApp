@@ -420,4 +420,34 @@ var VerificationListController = (function () {
     ];
     return VerificationListController;
 })();
+var VerificationRequestController = (function () {
+    function VerificationRequestController($scope, $location, $routeParams, assetsService) {
+        this.$scope = $scope;
+        this.$location = $location;
+        this.$routeParams = $routeParams;
+        this.assetsService = assetsService;
+        $scope.vm = this;
+        if ($routeParams.assetID != undefined) {
+            $scope.verificationRequest = assetsService.getIncomingVerificationRequest($routeParams.assetID, $routeParams.verificationType);
+        }
+    }
+    VerificationRequestController.prototype.hasLedgers = function () {
+        return this.assetsService.hasLedgers();
+    };
+    VerificationRequestController.prototype.confirm = function () {
+        this.assetsService.confirmVerificationRequest(this.$scope.verificationRequest);
+        this.$location.path("/verify/incoming");
+    };
+    VerificationRequestController.prototype.ignore = function () {
+        this.assetsService.ignoreVerificationRequest(this.$scope.verificationRequest);
+        this.$location.path("/verify/incoming");
+    };
+    VerificationRequestController.$inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService"
+    ];
+    return VerificationRequestController;
+})();
 //# sourceMappingURL=controllers.js.map

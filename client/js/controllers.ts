@@ -150,7 +150,7 @@ class ExpertVerificationController {
                         title: "Asset verification requested",
                         date: moment().toISOString(),
                         details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>"
-                            + expertName + "</strong>.",
+                        + expertName + "</strong>.",
                         url: "asset/" + s.asset.id,
                         icon: "check",
                         seen: false,
@@ -705,4 +705,61 @@ class VerificationListController {
         // Load incoming verification request data.
         $scope.verificationRequests = assetsService.getIncomingVerificationRequests();
     }
+}
+
+interface IVerificationRequestScope extends ng.IScope {
+    vm: VerificationRequestController;
+    verificationRequest: VerificationRequest;
+    asset: Asset;
+}
+
+interface IVerificationRequestRouteParameters extends ng.route.IRouteParamsService {
+    assetID: string;
+    verificationType: number;
+}
+
+class VerificationRequestController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService"];
+
+    constructor(
+        private $scope: IVerificationRequestScope,
+        private $location: ng.ILocationService,
+        private $routeParams: IVerificationRequestRouteParameters,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load the verification and asset info.
+        if ($routeParams.assetID != undefined) {
+            $scope.verificationRequest = assetsService.getIncomingVerificationRequest($routeParams.assetID, $routeParams.verificationType);
+
+            // TODO: handle case that VR can't be found, is non-existing etc.                
+        }
+    }
+
+    hasLedgers(): boolean {
+        return this.assetsService.hasLedgers();
+    }
+
+    confirm() {
+        this.assetsService.confirmVerificationRequest(this.$scope.verificationRequest);
+            
+        // TODO: show notification
+
+        // Go back to the verifications list
+        this.$location.path("/verify/incoming");
+    }
+
+    ignore() {
+        this.assetsService.ignoreVerificationRequest(this.$scope.verificationRequest);
+            
+        // TODO: show notification
+
+        // Go back to the verifications list
+        this.$location.path("/verify/incoming");
+    }
+
 }

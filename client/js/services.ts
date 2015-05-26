@@ -290,6 +290,9 @@ class AssetsService {
                     }
                 }
             });
+
+            // TODO: check for dangling verifications
+            // TODO: update unprocessed verifications (check whether they're processed)
         });
     }
 
@@ -411,6 +414,35 @@ class AssetsService {
         if (this.ethereumService.connect()) {
             return this.ethereumService.getIncomingVerificationRequests();
         }
+    }
+
+    /**
+     * Get a single incoming verification request.
+     */
+    getIncomingVerificationRequest(assetID: string, verificationType: number): VerificationRequest {
+        if (this.ethereumService.connect()) {
+            return this.ethereumService.getIncomingVerificationRequest(assetID, verificationType);
+        }
+    }
+
+    /**
+     * Confirm a received verification request.
+     */
+    confirmVerificationRequest(request: VerificationRequest) {
+        // TODO: wait for result; error handling
+        this.ethereumService.processVerification(request, true);
+
+        // TODO: update local asset collection to show this asset is verificationred. Archived? Grayed out?
+    }
+
+    /**
+     * Ignore/deny a received verification request.
+     */
+    ignoreVerificationRequest(request: VerificationRequest) {
+        // TODO: wait for result; error handling
+        this.ethereumService.processVerification(request, false);
+
+        // TODO: update local asset collection to show this asset is verificationred. Archived? Grayed out?
     }
 
 }
@@ -962,6 +994,23 @@ class EthereumService {
      */
     private assetVaultContract: any;
 
+    /**
+     * Normalize an Ethereum(-like) address to start with "0x".
+     */
+    normalizeAddress(address: string): string {
+        if (address == null)
+            return address;
+
+        if (address.length < 10)
+            return address;
+
+        if (address.substring(0, 2) == "0x")
+            return address;
+
+        return "0x" + address;
+    }
+
+
     connect(): boolean {
         try {
             this.configurationService.load();
@@ -1072,7 +1121,7 @@ class EthereumService {
         // Send transactions from the currently active address. This has to be done
         // before every transaction, because contract._options are cleared after every call.
         // DISABLED because it gave problems, transactions wouldn't pass anymore.
-        //this.AssetVaultContract._options["from"] = this.Config.CurrentAddress;
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
 
         // Watch until the transaction is processed.
         // TODO: apply web3.eth.filter once it's fully available.
@@ -1261,6 +1310,7 @@ class EthereumService {
      * Confirm a received transfer request.
      */
     confirmTransferRequest(request: TransferRequest) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, true);
     }
 
@@ -1307,7 +1357,12 @@ class EthereumService {
     }
 
     getIncomingVerificationRequests(): Array<VerificationRequest> {
-        return this.getVerificationRequests(this.config.currentAddress);
+        return this.getVerificationRequests(this.config.currentAddress, null, null);
+    }
+
+    getIncomingVerificationRequest(filterAssetID: string, filterVerificationType: number): VerificationRequest {
+        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType);
+        return vrs[0];
     }
 
     /**
@@ -1315,7 +1370,7 @@ class EthereumService {
      * requested verifier. To be called with the own ethereum address, to get
      * incoming verification requests.
      */
-    getVerificationRequests(verifierAddress: string): Array<VerificationRequest> {
+    getVerificationRequests(verifierAddress: string, filterAssetID: string, filterVerificationType: number): Array<VerificationRequest> {
         var verifications = new Array<VerificationRequest>();
 
         // Loop through all owners, all assets, all verifications.
@@ -1330,41 +1385,45 @@ class EthereumService {
                 for (var ai = 0; ai < assetCount; ai++) {
                     var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
                     if (assetID != "") {
+                        if (filterAssetID == undefined || filterAssetID == assetID) {
+                            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
+                            var verificationCount = assetInfo[2].toNumber();
+                            if (verificationCount > 0) {
+                                for (var vi = 0; vi < verificationCount; vi++) {
+                                    var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
 
-                        var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
-                        var verificationCount = assetInfo[2].toNumber();
-                        if (verificationCount > 0) {
-                            for (var vi = 0; vi < verificationCount; vi++) {
-                                var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+                                    var verifier = verificationInfo[0];
+                                    var verificationType = verificationInfo[1].toNumber();
+                                    var confirmed = verificationInfo[2];
 
-                                var verifier = verificationInfo[0];
-                                var verificationType = verificationInfo[1].toNumber();
-                                var confirmed = verificationInfo[2];
+                                    if (verifier == verifierAddress && !confirmed
+                                        && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
+                                        // This is an incoming verification for the requested address,
+                                        // that matches any passed filters.
+                                        // Prepare and return it.
 
-                                if (verifier == verifierAddress && !confirmed) {
-                                    // This is an incoming verification for the requested address.
+                                        var vr = new VerificationRequest();
+                                        verifications.push(vr);
+                                        vr.ownerAddress = ownerAddress;
 
-                                    var vr = new VerificationRequest();
-                                    verifications.push(vr);
-                                    vr.ownerAddress = ownerAddress;
+                                        var asset = new Asset();
+                                        vr.asset = asset;
+                                        asset.id = assetID;
+                                        asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
 
-                                    var asset = new Asset();
-                                    vr.asset = asset;
-                                    asset.id = assetID;
-                                    asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+                                        // TODO: realize some way so the verifier can see (a selection of) the images.
+                                        // This requires encrypting them with their public key. Is that possible in 
+                                        // Eth / Tendermint / Thelonious crypto?
 
-                                    // TODO: realize some way so the verifier can see (a selection of) the images.
-                                    // This requires encrypting them with their public key. Is that possible in 
-                                    // Eth / Tendermint / Thelonious crypto?
-
-                                    var verification = new Verification();
-                                    vr.verification = verification;
-                                    verification.verificationType = verificationType;
-                                    verification.verifierAddress = verifier;
-                                    verification.isPending = true;
+                                        var verification = new Verification();
+                                        vr.verification = verification;
+                                        verification.verificationType = verificationType;
+                                        verification.verifierAddress = verifier;
+                                        verification.isPending = true;
                                     
-                                    // TODO: load other properties of the verification request (comments, defects, ...). Currently
-                                    // these are not stored in the backend.
+                                        // TODO: load other properties of the verification request (comments, defects, ...). Currently
+                                        // these are not stored in the backend.
+                                    }
                                 }
                             }
                         }
@@ -1372,7 +1431,6 @@ class EthereumService {
                 }
             }
         }
-        this.assetVaultContract
 
         return verifications;
     }
@@ -1413,6 +1471,19 @@ class EthereumService {
         //    resultPromise.reject(e);
         //}
         //return resultPromise.promise;
+    }
+
+    /**
+     * Process a verification request.
+     */
+    processVerification(vr: VerificationRequest, confirm: boolean) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
+        this.assetVaultContract.processVerification(
+            vr.asset.id,
+            vr.verification.verificationType,
+            confirm
+            );
+
     }
 }
 

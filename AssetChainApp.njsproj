@@ -41,6 +41,7 @@
     <Content Include="client\js\_all-references.js.map" />
     <Content Include="client\vendors-manual\ethereum\ethereum.js.map" />
     <Content Include="client\views\incoming-verification-requests.html" />
+    <Content Include="client\views\verification-request-process.html" />
     <Content Include="client\views\user-profile.html" />
     <Content Include="client\views\account-list.html" />
     <Content Include="client\views\ethereum-account-widget.html" />
