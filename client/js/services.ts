@@ -259,9 +259,11 @@ class AssetsService {
 
         var t = this;
 
-        // Load image data for all images stored on backends
-        // TODO: do this per image, only on details, get thumbnails first etc
+        // Load/update data of assets
         _(this.assets).each(function (asset) {
+            // Load image data for all images stored on backends
+            // TODO: do this per image, only on details, get thumbnails first etc
+        
             _(asset.images).each(function (image) {
                 // The images aren't deserialized as actual AssetImage
                 // objects, but as anonymous objects missing the functions. Therefore we
@@ -291,8 +293,22 @@ class AssetsService {
                 }
             });
 
-            // TODO: check for dangling verifications
-            // TODO: update unprocessed verifications (check whether they're processed)
+            
+            if (t.ethereumService.connect()) {
+                // Update unprocessed verifications (check whether they're processed)
+                _(asset.verifications).each(function (v) {
+                    // Only update unprocessed verifications.
+                    if (!v.isPending)
+                        return;
+
+                    var verificationFromLedger = t.ethereumService.getOwnVerificationRequest(v.verifierAddress, asset.id, v.verificationType, null);
+
+                    v.isPending = verificationFromLedger.verification.isPending;
+                });
+
+                // TODO: check for dangling verifications, i.e. verifications that have been created from another 
+                // (instance of this) app.
+            }
         });
     }
 
@@ -1356,21 +1372,38 @@ class EthereumService {
         return transferRequests;
     }
 
+    /**
+     * Gets all verification requests for which the current address has been requested to verify.
+     */
     getIncomingVerificationRequests(): Array<VerificationRequest> {
-        return this.getVerificationRequests(this.config.currentAddress, null, null);
+        return this.getVerificationRequests(this.config.currentAddress, null, null, false);
     }
 
+    /**
+     * Gets an incoming verification request which matches the giver criteria.
+     */
     getIncomingVerificationRequest(filterAssetID: string, filterVerificationType: number): VerificationRequest {
-        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType);
-        return vrs[0];
+        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType, false);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
+    }
+
+    /**
+     * Gets a verification request for an asset of which the current address is the owner.
+     */
+    getOwnVerificationRequest(verifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): VerificationRequest {
+        var vrs = this.getVerificationRequestsForOwner(this.config.currentAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
     }
 
     /**
      * Returns a list of all verification requests where the given address is the 
-     * requested verifier. To be called with the own ethereum address, to get
-     * incoming verification requests.
+     * requested verifier.
      */
-    getVerificationRequests(verifierAddress: string, filterAssetID: string, filterVerificationType: number): Array<VerificationRequest> {
+    getVerificationRequests(verifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): Array<VerificationRequest> {
         var verifications = new Array<VerificationRequest>();
 
         // Loop through all owners, all assets, all verifications.
@@ -1380,56 +1413,72 @@ class EthereumService {
         for (var oi = 0; oi < ownerCount; oi++) {
             var ownerAddress = this.assetVaultContract.owners(oi);
 
-            if (ownerAddress != "0x0000000000000000000000000000000000000000") { // empty
-                var assetCount = this.assetVaultContract.call().assetsByOwner(ownerAddress).toNumber();
-                for (var ai = 0; ai < assetCount; ai++) {
-                    var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
-                    if (assetID != "") {
-                        if (filterAssetID == undefined || filterAssetID == assetID) {
-                            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
-                            var verificationCount = assetInfo[2].toNumber();
-                            if (verificationCount > 0) {
-                                for (var vi = 0; vi < verificationCount; vi++) {
-                                    var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+            if (ownerAddress == "0x0000000000000000000000000000000000000000") // empty
+                continue;
+            var vfo = this.getVerificationRequestsForOwner(ownerAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
 
-                                    var verifier = verificationInfo[0];
-                                    var verificationType = verificationInfo[1].toNumber();
-                                    var confirmed = verificationInfo[2];
+            verifications = verifications.concat(vfo);
+        }
 
-                                    if (verifier == verifierAddress && !confirmed
-                                        && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
-                                        // This is an incoming verification for the requested address,
-                                        // that matches any passed filters.
-                                        // Prepare and return it.
+        return verifications;
+    }
 
-                                        var vr = new VerificationRequest();
-                                        verifications.push(vr);
-                                        vr.ownerAddress = ownerAddress;
+    /**
+     * Gets all verification requests for the given owner, filtered by the parameters.
+     */
+    getVerificationRequestsForOwner(ownerAddress: string, filterVerifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): Array<VerificationRequest> {
+        var verifications = new Array<VerificationRequest>();
 
-                                        var asset = new Asset();
-                                        vr.asset = asset;
-                                        asset.id = assetID;
-                                        asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+        var assetCount = this.assetVaultContract.call().assetsByOwner(ownerAddress).toNumber();
+        for (var ai = 0; ai < assetCount; ai++) {
+            var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
+            if (assetID == "")
+                continue;
 
-                                        // TODO: realize some way so the verifier can see (a selection of) the images.
-                                        // This requires encrypting them with their public key. Is that possible in 
-                                        // Eth / Tendermint / Thelonious crypto?
+            if (filterAssetID != undefined && filterAssetID != assetID)
+                continue;
 
-                                        var verification = new Verification();
-                                        vr.verification = verification;
-                                        verification.verificationType = verificationType;
-                                        verification.verifierAddress = verifier;
-                                        verification.isPending = true;
+            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
+            var verificationCount = assetInfo[2].toNumber();
+            for (var vi = 0; vi < verificationCount; vi++) {
+                var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+
+                var verifier = verificationInfo[0];
+                var verificationType = verificationInfo[1].toNumber();
+                var confirmed = verificationInfo[2];
+
+                // TODO: flatten code with continue
+                if ((filterVerifierAddress == undefined || verifier == filterVerifierAddress)
+                    && (filterConfirmed === null || filterConfirmed == confirmed)
+                    && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
+                    
+                    // This is a verification that matches any passed filters.
+                    // Prepare and return it.
+
+                    var vr = new VerificationRequest();
+                    verifications.push(vr);
+                    vr.ownerAddress = ownerAddress;
+
+                    var asset = new Asset();
+                    vr.asset = asset;
+                    asset.id = assetID;
+                    asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+
+                    // TODO: realize some way so the verifier can see (a selection of) the images.
+                    // This requires encrypting them with their public key. Is that possible in 
+                    // Eth / Tendermint / Thelonious crypto?
+
+                    var verification = new Verification();
+                    vr.verification = verification;
+                    verification.verificationType = verificationType;
+                    verification.verifierAddress = verifier;
+                    verification.isPending = !confirmed;
                                     
-                                        // TODO: load other properties of the verification request (comments, defects, ...). Currently
-                                        // these are not stored in the backend.
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    // TODO: load other properties of the verification request (comments, defects, ...). Currently
+                    // these are not stored in the backend.                            
                 }
             }
+
         }
 
         return verifications;

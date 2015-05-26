@@ -139,6 +139,14 @@ var AssetsService = (function () {
                     }
                 }
             });
+            if (t.ethereumService.connect()) {
+                _(asset.verifications).each(function (v) {
+                    if (!v.isPending)
+                        return;
+                    var verificationFromLedger = t.ethereumService.getOwnVerificationRequest(v.verifierAddress, asset.id, v.verificationType, null);
+                    v.isPending = verificationFromLedger.verification.isPending;
+                });
+            }
         });
     };
     AssetsService.prototype.reload = function () {
@@ -733,49 +741,61 @@ var EthereumService = (function () {
         return transferRequests;
     };
     EthereumService.prototype.getIncomingVerificationRequests = function () {
-        return this.getVerificationRequests(this.config.currentAddress, null, null);
+        return this.getVerificationRequests(this.config.currentAddress, null, null, false);
     };
     EthereumService.prototype.getIncomingVerificationRequest = function (filterAssetID, filterVerificationType) {
-        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType);
-        return vrs[0];
+        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType, false);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
     };
-    EthereumService.prototype.getVerificationRequests = function (verifierAddress, filterAssetID, filterVerificationType) {
+    EthereumService.prototype.getOwnVerificationRequest = function (verifierAddress, filterAssetID, filterVerificationType, filterConfirmed) {
+        var vrs = this.getVerificationRequestsForOwner(this.config.currentAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
+    };
+    EthereumService.prototype.getVerificationRequests = function (verifierAddress, filterAssetID, filterVerificationType, filterConfirmed) {
         var verifications = new Array();
         var ownerCount = this.assetVaultContract.call().ownerCount().toNumber();
         for (var oi = 0; oi < ownerCount; oi++) {
             var ownerAddress = this.assetVaultContract.owners(oi);
-            if (ownerAddress != "0x0000000000000000000000000000000000000000") {
-                var assetCount = this.assetVaultContract.call().assetsByOwner(ownerAddress).toNumber();
-                for (var ai = 0; ai < assetCount; ai++) {
-                    var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
-                    if (assetID != "") {
-                        if (filterAssetID == undefined || filterAssetID == assetID) {
-                            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
-                            var verificationCount = assetInfo[2].toNumber();
-                            if (verificationCount > 0) {
-                                for (var vi = 0; vi < verificationCount; vi++) {
-                                    var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
-                                    var verifier = verificationInfo[0];
-                                    var verificationType = verificationInfo[1].toNumber();
-                                    var confirmed = verificationInfo[2];
-                                    if (verifier == verifierAddress && !confirmed && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
-                                        var vr = new VerificationRequest();
-                                        verifications.push(vr);
-                                        vr.ownerAddress = ownerAddress;
-                                        var asset = new Asset();
-                                        vr.asset = asset;
-                                        asset.id = assetID;
-                                        asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
-                                        var verification = new Verification();
-                                        vr.verification = verification;
-                                        verification.verificationType = verificationType;
-                                        verification.verifierAddress = verifier;
-                                        verification.isPending = true;
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if (ownerAddress == "0x0000000000000000000000000000000000000000")
+                continue;
+            var vfo = this.getVerificationRequestsForOwner(ownerAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
+            verifications = verifications.concat(vfo);
+        }
+        return verifications;
+    };
+    EthereumService.prototype.getVerificationRequestsForOwner = function (ownerAddress, filterVerifierAddress, filterAssetID, filterVerificationType, filterConfirmed) {
+        var verifications = new Array();
+        var assetCount = this.assetVaultContract.call().assetsByOwner(ownerAddress).toNumber();
+        for (var ai = 0; ai < assetCount; ai++) {
+            var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
+            if (assetID == "")
+                continue;
+            if (filterAssetID != undefined && filterAssetID != assetID)
+                continue;
+            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
+            var verificationCount = assetInfo[2].toNumber();
+            for (var vi = 0; vi < verificationCount; vi++) {
+                var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+                var verifier = verificationInfo[0];
+                var verificationType = verificationInfo[1].toNumber();
+                var confirmed = verificationInfo[2];
+                if ((filterVerifierAddress == undefined || verifier == filterVerifierAddress) && (filterConfirmed === null || filterConfirmed == confirmed) && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
+                    var vr = new VerificationRequest();
+                    verifications.push(vr);
+                    vr.ownerAddress = ownerAddress;
+                    var asset = new Asset();
+                    vr.asset = asset;
+                    asset.id = assetID;
+                    asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+                    var verification = new Verification();
+                    vr.verification = verification;
+                    verification.verificationType = verificationType;
+                    verification.verifierAddress = verifier;
+                    verification.isPending = !confirmed;
                 }
             }
         }
