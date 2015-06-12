@@ -78,7 +78,7 @@ var ExpertVerificationController = (function () {
                     details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>" + expertName + "</strong>.",
                     url: "asset/" + s.asset.id,
                     icon: "check",
-                    seen: false,
+                    seen: false
                 };
                 t.$rootScope.$emit("addNotification", not);
                 s.location.path("/");
@@ -213,22 +213,22 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
         {
             name: "My assets",
             url: "asset/list",
-            icon: "list",
+            icon: "list"
         },
         {
             name: "Register new asset",
             url: "asset/register",
-            icon: "plus-circle",
+            icon: "plus-circle"
         },
         {
             name: "Verify assets",
             url: "verify/incoming",
-            icon: "check",
+            icon: "check"
         },
         {
             name: "Transfer assets",
             url: "transfer/create",
-            icon: "mail-forward",
+            icon: "mail-forward"
         },
     ];
     $scope.isAuthenticated = function () {
@@ -373,7 +373,7 @@ var SecureAssetController = (function () {
                         details: "Your asset <strong>" + asset.name + "</strong> has been secured with <strong>" + asset.securedOn.name + " security</strong>.",
                         url: "asset/" + asset.id,
                         icon: "lock",
-                        seen: false,
+                        seen: false
                     };
                     t.$rootScope.$emit("addNotification", not);
                     t.$location.path('/asset/' + assetResp.id);

@@ -64,7 +64,7 @@ var AssetsService = (function () {
                 details: "The asset <strong>" + newAsset.name + "</strong> for which you control the security peg on the <strong>" + p.name + "</strong> ledger has been restored.",
                 url: "asset/" + newAsset.id,
                 icon: "lock",
-                seen: false,
+                seen: false
             };
             t.$rootScope.$emit('addNotification', n);
             t.assets.push(newAsset);
@@ -181,7 +181,7 @@ var AssetsService = (function () {
             details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
             url: "asset/" + asset.id,
             icon: "plus-circle",
-            seen: false,
+            seen: false
         };
         this.$rootScope.$emit('addNotification', n);
         cb(asset);
@@ -313,7 +313,7 @@ var EncryptedIpfsStorageService = (function () {
         var t = this;
         this.$http({
             method: "GET",
-            url: this.configurationService.configuration.decerver.apiUrl() + '/ipfs/' + key,
+            url: this.configurationService.configuration.decerver.apiUrl() + '/ipfs/' + key
         }).success(function (data) {
             var stringVar = data["data"];
             if (stringVar === null)
@@ -525,7 +525,7 @@ var NotificationService = (function () {
                 details: "You became an AssetChain user. Be welcome!",
                 url: '',
                 icon: "home",
-                seen: false,
+                seen: false
             });
         }
         _(this.notifications).each(function (not) {
@@ -632,7 +632,7 @@ var EthereumService = (function () {
                     id: asset.id,
                     name: asset.name
                 },
-                address: t.config.currentAddress,
+                address: t.config.currentAddress
             };
             peg.logoImageFileName = "ethereum-logo.png";
             peg.transactionUrl = "http://etherapps.info/block/" + web3.eth.number;
@@ -737,7 +737,7 @@ var EthereumService = (function () {
                 var requesterAddress = transferRequestData[1];
                 var tr = {
                     assetID: assetID,
-                    requesterAddress: requesterAddress,
+                    requesterAddress: requesterAddress
                 };
                 transferRequests.push(tr);
             }
