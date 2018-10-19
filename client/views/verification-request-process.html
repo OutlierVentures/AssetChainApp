@@ -1,0 +1,54 @@
+﻿<div class="row">
+    <div class="col-lg-12">
+        <h1 class="page-header" id="page-header">Verify an asset</h1>
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<div class="row" id="transfer-request-form" ng-hide="vm.hasLedgers()">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-lock fa-fw"></i> No accounts connected
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <p>
+                    You don't have any accounts for decentralized ledgers configured and connected yet. Please
+                    <a href="#/user/settings/accounts">configure and connect to an account</a> and come back here.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row" id="transfer-request-form" ng-show="vm.hasLedgers()">
+    <div class="col-lg-12">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <i class="fa fa-mail-forward fa-fw"></i> Incoming verification request
+            </div>
+            <!-- /.panel-heading -->
+            <div class="panel-body">
+                <div class="row">
+                    <div class="col-lg-12">
+                        <p>
+                            You have received a transfer request for the asset <strong>{{verificationRequest.asset.name}}</strong> owned by address
+                            <code>{{verificationRequest.ownerAddress}}</code>.
+                        </p>
+                        <p ng-show="verificationRequest.verification.verificationType == 1">
+                            The owner requested you to verify that they are the owner of the asset.
+                        </p>
+                        <p ng-show="verificationRequest.verification.verificationType == 2">
+                            The owner requested you to verify the authenticity and quality of the asset.
+                        </p>
+                        <a ng-click="vm.ignore()" class="btn btn-primary">Ignore verification request</a>
+                        <a ng-click="vm.confirm()" class="btn">I have verified the claim of the owner</a>
+                    </div>
+                </div>
+            </div>
+            <!-- /.panel-body -->
+        </div>
+        <!-- /.panel -->
+    </div>
+    <!-- /.col-lg-12 -->
+</div>
+<!-- /.row -->

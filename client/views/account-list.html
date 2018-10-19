@@ -28,7 +28,7 @@
                                     <button class="btn btn-primary" ng-click="vm.saveConfiguration()">Save</button>
                                 </form>
                             </div>
-                            <div ng-show="isActive()">
+                            <div ng-show="vm.isActive('ethereum')">
                                 <h3>Your Ethereum account</h3>
                                 <p>Address: {{address}}</p>
                                 <p>Account balance: {{balance}}</p>

@@ -1,0 +1,8 @@
+#THE ASSETCHAIN DEPLOYMENT FILE
+
+#File Deployment
+!{TEST
+deploy:
+	"./asset-vault.lll" => {{ROOT}}
+!}TEST
+

@@ -4,6 +4,9 @@
     login();
 }
 
+/**
+ * Controller for the logon box.
+ */
 class LoginController {
     public static $inject = [
         "$scope",
@@ -37,6 +40,8 @@ class LoginController {
 }
 
 function DashboardController($scope, $location, $http, $routeParams, assetsService: AssetsService) {
+    // TODO: implement.
+
     // Get latest notifications
 
     // Get all assets (not only current user)
@@ -59,6 +64,7 @@ interface IVerificationScope extends ng.IScope {
     expertsByLocation: Array<ExpertCollection>;
     location: ng.ILocationService;
     vm: ExpertVerificationController;
+    expertID: string;
     verification: Verification;
 }
 
@@ -68,6 +74,7 @@ class ExpertVerificationController {
         "$scope",
         "$location",
         "$routeParams",
+        "$rootScope",
         "assetsService",
         "expertsService"];
 
@@ -75,6 +82,7 @@ class ExpertVerificationController {
         private $scope: IVerificationScope,
         private $location: ng.ILocationService,
         private $routeParams: IVerifyAssetRouteParameters,
+        private $rootScope: ng.IRootScopeService,
         private assetsService: AssetsService,
         private expertsService: ExpertsService) {
         $scope.assetID = $routeParams.id;
@@ -86,9 +94,14 @@ class ExpertVerificationController {
             $scope.asset = resp;
 
             if ($scope.verificationID != null) {
-                // Load the verification we worked on in an earlier step.
+                // Load the verification we worked on in an earlier step. The scope doesn't survive page changes,
+                // so we'll have to get it from the asset.
                 var verificationsWithId = _($scope.asset.verifications).select(v => v.id == $scope.verificationID);
                 $scope.verification = verificationsWithId[0];
+            }
+            else {
+                $scope.verification = new Verification();
+                $scope.verification.verificationType = 2; // quality
             }
 
             $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
@@ -99,26 +112,55 @@ class ExpertVerificationController {
         // Provide the callback below access to the scope.
         // TODO: refactor.
         var s = this.$scope;
+        var t = this;
 
-        this.assetsService.save(this.$scope.asset, function (resp) {
-            if (s.location.path() == "/verify/expert/" + s.assetID) {
-                // Step 1
-                s.verification.id = guid(true);
-                s.verification.date = moment().toISOString();
-                s.verification.isPending = true;
-                if (s.asset.verifications == null)
-                    s.asset.verifications = [];
-                s.asset.verifications.push(s.verification);
-                s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
-            } else {
-                // Step 2
-                // Finished.
-                // TODO: show "finished" message.
-                // TODO: add item to notifications.
-                
+        if (s.location.path() == "/verify/expert/" + s.assetID) {
+            // Step 1
+            s.verification.id = guid(true);
+            s.verification.date = moment().toISOString();
+            s.verification.isPending = true;
+            s.verification.expert = t.expertsService.getExpertByID(s.expertID);
+
+            // The verification has to be added to the asset array in order to load it in the second step.
+            // We don't want the asset service to save it yet though, as it isn't complete.
+            if (s.asset.verifications == null)
+                s.asset.verifications = [];
+
+            s.asset.verifications.push(s.verification);
+
+            s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
+        } else {
+            // Step 2
+            // Finished.
+
+            // Mark it as "to be saved".
+            s.verification.shouldBeSaved = true;
+
+            // Save the asset including the verification.
+            t.assetsService.save(t.$scope.asset, function (resp) {
+                // Show notification.
+                var expertName = "";
+                if (s.verification)
+                    if (s.verification.expert)
+                        expertName = s.verification.expert.name;
+
+                var not: Notification =
+                    {
+                        id: guid(true),
+                        title: "Asset verification requested",
+                        date: moment().toISOString(),
+                        details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>"
+                        + expertName + "</strong>.",
+                        url: "asset/" + s.asset.id,
+                        icon: "check",
+                        seen: false,
+                    };
+
+                t.$rootScope.$emit("addNotification", not);
+
                 s.location.path("/");
-            }
-        });
+            });
+        }
     }
 }
 
@@ -131,7 +173,6 @@ function OwnershipVerificationController($scope, $location, $http, $routeParams,
         $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
     });
 }
-
 
 interface ITransferRequestScope extends ng.IScope {
     vm: TransferRequestController;
@@ -255,41 +296,61 @@ class SingleAssetController {
     }
 }
 
-function RegisterAssetController($scope, $location: ng.ILocationService, $http, $routeParams, assetsService: AssetsService) {
+interface IRegisterAssetControllerScope extends ng.IScope {
+    save();
+    asset: Asset;
+    assetform: any;
+}
+
+function RegisterAssetController($scope: IRegisterAssetControllerScope,
+    $location: ng.ILocationService,
+    $http, $routeParams,
+    $q: ng.IQService,
+    assetsService: AssetsService) {
     $scope.save = function () {
         // Load the photo data.
         $scope.asset.images = [];
 
+        // The data arrives asynchronously. Use promises to keep track of them.
+        var loadFilePromises = new Array();
+
         _.each($scope.assetform.flow.files, function (file: any) {
+            var loadThisFile = $q.defer();
+            loadFilePromises.push(loadThisFile.promise);
+
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file.file);
 
             fileReader.onload = function (event: any) {
-                $scope.asset.images.push({
-                    location: "dataUrl",
-                    fileName: file.name,
-                    dataUrl: event.target.result
-                });
+                // File is loaded. Store it and resolve the promise.
+                var img = new AssetImage();
+                img.location = "dataUrl";
+                img.fileName = file.name;
+                img.dataUrl = event.target.result;
+                $scope.asset.images.push(img);
+                loadThisFile.resolve(img);
+            };
+
+            fileReader.onabort = function (event: any) {
+                loadThisFile.reject(event);
+            };
+            fileReader.onerror = function (event: any) {
+                loadThisFile.reject(event);
             };
         });
 
-        // The data arrives asynchronously.
-        // Poor man's solution: wait 5 seconds.
-        // TODO: solve properly using async().
-        setTimeout(function () {
+        // When all promises are done, save the asset data.
+        // Risk: a promise never resolved and no data is ever saved.
+        $q.all(loadFilePromises).then(function (data) {
+            // TODO: handle errors.
             assetsService.save($scope.asset, function (resp) {
                 // Redirect to the new asset page.
                 $location.path('/asset/' + resp.id);
                 // Apply scope changes to effect the redirect.
-                $scope.$apply();
+                //$scope.$apply();
             });
-        }, 5000);
+        });
     }
-}
-
-
-function IdentityController($scope, identityService: IdentityService) {
-
 }
 
 interface INavigationScope extends ng.IScope {
@@ -317,12 +378,11 @@ function NavigationController($scope: INavigationScope, $location: ng.ILocationS
             url: "asset/register",
             icon: "plus-circle",
         },
-        // Disabled here, verification is initiated from asset detail page.
-        //{
-        //    name: "Verify assets",
-        //    url: "verify",
-        //    icon: "check",
-        //},
+        {
+            name: "Verify assets",
+            url: "verify/incoming",
+            icon: "check",
+        },
         {
             name: "Transfer assets",
             url: "transfer/create",
@@ -343,56 +403,25 @@ function NavigationController($scope: INavigationScope, $location: ng.ILocationS
     }
 }
 
-interface NotificationScope {
+interface INotificationScope extends ng.IScope {
     notifications: Array<Notification>;
     latestNotifications: Array<Notification>;
 }
 
-function NotificationController($scope: NotificationScope, $location, $http, $routeParams, assetsService: AssetsService) {
-    var exampleDate: string;
-    // Use a recent date to test moment display ("... minutes ago")
-    exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
+class NotificationController {
+    public static $inject = [
+        "$scope",
+        "notificationService"
+    ];
 
-    // Note: using object initializers like this requires all properties to be set.
-    $scope.notifications = [
-        {
-            title: "Asset secured",
-            date: exampleDate,
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
-            url: "asset/3",
-            icon: "lock",
-            seen: true,
-        },
-        {
-            title: "Asset transferred to you",
-            date: '2015-01-16 03:43',
-            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            url: "asset/4",
-            icon: "mail-forward",
-            seen: false,
-        },
+    constructor(
+        private $scope: INotificationScope,
+        private notificationService: NotificationService) {
 
-        {
-            title: "New asset registered",
-            date: '2015-01-13 12:43',
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
-            url: "asset/3",
-            icon: "plus-circle",
-            seen: true,
-        },
-        {
-            title: "Entered on AssetChain",
-            date: '2015-01-13 19:01',
-            details: "You became an AssetChain user. Be welcome!",
-            url: '',
-            icon: "home",
-            seen: false,
-        }];
-
-    // Latest notifications: get first N items.
-    $scope.latestNotifications = $scope.notifications.slice(0, 3);
+        $scope.notifications = notificationService.notifications;
+        $scope.latestNotifications = notificationService.latestNotifications;
+    }
 }
-
 
 interface IEthereumAccountScope extends ng.IScope {
     vm: EthereumAccountController;
@@ -508,6 +537,12 @@ class UserAccountController {
         return true;
     }
 
+    //isActive(ledgerId: string): boolean {
+    //    if (ledgerId == this.ethereumService._ledgerName) {
+    //        return this.ethereumService.isActive();
+    //    }
+    //}
+
     saveConfiguration() {
         // Is this even necessary? Or is the configuration object updated by reference?
         this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
@@ -515,6 +550,8 @@ class UserAccountController {
 
         // Save configuration to the store.
         this.configurationService.save();
+
+        this.ethereumService.connect();
     }
 }
 
@@ -537,6 +574,7 @@ class SecureAssetController {
         "$location",
         "$route",
         "$routeParams",
+        "$rootScope",
         "configurationService",
         "identityService",
         "assetsService",
@@ -547,6 +585,7 @@ class SecureAssetController {
         private $location: ng.ILocationService,
         private $route: ng.route.IRouteProvider,
         private $routeParams: IAssetRouteParameters,
+        private $rootScope: ng.IRootScopeService,
         private configurationService: ConfigurationService,
         private identityService: IdentityService,
         private assetsService: AssetsService,
@@ -595,7 +634,6 @@ class SecureAssetController {
 
             var savePeg = function (pegResp) {
                 // TODO: handle errors from Ethereum. No ether, etc.
-                // TODO: add notification that registering was completed.
                 if (asset.securedOn == null)
                     asset.securedOn = new AssetSecurity();
 
@@ -607,7 +645,21 @@ class SecureAssetController {
                 t.assetsService.save(asset, function (assetResp) {
                     // TODO: handle any errors
 
-                    // Redirect to the new asset page.
+                    // Add notification that registering the security peg was completed.
+                    var not: Notification =
+                        {
+                            id: guid(true),
+                            title: "Asset secured",
+                            date: moment().toISOString(),
+                            details: "Your asset <strong>" + asset.name + "</strong> has been secured with <strong>" + asset.securedOn.name + " security</strong>.",
+                            url: "asset/" + asset.id,
+                            icon: "lock",
+                            seen: false,
+                        };
+
+                    t.$rootScope.$emit("addNotification", not);
+
+                    // Redirect to the asset page.
                     t.$location.path('/asset/' + assetResp.id);
                     t.$location.replace();
                 });
@@ -636,9 +688,86 @@ class SecureAssetController {
             // No connection
             // TODO: show error message.
         }
+    }
+
+}
+
+interface IVerificationListScope extends ng.IScope {
+    vm: VerificationListController;
+    verificationRequests: Array<VerificationRequest>;
+}
 
 
+class VerificationListController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "assetsService"];
 
+    constructor(
+        private $scope: IVerificationListScope,
+        private $location: ng.ILocationService,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load incoming verification request data.
+        $scope.verificationRequests = assetsService.getIncomingVerificationRequests();
+    }
+}
+
+interface IVerificationRequestScope extends ng.IScope {
+    vm: VerificationRequestController;
+    verificationRequest: VerificationRequest;
+    asset: Asset;
+}
+
+interface IVerificationRequestRouteParameters extends ng.route.IRouteParamsService {
+    assetID: string;
+    verificationType: number;
+}
+
+class VerificationRequestController {
+    public static $inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService"];
+
+    constructor(
+        private $scope: IVerificationRequestScope,
+        private $location: ng.ILocationService,
+        private $routeParams: IVerificationRequestRouteParameters,
+        private assetsService: AssetsService) {
+        $scope.vm = this;
+
+        // Load the verification and asset info.
+        if ($routeParams.assetID != undefined) {
+            $scope.verificationRequest = assetsService.getIncomingVerificationRequest($routeParams.assetID, $routeParams.verificationType);
+
+            // TODO: handle case that VR can't be found, is non-existing etc.                
+        }
+    }
+
+    hasLedgers(): boolean {
+        return this.assetsService.hasLedgers();
+    }
+
+    confirm() {
+        this.assetsService.confirmVerificationRequest(this.$scope.verificationRequest);
+            
+        // TODO: show notification
+
+        // Go back to the verifications list
+        this.$location.path("/verify/incoming");
+    }
+
+    ignore() {
+        this.assetsService.ignoreVerificationRequest(this.$scope.verificationRequest);
+            
+        // TODO: show notification
+
+        // Go back to the verifications list
+        this.$location.path("/verify/incoming");
     }
 
 }

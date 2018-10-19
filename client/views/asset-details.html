@@ -17,7 +17,7 @@
                     <div ng-repeat="image in asset.images" style="display: inline-block">
                         <img ng-show="image.location=='local'" ng-src="{{(image.location=='local') && 'img/assets/' + image.fileName || ''}}"
                              class="img-responsive img-rounded" style="margin-bottom: 1em; margin-right: 1em;">
-                        <img ng-show="image.location=='dataUrl'" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
+                        <img ng-show="image.location!='local' && image.dataUrl" data-ng-src="{{image.dataUrl}}" class="img-responsive img-rounded"
                              style="margin-bottom: 1em; margin-right: 1em;">
                     </div>
                 </div>
@@ -35,7 +35,7 @@
                                             <!-- TODO: display ledger-specific properties here. The controller should prepare them. -->
                                             <pre ng-show="peg.details">{{peg.details | json}}</pre>
                                             <a ng-hide="peg.transactionUrl == null" class="btn btn-primary" href="{{peg.transactionUrl}}"
-                                               target="_blank"><i class="fa fa-search"></i>View transaction</a>
+                                               target="_blank"><i class="fa fa-search"></i> View transaction</a>
                                             <div class="alert alert-danger" style="margin-top: 1em;" ng-hide="peg.isOwned">
                                                 <strong>Warning!</strong> This security peg is not linked to your current address. This could mean that ownership has been transferred to another user.
                                             </div>
@@ -51,16 +51,17 @@
                                 </div>
                                 <div class="panel-body">
                                     <div class="row">
-                                        <div ng-repeat="verification in asset.verifications track by verification.name" class="col-lg-4" style="padding-bottom: 1em;">
-                                            <p>{{verification.name}} </p>
+                                        <div ng-repeat="verification in asset.verifications track by verification.id" class="col-lg-4" style="padding-bottom: 1em;">
+                                            <p>{{verification.expert.name}} </p>
                                             <p class="small" ng-show="verification.date">{{verification.date | amDateFormat: 'dddd, MMMM Do YYYY, h:mm:ss a'}}</p>
-                                            <p ng-show="verification.address">{{verification.address}}</p>
+                                            <p class="small" ng-show="verification.verifierAddress">Verifier address: {{verification.verifierAddress}}</p>
                                             <p ng-show="verification.comments">Your comments: {{verification.comments}}</p>
 
                                             <a ng-show="verification.url" class="btn btn-primary" href="{{verification.url}}" target="_blank">
                                                 <i class="fa fa-search"></i>View verification
                                             </a>
                                             <p ng-show="verification.isPending"><strong>This verification request is still pending.</strong></p>
+                                            <p ng-show="!verification.isPending"><i class="fa fa-check"></i> <strong>This verification request has been confirmed.</strong></p>
                                         </div>
                                     </div>
                                 </div>
@@ -86,7 +87,7 @@
                         </div>
                         <div class="col-lg-12">
                             <div class="btn-group">
-                                <a class="btn btn-primary" href="#/asset/{{asset.id}}"><i class="fa fa-clock-o"></i> Show history</a>
+                                <!--<a class="btn btn-primary" href="#/asset/{{asset.id}}"><i class="fa fa-clock-o"></i> Show history</a>-->
                                 <a class="btn btn-primary" href="#/secure/{{asset.id}}"><i class="fa fa-lock fa-fw"></i> Secure</a>
                                 <a class="btn btn-primary" href="#/verify/ownership/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Ownership verification</a>
                                 <a class="btn btn-primary" href="#/verify/expert/{{asset.id}}"><i class="fa fa-check fa-fw"></i> Expert verification</a>

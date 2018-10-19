@@ -38,7 +38,7 @@ function guid(skipDashes: boolean) {
 
 
 interface AssetChainRootScope extends ng.IRootScopeService {
-    isLoggedIn: boolean;
+    isLoggedOn: boolean;
 }
 
 module AssetChain {
@@ -65,6 +65,8 @@ module AssetChain {
             .when('/secure/:id', { controller: SecureAssetController, templateUrl: 'views/secure-asset-start.html' })
             .when('/verify/expert/:id/:verificationID', { controller: ExpertVerificationController, templateUrl: 'views/verify-expert-step2.html' })
             .when('/verify/ownership/:id', { controller: OwnershipVerificationController, templateUrl: 'views/verify-ownership.html' })
+            .when('/verify/incoming', { controller: VerificationListController, templateUrl: 'views/incoming-verification-requests.html' })
+            .when('/verify/incoming/process/:assetID/:verificationType', { controller: VerificationRequestController, templateUrl: 'views/verification-request-process.html' })
             .when('/user/notifications', { controller: NotificationController, templateUrl: 'views/notifications.html' })
             .when('/user/settings/accounts', { controller: UserAccountController, templateUrl: 'views/account-list.html' })
             .when('/user/profile', { controller: UserAccountController, templateUrl: 'views/user-profile.html' })
@@ -75,10 +77,11 @@ module AssetChain {
 
     // Note: the string name provided to angular has to match the parameter names as used in the controllers,
     // case-sensitive. E.g. we can't use 'AssetsService' here and use 'assetsService' in the controllers.
+    assetChainApp.service('configurationService', ConfigurationService);
+    assetChainApp.service('notificationService', NotificationService);
     assetChainApp.service('identityService', IdentityService);
     assetChainApp.service('assetsService', AssetsService);
     assetChainApp.service('expertsService', ExpertsService);
-    assetChainApp.service('configurationService', ConfigurationService);
     assetChainApp.service('ethereumService', EthereumService);
 }
 

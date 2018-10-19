@@ -18,8 +18,43 @@ class Asset {
     isPendingClaim: boolean = true;
     verifications: Verification[];
     securedOn: AssetSecurity;
+    images: AssetImage[];
 }
 
+/**
+ * Image of an asset. Stored in any backend depending on 'location'.
+ */
+class AssetImage {
+    /**
+     * Location where the (encrypted) image data resides. Possible values:
+     * - 'dataUrl': the primary storage is the dataUrl property, i.e. the image
+     *  hasn't been saved to any backend.
+     * - 'ipfs': IPFS. The 'hash' contains the IPFS hash.
+     */
+    location: string;
+    fileName: string;
+    dataUrl: string;
+    hash: string;
+
+    /**
+     * Returns whether the image is loaded locally.
+     */
+    isLoaded(): boolean{
+        if (this.dataUrl === undefined || this.dataUrl === null)
+            return false;
+        if (this.dataUrl.length < 5)
+            return false;
+
+        if (this.dataUrl.substr(0, 5) !== "data:")
+            return false;
+
+        return true;
+    }
+}
+
+/**
+ * The security info of the asset including the level and any security pegs.
+ */
 class AssetSecurity {
     name: string;
     // The backend ledgers on which this asset has been secured.
@@ -60,14 +95,65 @@ class Expert {
  * Verification of an asset by an expert.
  */
 class Verification {
+    /**
+     * Unique ID on the client side.
+     */
     id: string;
-    name: string;
-    address: string;
+
+    /**
+     * Internal boolean to indicate whether the verification should be processed for saving in the backend.
+     */
+    shouldBeSaved: boolean;
+
+    /**
+     * Index of the verification on the contract backend. Currently never set. It's not particularly useful 
+     * in the client anyway, so it might be removed.
+     */
+    index: number;
+
+    /**
+     * Type of verification. 1 = ownership, 2 = quality.
+     * TODO: use enum.
+     */
+    verificationType: number;
+
+    /**
+     * Address of the expert that is requested to verify the asset. Currently an Ethereum address.
+     */
+    verifierAddress: string;
+
+    /**
+     * Date that the verification has taken place. Should be taken from the block chain later,
+     * by looking at the block in which the verification was confirmed.
+     */
     date: string;
-    comments: string;
+
+    /**
+     * Shows whether this verification yet has to be confirmed.
+     */
     isPending: boolean;
+
+    // The below properties are currently not saved in the contract backend, only locally.
+    comments: string;
     defects: string;
+
+
+    /**
+     * The expert carrying out this verification.
+     */
+    // Currently this information is not stored in the backend.
+    expert: Expert;
 }
+
+/**
+ * Incoming verification request.
+ */
+class VerificationRequest {
+    asset: Asset;
+    ownerAddress: string;
+    verification: Verification;
+}
+
 
 /**
  * Request for transfer of ownership of an asset.
@@ -86,8 +172,18 @@ class TransferRequest {
 
 /** BEGIN Application classes **/
 
+/**
+ * Configuration for the backend Ethereum node.
+ */
 class EthereumConfiguration {
+    /**
+     * URL where the JSON RPC interface can be reached.
+     */
     jsonRpcUrl: string;
+
+    /**
+     * Address to use for outgoing transactions.
+     */
     currentAddress: string;
 }
 
@@ -96,27 +192,62 @@ class CoinPrismConfiguration {
     password: string;
 }
 
+/**
+ * Configuration for the Decerver backend.
+ */
+class DecerverConfiguration {
+    /**
+     * Base URL where the decerver is reached, for example "http://localhost:3000"
+     */
+    baseUrl: string;
+
+    /**
+     * Returns the complete URL of the API.
+     */
+    // When the configuration is deserialized from storage, this method is not included. As a workaround,
+    // it's recreated when the configuration is loaded. 
+    // TODO: introduce a better way to do this.
+    public apiUrl(): string {
+        return this.baseUrl + "/apis/assetchain";
+    }
+}
+
+/**
+ * Application configuration.
+ */
 class Configuration {
     ethereum: EthereumConfiguration;
     coinPrism: CoinPrismConfiguration;
+    decerver: DecerverConfiguration;
 
     constructor() {
         this.ethereum = new EthereumConfiguration();
         this.coinPrism = new CoinPrismConfiguration();
+        this.decerver = new DecerverConfiguration();
     }
 }
 
+/**
+ * Credentials that identify an AssetChain user account.
+ */
 class Credentials {
     password: string;
 }
 
+/**
+ * A link in the main menu.
+ */
 class MenuItem {
     name: string;
     url: string;
     icon: string;
 }
 
+/**
+ * A notification to be shown to the user in the notifications pane; possibly in e-mail or other channels.
+ */
 class Notification {
+    id: string;
     title: string;
     date: string;
     details: string;

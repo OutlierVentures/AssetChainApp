@@ -1,6 +1,6 @@
 *State of this readme:* **_DRAFT_**
 
-# AssetChain client app
+# AssetChain Distributed Application (DApp)
 
 This is the frontend for [AssetChain](http://assetcha.in).
 

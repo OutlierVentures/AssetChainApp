@@ -27,10 +27,11 @@ var LoginController = (function () {
 function DashboardController($scope, $location, $http, $routeParams, assetsService) {
 }
 var ExpertVerificationController = (function () {
-    function ExpertVerificationController($scope, $location, $routeParams, assetsService, expertsService) {
+    function ExpertVerificationController($scope, $location, $routeParams, $rootScope, assetsService, expertsService) {
         this.$scope = $scope;
         this.$location = $location;
         this.$routeParams = $routeParams;
+        this.$rootScope = $rootScope;
         this.assetsService = assetsService;
         this.expertsService = expertsService;
         $scope.assetID = $routeParams.id;
@@ -43,30 +44,52 @@ var ExpertVerificationController = (function () {
                 var verificationsWithId = _($scope.asset.verifications).select(function (v) { return v.id == $scope.verificationID; });
                 $scope.verification = verificationsWithId[0];
             }
+            else {
+                $scope.verification = new Verification();
+                $scope.verification.verificationType = 2;
+            }
             $scope.expertsByLocation = expertsService.getExperts("London", $scope.asset.category);
         });
     }
     ExpertVerificationController.prototype.save = function () {
         var s = this.$scope;
-        this.assetsService.save(this.$scope.asset, function (resp) {
-            if (s.location.path() == "/verify/expert/" + s.assetID) {
-                s.verification.id = guid(true);
-                s.verification.date = moment().toISOString();
-                s.verification.isPending = true;
-                if (s.asset.verifications == null)
-                    s.asset.verifications = [];
-                s.asset.verifications.push(s.verification);
-                s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
-            }
-            else {
+        var t = this;
+        if (s.location.path() == "/verify/expert/" + s.assetID) {
+            s.verification.id = guid(true);
+            s.verification.date = moment().toISOString();
+            s.verification.isPending = true;
+            s.verification.expert = t.expertsService.getExpertByID(s.expertID);
+            if (s.asset.verifications == null)
+                s.asset.verifications = [];
+            s.asset.verifications.push(s.verification);
+            s.location.path("/verify/expert/" + s.assetID + "/" + s.verification.id);
+        }
+        else {
+            s.verification.shouldBeSaved = true;
+            t.assetsService.save(t.$scope.asset, function (resp) {
+                var expertName = "";
+                if (s.verification)
+                    if (s.verification.expert)
+                        expertName = s.verification.expert.name;
+                var not = {
+                    id: guid(true),
+                    title: "Asset verification requested",
+                    date: moment().toISOString(),
+                    details: "Verification for your asset <strong>" + s.asset.name + "</strong> has been requested at <strong>" + expertName + "</strong>.",
+                    url: "asset/" + s.asset.id,
+                    icon: "check",
+                    seen: false
+                };
+                t.$rootScope.$emit("addNotification", not);
                 s.location.path("/");
-            }
-        });
+            });
+        }
     };
     ExpertVerificationController.$inject = [
         "$scope",
         "$location",
         "$routeParams",
+        "$rootScope",
         "assetsService",
         "expertsService"
     ];
@@ -154,46 +177,58 @@ var SingleAssetController = (function () {
     ];
     return SingleAssetController;
 })();
-function RegisterAssetController($scope, $location, $http, $routeParams, assetsService) {
+function RegisterAssetController($scope, $location, $http, $routeParams, $q, assetsService) {
     $scope.save = function () {
         $scope.asset.images = [];
+        var loadFilePromises = new Array();
         _.each($scope.assetform.flow.files, function (file) {
+            var loadThisFile = $q.defer();
+            loadFilePromises.push(loadThisFile.promise);
             var fileReader = new FileReader();
             fileReader.readAsDataURL(file.file);
             fileReader.onload = function (event) {
-                $scope.asset.images.push({
-                    location: "dataUrl",
-                    fileName: file.name,
-                    dataUrl: event.target.result
-                });
+                var img = new AssetImage();
+                img.location = "dataUrl";
+                img.fileName = file.name;
+                img.dataUrl = event.target.result;
+                $scope.asset.images.push(img);
+                loadThisFile.resolve(img);
+            };
+            fileReader.onabort = function (event) {
+                loadThisFile.reject(event);
+            };
+            fileReader.onerror = function (event) {
+                loadThisFile.reject(event);
             };
         });
-        setTimeout(function () {
+        $q.all(loadFilePromises).then(function (data) {
             assetsService.save($scope.asset, function (resp) {
                 $location.path('/asset/' + resp.id);
-                $scope.$apply();
             });
-        }, 5000);
+        });
     };
-}
-function IdentityController($scope, identityService) {
 }
 function NavigationController($scope, $location, $http, $routeParams, assetsService, identityService, $window) {
     $scope.menuItems = [
         {
             name: "My assets",
             url: "asset/list",
-            icon: "list",
+            icon: "list"
         },
         {
             name: "Register new asset",
             url: "asset/register",
-            icon: "plus-circle",
+            icon: "plus-circle"
+        },
+        {
+            name: "Verify assets",
+            url: "verify/incoming",
+            icon: "check"
         },
         {
             name: "Transfer assets",
             url: "transfer/create",
-            icon: "mail-forward",
+            icon: "mail-forward"
         },
     ];
     $scope.isAuthenticated = function () {
@@ -204,45 +239,19 @@ function NavigationController($scope, $location, $http, $routeParams, assetsServ
         $window.location.reload();
     };
 }
-function NotificationController($scope, $location, $http, $routeParams, assetsService) {
-    var exampleDate;
-    exampleDate = moment().subtract(Math.random() * 600, 'seconds').toISOString();
-    $scope.notifications = [
-        {
-            title: "Asset secured",
-            date: exampleDate,
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been secured with <strong>Premium security</strong>.",
-            url: "asset/3",
-            icon: "lock",
-            seen: true,
-        },
-        {
-            title: "Asset transferred to you",
-            date: '2015-01-16 03:43',
-            details: "The asset <strong>Diamond 1ct</strong> has been transferred to you.",
-            url: "asset/4",
-            icon: "mail-forward",
-            seen: false,
-        },
-        {
-            title: "New asset registered",
-            date: '2015-01-13 12:43',
-            details: "Your asset <strong>Rolex Platinum Pearlmaster</strong> has been registered.",
-            url: "asset/3",
-            icon: "plus-circle",
-            seen: true,
-        },
-        {
-            title: "Entered on AssetChain",
-            date: '2015-01-13 19:01',
-            details: "You became an AssetChain user. Be welcome!",
-            url: '',
-            icon: "home",
-            seen: false,
-        }
+var NotificationController = (function () {
+    function NotificationController($scope, notificationService) {
+        this.$scope = $scope;
+        this.notificationService = notificationService;
+        $scope.notifications = notificationService.notifications;
+        $scope.latestNotifications = notificationService.latestNotifications;
+    }
+    NotificationController.$inject = [
+        "$scope",
+        "notificationService"
     ];
-    $scope.latestNotifications = $scope.notifications.slice(0, 3);
-}
+    return NotificationController;
+})();
 var EthereumAccountController = (function () {
     function EthereumAccountController($scope, $location, configurationService, ethereumService) {
         this.$scope = $scope;
@@ -304,6 +313,7 @@ var UserAccountController = (function () {
         this.configurationService.configuration.ethereum.jsonRpcUrl = this.$scope.ethereumJsonRpcUrl;
         this.configurationService.configuration.coinPrism = this.$scope.coinPrismConfiguration;
         this.configurationService.save();
+        this.ethereumService.connect();
     };
     UserAccountController.$inject = [
         "$scope",
@@ -315,11 +325,12 @@ var UserAccountController = (function () {
     return UserAccountController;
 })();
 var SecureAssetController = (function () {
-    function SecureAssetController($scope, $location, $route, $routeParams, configurationService, identityService, assetsService, ethereumService) {
+    function SecureAssetController($scope, $location, $route, $routeParams, $rootScope, configurationService, identityService, assetsService, ethereumService) {
         this.$scope = $scope;
         this.$location = $location;
         this.$route = $route;
         this.$routeParams = $routeParams;
+        this.$rootScope = $rootScope;
         this.configurationService = configurationService;
         this.identityService = identityService;
         this.assetsService = assetsService;
@@ -355,6 +366,16 @@ var SecureAssetController = (function () {
                     asset.securedOn.securityPegs = [];
                 asset.securedOn.securityPegs.push(pegResp);
                 t.assetsService.save(asset, function (assetResp) {
+                    var not = {
+                        id: guid(true),
+                        title: "Asset secured",
+                        date: moment().toISOString(),
+                        details: "Your asset <strong>" + asset.name + "</strong> has been secured with <strong>" + asset.securedOn.name + " security</strong>.",
+                        url: "asset/" + asset.id,
+                        icon: "lock",
+                        seen: false
+                    };
+                    t.$rootScope.$emit("addNotification", not);
                     t.$location.path('/asset/' + assetResp.id);
                     t.$location.replace();
                 });
@@ -377,11 +398,57 @@ var SecureAssetController = (function () {
         "$location",
         "$route",
         "$routeParams",
+        "$rootScope",
         "configurationService",
         "identityService",
         "assetsService",
         "ethereumService"
     ];
     return SecureAssetController;
+})();
+var VerificationListController = (function () {
+    function VerificationListController($scope, $location, assetsService) {
+        this.$scope = $scope;
+        this.$location = $location;
+        this.assetsService = assetsService;
+        $scope.vm = this;
+        $scope.verificationRequests = assetsService.getIncomingVerificationRequests();
+    }
+    VerificationListController.$inject = [
+        "$scope",
+        "$location",
+        "assetsService"
+    ];
+    return VerificationListController;
+})();
+var VerificationRequestController = (function () {
+    function VerificationRequestController($scope, $location, $routeParams, assetsService) {
+        this.$scope = $scope;
+        this.$location = $location;
+        this.$routeParams = $routeParams;
+        this.assetsService = assetsService;
+        $scope.vm = this;
+        if ($routeParams.assetID != undefined) {
+            $scope.verificationRequest = assetsService.getIncomingVerificationRequest($routeParams.assetID, $routeParams.verificationType);
+        }
+    }
+    VerificationRequestController.prototype.hasLedgers = function () {
+        return this.assetsService.hasLedgers();
+    };
+    VerificationRequestController.prototype.confirm = function () {
+        this.assetsService.confirmVerificationRequest(this.$scope.verificationRequest);
+        this.$location.path("/verify/incoming");
+    };
+    VerificationRequestController.prototype.ignore = function () {
+        this.assetsService.ignoreVerificationRequest(this.$scope.verificationRequest);
+        this.$location.path("/verify/incoming");
+    };
+    VerificationRequestController.$inject = [
+        "$scope",
+        "$location",
+        "$routeParams",
+        "assetsService"
+    ];
+    return VerificationRequestController;
 })();
 //# sourceMappingURL=controllers.js.map

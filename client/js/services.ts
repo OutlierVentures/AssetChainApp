@@ -25,21 +25,41 @@ String.prototype.capitalizeFirstLetter = function () {
 class AssetsService {
     assets: Asset[];
 
+    /**
+     * The primary storage for asset data.
+     */
     backend: IStorageService;
 
+    /**
+     * Backend for storing binary data like images and documents. The primary storage
+     * contains hashes referring to these files.
+     */
+    binaryBackend: IStorageService;
+
     public static $inject = [
+        '$http',
+        '$q',
+        '$rootScope',
+        '$window',
         'identityService',
-        'ethereumService'
+        'ethereumService',
+        'configurationService'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
+        private $http: ng.IHttpService,
+        private $q: ng.IQService,
+        private $rootScope: ng.IRootScopeService,
+        private $window: ng.IWindowService,
         private identityService: IdentityService,
-        private ethereumService: EthereumService) {
+        private ethereumService: EthereumService,
+        private configurationService: ConfigurationService) {
 
         // TODO: make storageService into a configurable, multi-backend data layer
         // For example, assets can be stored anywhere, but their verification cannot.
         this.backend = new EncryptedLocalStorageService(identityService);
+        this.binaryBackend = new EncryptedIpfsStorageService(identityService, $http, $q, configurationService);
 
         this.ensureAssets();
     }
@@ -126,6 +146,18 @@ class AssetsService {
 
             newAsset.securedOn = sec;
 
+            // Emit notification
+            var n: Notification = {
+                id: guid(true),
+                title: "Asset restored from security peg",
+                date: moment().toISOString(),
+                details: "The asset <strong>" + newAsset.name + "</strong> for which you control the security peg on the <strong>" + p.name + "</strong> ledger has been restored.",
+                url: "asset/" + newAsset.id,
+                icon: "lock",
+                seen: false,
+            };
+            t.$rootScope.$emit('addNotification', n);
+
             // TODO: mark it as incomplete, "needs more info". The asset details package should be loaded.
 
             t.assets.push(newAsset);
@@ -143,14 +175,143 @@ class AssetsService {
     }
 
     private saveDB(): void {
-        // TODO: encrypt by identityservice
-        // TODO: use a unique key for the current account
-        // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
-        this.backend.setItem("assets", angular.copy(this.assets));
+        var t = this;
+
+        // Get all binaries from the asset array and store them in the binary backend if necessary.
+        var imageSavePromises = new Array();
+
+        _(this.assets).each(function (asset) {
+            _(asset.images).each(function (image) {
+                if (image.location == "dataUrl") {
+                    var saveImage = t.$q.defer();
+                    imageSavePromises.push(saveImage.promise);
+
+                    t.binaryBackend.setItem(image.fileName, image.dataUrl).then(function (data) {
+                        // The IPFS backend returns the IPFS hash.
+                        var hash = data;
+
+                        image.hash = hash;
+                        image.location = "ipfs";
+                        saveImage.resolve(image);
+                    }, function (reason) {
+                            saveImage.reject();
+                            // Error calling IPFS backend.
+                        });
+                }
+            });
+        });
+
+        // Store all verifications that haven't been stored before.
+        var verificationSavePromises = new Array();
+
+        _(this.assets).each(function (asset) {
+            _(asset.verifications).each(function (verification) {
+                // Valid verifications that should be saved to the backend.
+                if (verification.shouldBeSaved
+                    && verification.verifierAddress
+                    && verification.verifierAddress) {
+                    var saveVerification = t.$q.defer();
+
+                    verificationSavePromises.push(saveVerification.promise);
+
+                    try {
+                        t.ethereumService.requestVerification(asset, verification);
+                    
+                        // Verification save on blockchain backend was requested. We don't know when it
+                        // will be complete.
+
+                        verification.shouldBeSaved = false;
+                        //verification.index = vres;
+
+                        saveVerification.resolve(verification);
+                    }
+                    catch (e) {
+                        saveVerification.reject(e);
+                        // TODO: handle error.
+                    };
+                }
+            });
+        });
+
+        // Save the asset data to the backend after all secondary items have been saved.
+        //this.$q.all([imagesSaved.promise, verificationsSaved.promise]).then(
+        this.$q.all(imageSavePromises.concat(verificationSavePromises)).then(
+            function (data) {
+                // Use angular.copy to strip any internal angular variables like $$hashKey from the data.
+                var arrayForSave = angular.copy(t.assets);
+
+                // In the array to save, remove image data to keep it lean.
+                _(arrayForSave).each(function (asset) {
+                    _(asset.images).each(function (image) {
+                        if (image.location == "ipfs")
+                            image.dataUrl = null;
+                    });
+                });
+
+                // Save it to the backend.
+                t.backend.setItem("assets", arrayForSave);
+            });
+
     }
 
     private loadDB(): void {
         this.assets = this.backend.getItem("assets");
+
+        var t = this;
+
+        // Load/update data of assets
+        _(this.assets).each(function (asset) {
+            // Load image data for all images stored on backends
+            // TODO: do this per image, only on details, get thumbnails first etc
+        
+            _(asset.images).each(function (image) {
+                // The images aren't deserialized as actual AssetImage
+                // objects, but as anonymous objects missing the functions. Therefore we
+                // copy the method from a prototype.
+                // TODO: find a better way to do this (this can't be how it's meant to be done).
+
+                var protoImage = new AssetImage();
+                image.isLoaded = protoImage.isLoaded;
+
+                // Only load image if it hasn't been loaded yet.
+                // DEV: always try to get it
+                if (!image.isLoaded()) {
+                    if (image.location === "ipfs" && image.hash) {
+                        // TODO: check whether the format of the data is right.
+                        // DEV: cat.jpg;
+
+                        //image.hash = "Qmd286K6pohQcTKYqnS1YhWrCiS4gz7Xi34sdwMe9USZ7u";
+
+                        // The IPFS backend returns a promise.
+                        t.binaryBackend.getItem(image.hash).then(function (data) {
+                            // The IPFS service returns the decrypted image in dataURL format.                            
+                            image.dataUrl = data;
+                        }, function (reason) {
+                                // Error calling IPFS backend.
+                            });
+                    }
+                }
+            });
+
+            
+            if (t.ethereumService.connect()) {
+                // Update unprocessed verifications (check whether they're processed)
+                _(asset.verifications).each(function (v) {
+                    // Only update unprocessed verifications.
+                    if (!v.isPending)
+                        return;
+
+                    var verificationFromLedger = t.ethereumService.getOwnVerificationRequest(v.verifierAddress, asset.id, v.verificationType, null);
+
+                    if (verificationFromLedger != null
+                        && verificationFromLedger.verification != null)
+                        v.isPending = verificationFromLedger.verification.isPending;
+                });
+
+                // TODO: check for dangling verifications, i.e. verifications that have been created from another 
+                // (instance of this) app.
+            }
+        });
     }
 
     reload(): void {
@@ -188,6 +349,9 @@ class AssetsService {
     save(asset: Asset, cb: SingleAssetCallback) {
         this.ensureAssets();
 
+        // The callback is called directly after persisting the asset to the in-memory array. Saving 
+        // happens afterwards.
+        // TODO: change that to a promise, called after saving is complete.
         if (asset.id === undefined)
             this.create(asset, cb);
         else
@@ -199,7 +363,19 @@ class AssetsService {
     create(asset: Asset, cb: SingleAssetCallback) {
         asset.id = guid(true);
 
-        this.assets.push(asset)
+        this.assets.push(asset);
+
+        var n: Notification = {
+            id: guid(true),
+            title: "New asset registered",
+            date: moment().toISOString(),
+            details: "Your asset <strong>" + asset.name + "</strong> has been registered.",
+            url: "asset/" + asset.id,
+            icon: "plus-circle",
+            seen: false,
+        };
+        this.$rootScope.$emit('addNotification', n);
+
         cb(asset);
     }
 
@@ -251,6 +427,42 @@ class AssetsService {
     getTransferRequests(asset: Asset): Array<TransferRequest> {
         return this.ethereumService.getTransferRequests(asset);
     }
+
+    getIncomingVerificationRequests(): Array<VerificationRequest> {
+        if (this.ethereumService.connect()) {
+            return this.ethereumService.getIncomingVerificationRequests();
+        }
+    }
+
+    /**
+     * Get a single incoming verification request.
+     */
+    getIncomingVerificationRequest(assetID: string, verificationType: number): VerificationRequest {
+        if (this.ethereumService.connect()) {
+            return this.ethereumService.getIncomingVerificationRequest(assetID, verificationType);
+        }
+    }
+
+    /**
+     * Confirm a received verification request.
+     */
+    confirmVerificationRequest(request: VerificationRequest) {
+        // TODO: wait for result; error handling
+        this.ethereumService.processVerification(request, true);
+
+        // TODO: update local asset collection to show this asset is verificationred. Archived? Grayed out?
+    }
+
+    /**
+     * Ignore/deny a received verification request.
+     */
+    ignoreVerificationRequest(request: VerificationRequest) {
+        // TODO: wait for result; error handling
+        this.ethereumService.processVerification(request, false);
+
+        // TODO: update local asset collection to show this asset is verificationred. Archived? Grayed out?
+    }
+
 }
 
 interface IIdentityProvider {
@@ -336,6 +548,7 @@ interface IStorageService {
 
 /**
  * Storage service using the local browser storage with data encrypted using identity.PrimaryProvider.
+ * Note: this is not an Angular service. It's a class thats instantiated by other objects.
  */
 class EncryptedLocalStorageService {
     private _identityService: IdentityService;
@@ -378,6 +591,74 @@ class EncryptedLocalStorageService {
     }
 }
 
+/**
+ * Storage service using IPFS through Decerver.
+ */
+class EncryptedIpfsStorageService {
+
+    constructor(
+        /**
+         * IdentityService used for encryption.
+         */
+        private identityService: IdentityService,
+        private $http: ng.IHttpService,
+        private $q: ng.IQService,
+        private configurationService: ConfigurationService) {
+    }
+
+    setItem(key: string, val: any): ng.IPromise<string> {
+        var stringVar = JSON.stringify(val);
+
+        stringVar = this.identityService.primaryProvider.encrypt(stringVar);
+
+        var ipfsHash: string;
+
+        var defer = this.$q.defer();
+
+        var jsonObj = { name: key, data: stringVar };
+
+        this.$http({
+            method: "POST",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/files',
+            data: JSON.stringify(jsonObj)
+        }).success(function (data) {
+            // The DAPI will return the IPFS hash. Also, the file name and hash are stored in the contract.
+            var ipfsHash: string = data["ipfsHash"];
+            defer.resolve(ipfsHash);
+        }).error(function (error) {
+            defer.reject('$http call failed');
+
+        });
+
+        return defer.promise;
+    }
+
+    getItem(key: string): ng.IPromise<string> {
+        // TODO: get from IPFS through decerver
+        var defer = this.$q.defer();
+        var t = this;
+
+        this.$http({
+            method: "GET",
+            url: this.configurationService.configuration.decerver.apiUrl() + '/ipfs/' + key,
+        }).success(function (data) {
+            var stringVar: string = data["data"];
+            if (stringVar === null)
+                return null;
+            try {
+                stringVar = t.identityService.primaryProvider.decrypt(stringVar);
+                defer.resolve(JSON.parse(stringVar));
+            }
+            catch (error) {
+                defer.reject("Error decrypting result '" + stringVar + "'.");
+            }
+        }).error(function () {
+            defer.reject('$http call failed');
+        });
+
+        return defer.promise;
+    }
+}
 
 /**
  * Service managing the identity of the user on the various backends.
@@ -412,7 +693,9 @@ class IdentityService {
         if (!this.primaryProvider)
             this.primaryProvider = provider;
 
-        this.$rootScope.isLoggedIn = true;
+        this.$rootScope.isLoggedOn = true;
+
+        this.$rootScope.$emit('loggedOn');
 
         return true;
     }
@@ -431,6 +714,37 @@ class IdentityService {
  * Service around experts who execute verifications of assets.
  */
 class ExpertsService {
+    allExperts: ExpertCollection;
+    constructor() {
+        // Initialize dummy data.
+        // TODO: realize a directory of experts with their blockchain addresses and metadata.
+
+        // TODO: add a blockchain address for each of these dummy experts so we can request verifications.
+        this.allExperts = new ExpertCollection();
+        this.allExperts.experts = new Array<Expert>();
+
+        this.allExperts.experts.push({
+            id: "5615641",
+            name: "Royal Exchange Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "1564156",
+            name: "Jonathan Geeves Jewellers"
+        });
+        this.allExperts.experts.push({
+            id: "9486451",
+            name: "Tawny Phillips"
+        });
+        this.allExperts.experts.push({
+            id: "1859159",
+            name: "The Watch Gallery (Rolex Boutique)"
+        });
+        this.allExperts.experts.push({
+            id: "41859189",
+            name: "Watches of Switzerland"
+        });
+    }
+
     /**
      * Returns a set of experts by search criteria.
      */
@@ -488,6 +802,11 @@ class ExpertsService {
 
         }
     }
+
+    getExpertByID(expertID: string): Expert {
+        var es = function (e: Expert) { return e.id == expertID };
+        return _(this.allExperts.experts).find(es);
+    }
 }
 
 /**
@@ -499,15 +818,31 @@ class ConfigurationService {
     private backend: IStorageService;
 
     public static $inject = [
-        'identityService'
+        'identityService',
+        '$location',
+        '$rootScope'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
-        private identityService: IdentityService) {
+        private identityService: IdentityService,
+        private $location: ng.ILocationService,
+        private $rootScope: ng.IRootScopeService) {
 
+        // Configuration is always stored in the local storage of the browser. This is where
+        // the end user stores their private data. 
         this.backend = new EncryptedLocalStorageService(identityService);
 
+        var t = this;
+
+        // Load configuration after logon.
+        this.$rootScope.$on('loggedOn', function (event, data) {
+            t.load();
+        });
+
+        // TODO: The configuration could be stored in a backend service to make it 
+        // transferrable to other devices.
+        
         // TODO: make sure configuration is loaded once identityService is initialized.
     }
 
@@ -515,10 +850,137 @@ class ConfigurationService {
         this.configuration = this.backend.getItem("configuration");
         if (this.configuration == null)
             this.configuration = new Configuration();
+
+        // Earlier saved config can miss new properties.
+        // TODO: ensure this in Configuration 
+        // TODO: there must be a far better way to restore JSON arrays to classes with functions.
+        if (this.configuration.decerver == null)
+            this.configuration.decerver = new DecerverConfiguration();
+
+        if (this.configuration.decerver.baseUrl == undefined) {
+            // Setup Decerver configuration
+            this.configuration.decerver.baseUrl = this.$location.protocol() + "://" + this.$location.host() + ":" + this.$location.port();
+        }
+
+        if (!this.configuration.decerver.apiUrl) {
+            var dummy = new DecerverConfiguration();
+            this.configuration.decerver.apiUrl = dummy.apiUrl;
+        }
     }
 
     save() {
         this.backend.setItem("configuration", this.configuration);
+    }
+}
+
+class NotificationService {
+    public static $inject = [
+        "$rootScope",
+        "identityService",
+    ]
+
+    /**
+     * Backend for storing notifications.
+     */
+    backend: IStorageService;
+
+    /**
+     * All notifications.
+     */
+    // Initialized as empty so controllers can bind to it.
+    notifications = new Array<Notification>();
+
+    /**
+     * Latest notifications
+     */
+    latestNotifications = new Array<Notification>();
+
+    constructor(
+        private $rootScope: ng.IRootScopeService,
+        private identityService: IdentityService) {
+        this.backend = new EncryptedLocalStorageService(identityService);
+
+        var t = this;
+        $rootScope.$on("loggedOn", function () {
+            t.load();
+            t.ensureNotifications();
+            t.updateLatestNotifications();
+        });
+
+        $rootScope.$on('addNotification', function (event: ng.IAngularEvent, data) {
+            var newNot = new Notification();
+            newNot.id = data.id;
+            newNot.date = moment().toISOString();
+            newNot.details = data.details;
+            newNot.icon = data.icon;
+            newNot.seen = false;
+            newNot.title = data.title;
+            newNot.url = data.url;
+
+            t.notifications.push(newNot);
+
+            t.updateLatestNotifications();
+            t.save();
+        });
+
+    }
+
+    load() {
+        this.notifications = this.backend.getItem("notifications");
+        this.updateLatestNotifications();
+    }
+
+    save() {
+        this.backend.setItem("notifications", this.notifications);
+    }
+
+
+    ensureNotifications() {
+        // Even though the array is initialized in the members, it happens that it is undefined. Hence 
+        // create it.
+        if (!this.notifications)
+            this.notifications = new Array<Notification>();
+
+        if (this.notifications.length == 0) {
+            // No stored notifications yet. This must be a new user. Add an initial notification.
+            // TODO: move this to an real "new vault" handling. Currently there is no such
+            // thing.
+            this.notifications.push(
+                {
+                    id: guid(true),
+                    title: "Entered on AssetChain",
+                    date: moment().toISOString(),
+                    details: "You became an AssetChain user. Be welcome!",
+                    url: '',
+                    icon: "home",
+                    seen: false,
+                });
+        }
+
+        // Ensure all current notifications have a non-null ID
+        _(this.notifications).each(function (not: Notification) {
+            if (!not.id)
+                not.id = guid(true);
+        });
+    }
+
+    // Latest notifications: get first N items.
+    updateLatestNotifications() {
+        // We can't recreate the latestNotifications array because it's bound by reference. Hence we clear
+        // and refill it.
+        if (!this.notifications)
+            return;
+
+        var latestToShow = Math.min(3, this.notifications.length);
+
+        // Clear the latest notifications.
+        this.latestNotifications.length = 0;
+
+        // Take max N items and add them.
+        _(this.notifications)
+            .last(latestToShow) // Get the last N items
+            .reverse() // Sort them newest first
+            .forEach((n) => this.latestNotifications.push(n)); // Add them to latestNotifications
     }
 }
 
@@ -529,11 +991,13 @@ class EthereumService {
     public config: EthereumConfiguration;
 
     public static $inject = [
+        '$q',
         'configurationService'
     ];
 
     // dependencies are injected via AngularJS $injector
     constructor(
+        private $q: ng.IQService,
         private configurationService: ConfigurationService) {
 
         // The service is constructed when the app is loaded, e.g. before the configuration is unlocked.
@@ -547,6 +1011,23 @@ class EthereumService {
      * The AssetVault contract from ABI.
      */
     private assetVaultContract: any;
+
+    /**
+     * Normalize an Ethereum(-like) address to start with "0x".
+     */
+    normalizeAddress(address: string): string {
+        if (address == null)
+            return address;
+
+        if (address.length < 10)
+            return address;
+
+        if (address.substring(0, 2) == "0x")
+            return address;
+
+        return "0x" + address;
+    }
+
 
     connect(): boolean {
         try {
@@ -609,10 +1090,10 @@ class EthereumService {
     private loadContract() {
         // The line below is generated by AlethZero when creating the contract. Copy/paste.
         // New syntax PoC9: .contract(...)
-        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
+        var AssetVault = web3.eth.contractFromAbi([{ "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "owners", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "uint256" }], "name": "transferRequests", "outputs": [{ "name": "assetID", "type": "string32" }, { "name": "requester", "type": "address" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "requestVerification", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "address" }], "name": "assetsByOwner", "outputs": [{ "name": "assetCount", "type": "uint256" }], "type": "function" }, { "constant": true, "inputs": [], "name": "ownerCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }], "name": "getAssetIndex", "outputs": [{ "name": "assetIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "getAssetByID", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [], "name": "cleanTransferRequests", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetID", "outputs": [{ "name": "id", "type": "string32" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }], "name": "requestTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }], "name": "createAsset", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "newOwner", "type": "address" }, { "name": "confirm", "type": "bool" }], "name": "processTransfer", "outputs": [{ "name": "dummyForLayout", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetID", "type": "string32" }, { "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }], "name": "getVerificationIndex", "outputs": [{ "name": "verificationIndex", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "verificationIndex", "type": "uint256" }], "name": "getVerification", "outputs": [{ "name": "verifier", "type": "address" }, { "name": "type", "type": "uint256" }, { "name": "isConfirmed", "type": "bool" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "assetID", "type": "string32" }, { "name": "type", "type": "uint256" }, { "name": "confirm", "type": "bool" }], "name": "processVerification", "outputs": [{ "name": "processedCorrectly", "type": "bool" }], "type": "function" }, { "constant": true, "inputs": [{ "name": "", "type": "string32" }], "name": "ownerByAssetID", "outputs": [{ "name": "", "type": "address" }], "type": "function" }, { "constant": true, "inputs": [], "name": "transferRequestCount", "outputs": [{ "name": "", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAsset", "outputs": [{ "name": "id", "type": "string32" }, { "name": "name", "type": "string32" }, { "name": "verificationCount", "type": "uint256" }], "type": "function" }, { "constant": false, "inputs": [{ "name": "ownerAddress", "type": "address" }, { "name": "assetIndex", "type": "uint256" }], "name": "getAssetName", "outputs": [{ "name": "name", "type": "string32" }], "type": "function" }]);
 
         // TODO: make address configurable
-        this.assetVaultContract = AssetVault("0x9254f061b65cbef1b0908f2882babe6f654e5765");
+        this.assetVaultContract = AssetVault("0x388104e955c95bbe3e25b22d1f824b0855ae622a");
     }
 
     _ledgerName = "ethereum";
@@ -658,7 +1139,8 @@ class EthereumService {
         // Send transactions from the currently active address. This has to be done
         // before every transaction, because contract._options are cleared after every call.
         // DISABLED because it gave problems, transactions wouldn't pass anymore.
-        //this.AssetVaultContract._options["from"] = this.Config.CurrentAddress;
+        // 2015-05-26 ENABLED because AlethZero started using a different account as "from". No problems up to now.
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
 
         // Watch until the transaction is processed.
         // TODO: apply web3.eth.filter once it's fully available.
@@ -705,8 +1187,9 @@ class EthereumService {
             };
             // TODO: don't store this data with the asset in the vault; the logo can be added on load.
             peg.logoImageFileName = "ethereum-logo.png";
-            // Currently a dummy URL as there is no working block explorer.
-            peg.transactionUrl = "http://ether.fund/block/" + web3.eth.number;
+            
+            // Real URL to the Etherapps block explorer. However since we use a local testchain, the blocks don't match up.
+            peg.transactionUrl = "http://etherapps.info/block/" + web3.eth.number;
 
             peg.isOwned = true;
 
@@ -723,6 +1206,7 @@ class EthereumService {
         });
 
         // The call to the transaction gives no result and doesn't support callbacks.
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.createAsset(asset.id, asset.name);
 
         // TODO: immediately make a SecurityPeg, but make it pending. Then send an update to show it as processed or failed.
@@ -839,6 +1323,7 @@ class EthereumService {
      * Create a request to transfer an asset of another owner.
      */
     createTransferRequest(assetID: string) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.requestTransfer(assetID);
     }
 
@@ -846,6 +1331,7 @@ class EthereumService {
      * Confirm a received transfer request.
      */
     confirmTransferRequest(request: TransferRequest) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, true);
     }
 
@@ -853,6 +1339,7 @@ class EthereumService {
         * Ignore a received transfer request.
         */
     ignoreTransferRequest(request: TransferRequest) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
         this.assetVaultContract.processTransfer(request.assetID, request.requesterAddress, false);
     }
 
@@ -889,6 +1376,170 @@ class EthereumService {
         }
 
         return transferRequests;
+    }
+
+    /**
+     * Gets all verification requests for which the current address has been requested to verify.
+     */
+    getIncomingVerificationRequests(): Array<VerificationRequest> {
+        return this.getVerificationRequests(this.config.currentAddress, null, null, false);
+    }
+
+    /**
+     * Gets an incoming verification request which matches the giver criteria.
+     */
+    getIncomingVerificationRequest(filterAssetID: string, filterVerificationType: number): VerificationRequest {
+        var vrs = this.getVerificationRequests(this.config.currentAddress, filterAssetID, filterVerificationType, false);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
+    }
+
+    /**
+     * Gets a verification request for an asset of which the current address is the owner.
+     */
+    getOwnVerificationRequest(verifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): VerificationRequest {
+        var vrs = this.getVerificationRequestsForOwner(this.config.currentAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
+        if (vrs.length > 0)
+            return vrs[0];
+        return null;
+    }
+
+    /**
+     * Returns a list of all verification requests where the given address is the 
+     * requested verifier.
+     */
+    getVerificationRequests(verifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): Array<VerificationRequest> {
+        var verifications = new Array<VerificationRequest>();
+
+        // Loop through all owners, all assets, all verifications.
+        // Find the verifications that are unconfirmed and have the target address as the verifier.
+        // Create minimal Asset and Verification objects.
+        var ownerCount = this.assetVaultContract.call().ownerCount().toNumber();
+        for (var oi = 0; oi < ownerCount; oi++) {
+            var ownerAddress = this.assetVaultContract.owners(oi);
+
+            if (ownerAddress == "0x0000000000000000000000000000000000000000") // empty
+                continue;
+            var vfo = this.getVerificationRequestsForOwner(ownerAddress, verifierAddress, filterAssetID, filterVerificationType, filterConfirmed);
+
+            verifications = verifications.concat(vfo);
+        }
+
+        return verifications;
+    }
+
+    /**
+     * Gets all verification requests for the given owner, filtered by the parameters.
+     */
+    getVerificationRequestsForOwner(ownerAddress: string, filterVerifierAddress: string, filterAssetID: string, filterVerificationType: number, filterConfirmed: boolean): Array<VerificationRequest> {
+        var verifications = new Array<VerificationRequest>();
+
+        var assetCount = this.assetVaultContract.call().assetsByOwner(ownerAddress).toNumber();
+        for (var ai = 0; ai < assetCount; ai++) {
+            var assetID = this.assetVaultContract.call().getAssetID(ownerAddress, ai);
+            if (assetID == "")
+                continue;
+
+            if (filterAssetID != undefined && filterAssetID != assetID)
+                continue;
+
+            var assetInfo = this.assetVaultContract.call().getAsset(ownerAddress, ai);
+            var verificationCount = assetInfo[2].toNumber();
+            for (var vi = 0; vi < verificationCount; vi++) {
+                var verificationInfo = this.assetVaultContract.call().getVerification(assetID, vi);
+
+                var verifier = verificationInfo[0];
+                var verificationType = verificationInfo[1].toNumber();
+                var confirmed = verificationInfo[2];
+
+                // TODO: flatten code with continue
+                if ((filterVerifierAddress == undefined || verifier == filterVerifierAddress)
+                    && (filterConfirmed === null || filterConfirmed == confirmed)
+                    && (filterVerificationType == undefined || filterVerificationType == verificationType)) {
+                    
+                    // This is a verification that matches any passed filters.
+                    // Prepare and return it.
+
+                    var vr = new VerificationRequest();
+                    verifications.push(vr);
+                    vr.ownerAddress = ownerAddress;
+
+                    var asset = new Asset();
+                    vr.asset = asset;
+                    asset.id = assetID;
+                    asset.name = this.assetVaultContract.call().getAssetName(ownerAddress, ai);
+
+                    // TODO: realize some way so the verifier can see (a selection of) the images.
+                    // This requires encrypting them with their public key. Is that possible in 
+                    // Eth / Tendermint / Thelonious crypto?
+
+                    var verification = new Verification();
+                    vr.verification = verification;
+                    verification.verificationType = verificationType;
+                    verification.verifierAddress = verifier;
+                    verification.isPending = !confirmed;
+                                    
+                    // TODO: load other properties of the verification request (comments, defects, ...). Currently
+                    // these are not stored in the backend.                            
+                }
+            }
+
+        }
+
+        return verifications;
+    }
+
+    /**
+     * Save a verification request.
+     */
+    //requestVerification(asset: Asset, verification: Verification): ng.IPromise<number> {
+    requestVerification(asset: Asset, verification: Verification) {
+        //var resultPromise = this.$q.defer<number>();
+        var t = this;
+
+        //try {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
+        this.assetVaultContract.requestVerification(
+            asset.id,
+            verification.verifierAddress,
+            verification.verificationType
+            );
+
+        // The currently used version of web3 doesn't support callbacks.
+        // The latest does:
+        // https://github.com/ethereum/wiki/wiki/JavaScript-API#using-callbacks
+        // When using that version, a callback and promise should be used.
+
+        //        function (data) {
+        //            // Get the index of the new verification.
+        //            // TODO: handle exceptions.
+        //            var verificationIndex = t.assetVaultContract.getVerificationIndex(
+        //                t.config.currentAddress,
+        //                asset.id,
+        //                verification.verifierAddress,
+        //                verification.verificationType);
+        //            resultPromise.resolve(verificationIndex);
+        //        }
+        //        );
+        //}
+        //catch (e) {
+        //    resultPromise.reject(e);
+        //}
+        //return resultPromise.promise;
+    }
+
+    /**
+     * Process a verification request.
+     */
+    processVerification(vr: VerificationRequest, confirm: boolean) {
+        this.assetVaultContract._options["from"] = this.config.currentAddress;
+        this.assetVaultContract.processVerification(
+            vr.asset.id,
+            vr.verification.verificationType,
+            confirm
+            );
+
     }
 }
 

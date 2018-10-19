@@ -4,6 +4,20 @@ var Asset = (function () {
     }
     return Asset;
 })();
+var AssetImage = (function () {
+    function AssetImage() {
+    }
+    AssetImage.prototype.isLoaded = function () {
+        if (this.dataUrl === undefined || this.dataUrl === null)
+            return false;
+        if (this.dataUrl.length < 5)
+            return false;
+        if (this.dataUrl.substr(0, 5) !== "data:")
+            return false;
+        return true;
+    };
+    return AssetImage;
+})();
 var AssetSecurity = (function () {
     function AssetSecurity() {
     }
@@ -29,6 +43,11 @@ var Verification = (function () {
     }
     return Verification;
 })();
+var VerificationRequest = (function () {
+    function VerificationRequest() {
+    }
+    return VerificationRequest;
+})();
 var TransferRequest = (function () {
     function TransferRequest() {
     }
@@ -44,10 +63,19 @@ var CoinPrismConfiguration = (function () {
     }
     return CoinPrismConfiguration;
 })();
+var DecerverConfiguration = (function () {
+    function DecerverConfiguration() {
+    }
+    DecerverConfiguration.prototype.apiUrl = function () {
+        return this.baseUrl + "/apis/assetchain";
+    };
+    return DecerverConfiguration;
+})();
 var Configuration = (function () {
     function Configuration() {
         this.ethereum = new EthereumConfiguration();
         this.coinPrism = new CoinPrismConfiguration();
+        this.decerver = new DecerverConfiguration();
     }
     return Configuration;
 })();
